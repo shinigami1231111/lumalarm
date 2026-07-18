@@ -1,0 +1,12 @@
+build/
+*.o
+*.user
+CMakeCache.txt
+CMakeFiles/
+.qmlls.ini
+.qmlls.build.ini
+meta_types/
+.qmlcache/
+.qt/
+moc_*
+qmltypes/

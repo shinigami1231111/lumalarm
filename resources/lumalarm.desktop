@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Lumalarm
+Comment=Glassmorphism alarm clock with rtcwake suspend support
+Exec=lumalarm
+Icon=lumalarm
+Terminal=false
+Type=Application
+Categories=Utility;Clock;
+Keywords=alarm;clock;timer;stopwatch;wakeup;
