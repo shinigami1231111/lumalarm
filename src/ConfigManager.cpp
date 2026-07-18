@@ -124,33 +124,13 @@ void ConfigManager::setThemeAccent(const QString &color)
     emit configChanged();
 }
 
-int ConfigManager::themeBlur() const
-{
-    return m_settings->value("theme/blur", 10).toInt();
-}
-void ConfigManager::setThemeBlur(int radius)
-{
-    m_settings->setValue("theme/blur", radius);
-    emit configChanged();
-}
-
 double ConfigManager::themeOpacity() const
 {
-    return m_settings->value("theme/opacity", 0.55).toDouble();
+    return m_settings->value("theme/opacity", 0.90).toDouble();
 }
 void ConfigManager::setThemeOpacity(double opacity)
 {
     m_settings->setValue("theme/opacity", opacity);
-    emit configChanged();
-}
-
-double ConfigManager::themeCardOpacity() const
-{
-    return m_settings->value("theme/cardOpacity", 0.06).toDouble();
-}
-void ConfigManager::setThemeCardOpacity(double opacity)
-{
-    m_settings->setValue("theme/cardOpacity", opacity);
     emit configChanged();
 }
 

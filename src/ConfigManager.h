@@ -19,9 +19,7 @@ class ConfigManager : public QObject
     // Theme properties
     Q_PROPERTY(QString themeBg READ themeBg WRITE setThemeBg NOTIFY configChanged)
     Q_PROPERTY(QString themeAccent READ themeAccent WRITE setThemeAccent NOTIFY configChanged)
-    Q_PROPERTY(int themeBlur READ themeBlur WRITE setThemeBlur NOTIFY configChanged)
     Q_PROPERTY(double themeOpacity READ themeOpacity WRITE setThemeOpacity NOTIFY configChanged)
-    Q_PROPERTY(double themeCardOpacity READ themeCardOpacity WRITE setThemeCardOpacity NOTIFY configChanged)
     Q_PROPERTY(QString themeTextPrimary READ themeTextPrimary WRITE setThemeTextPrimary NOTIFY configChanged)
     Q_PROPERTY(QString themeTextSecondary READ themeTextSecondary WRITE setThemeTextSecondary NOTIFY configChanged)
     Q_PROPERTY(bool stopwatchShowMs READ stopwatchShowMs WRITE setStopwatchShowMs NOTIFY configChanged)
@@ -54,14 +52,8 @@ public:
     QString themeAccent() const;
     void setThemeAccent(const QString &color);
 
-    int themeBlur() const;
-    void setThemeBlur(int radius);
-
     double themeOpacity() const;
     void setThemeOpacity(double opacity);
-
-    double themeCardOpacity() const;
-    void setThemeCardOpacity(double opacity);
 
     QString themeTextPrimary() const;
     void setThemeTextPrimary(const QString &color);

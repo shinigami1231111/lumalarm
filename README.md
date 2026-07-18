@@ -45,7 +45,7 @@ That's the core idea. Everything else below — timer, stopwatch, sound manager,
 - **Sound manager** — import and preview your own tones (`wav`, `mp3`, `ogg`, `flac`, `aac`)
 - **Volume fade-in & auto-stop** — wakes you up gently instead of blasting you out of bed
 - **Custom commands** — run any shell command when an alarm fires
-- **Fully themeable** — glassmorphism UI with a built-in HSV color picker for background, accent, blur, and opacity
+- **Fully themeable** — glassmorphism UI with a built-in HSV color picker for background, accent, and opacity
 
 ---
 
@@ -114,7 +114,7 @@ All data lives in `~/.config/lumalarm/`:
 
 | Path | Purpose |
 |---|---|
-| `settings.ini` | Theme colors, blur, opacity, defaults |
+| `settings.ini` | Theme colors, opacity, defaults |
 | `alarms.json` | Alarm list (persisted, human-readable) |
 | `tones/` | Imported alarm sound files |
 

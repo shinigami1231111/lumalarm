@@ -2,7 +2,6 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Window
-import Qt5Compat.GraphicalEffects
 import GlassAlarm
 
 Window {
@@ -30,8 +29,6 @@ Window {
         target: configManager
         function onConfigChanged() {
             root.checkNextAlarm()
-            bgLayer.layer.enabled = false
-            bgLayer.layer.enabled = configManager.themeBlur > 0
         }
     }
     Component.onCompleted: checkNextAlarm()
@@ -76,12 +73,6 @@ Window {
                 border.width: 1
                 color: "transparent"
                 opacity: 0.12
-            }
-
-            layer.enabled: configManager.themeBlur > 0
-            layer.effect: FastBlur {
-                radius: configManager.themeBlur
-                transparentBorder: false
             }
         }
 

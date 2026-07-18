@@ -32,9 +32,7 @@ ColumnLayout {
 
         ColumnLayout {
             Layout.fillWidth: true; spacing: 8
-            ThemeSpinBox { label: "Blur Radius"; fromVal: 0; toVal: 30; cfgProp: "themeBlur"; step: 1 }
             ThemeSpinBox { label: "Bg Opacity"; fromVal: 0.1; toVal: 1.0; cfgProp: "themeOpacity"; step: 0.05; decimals: 2 }
-            ThemeSpinBox { label: "Card Opacity"; fromVal: 0.0; toVal: 0.5; cfgProp: "themeCardOpacity"; step: 0.01; decimals: 2 }
         }
     }
 
@@ -80,9 +78,7 @@ ColumnLayout {
                 configManager.themeAccent = "#3d7fff"
                 configManager.themeTextPrimary = "#ffffff"
                 configManager.themeTextSecondary = "#808090"
-                configManager.themeBlur = 10
-                configManager.themeOpacity = 0.55
-                configManager.themeCardOpacity = 0.06
+                configManager.themeOpacity = 0.90
                 configManager.stopwatchShowMs = true
             }
         }
