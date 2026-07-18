@@ -41,6 +41,11 @@ That's the core idea. Everything else below — timer, stopwatch, sound manager,
 ## Features
 
 - **Alarms** — recurring or one-shot, with typing challenges and a "still awake?" check to stop you from oversleeping
+- **Soundscape wake** — ambient track plays quietly 90s before the alarm, ramps in, then crossfades to the main tone
+- **Math challenge** — alternative to typing challenge; solve an arithmetic problem to dismiss
+- **Snooze limiting** — set a max number of snoozes per alarm (or disable snooze entirely)
+- **Escalating wake** — screen brightness ramp, then sound, then forced challenge if you don't respond
+- **Alarm notes** — attach a note ("flight to Istanbul") shown prominently when the alarm fires
 - **Countdown timer & stopwatch** — with laps and completion sounds
 - **Sound manager** — import and preview your own tones (`wav`, `mp3`, `ogg`, `flac`, `aac`)
 - **Volume fade-in & auto-stop** — wakes you up gently instead of blasting you out of bed

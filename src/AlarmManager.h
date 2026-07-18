@@ -11,6 +11,7 @@
 #include <QFile>
 #include <QDir>
 #include <QStandardPaths>
+#include <QHash>
 
 struct Alarm {
     int hour = 7;
@@ -30,6 +31,15 @@ struct Alarm {
     QString challengeText;
     bool wakeUpCheckEnabled = false;
     int wakeUpCheckInterval = 3;
+
+    // Phase 1: Smarter Wake Experience
+    QString soundscape;
+    int maxSnoozes = -1;          // -1 = unlimited, 0 = no snooze
+    QString challengeMode = "typing"; // "none", "typing", "math"
+    int mathDifficulty = 0;       // 0=easy (add/sub), 1=hard (mul)
+    bool escalatingWake = false;
+    int escalatingTimeout = 60;   // seconds before forced challenge
+    QString note;
 
     QJsonObject toJson() const;
     static Alarm fromJson(const QJsonObject &obj);
@@ -58,13 +68,20 @@ public:
     // Adds a transient alarm (e.g. snooze) that won't be persisted to alarms.json
     Q_INVOKABLE void addTransientAlarm(const QVariantMap &alarm);
 
+    // Snooze tracking (in-memory only, resets each time alarm fires fresh)
+    Q_INVOKABLE int snoozeCount(int alarmIndex) const;
+    Q_INVOKABLE void resetSnoozeCount(int alarmIndex);
+    Q_INVOKABLE void incrementSnooze(int alarmIndex);
+
     QString alarmsFilePath() const;
 
 signals:
     void alarmsChanged();
+    void alarmDismissed(int alarmIndex, int stageReached);
 
 private:
     QVector<Alarm> m_alarms;
+    QHash<int, int> m_snoozeCounts;
     QString m_filePath;
 };
 

@@ -26,6 +26,15 @@ QJsonObject Alarm::toJson() const
     obj["challengeText"] = challengeText;
     obj["wakeUpCheckEnabled"] = wakeUpCheckEnabled;
     obj["wakeUpCheckInterval"] = wakeUpCheckInterval;
+
+    obj["soundscape"] = soundscape;
+    obj["maxSnoozes"] = maxSnoozes;
+    obj["challengeMode"] = challengeMode;
+    obj["mathDifficulty"] = mathDifficulty;
+    obj["escalatingWake"] = escalatingWake;
+    obj["escalatingTimeout"] = escalatingTimeout;
+    obj["note"] = note;
+
     return obj;
 }
 
@@ -55,6 +64,21 @@ Alarm Alarm::fromJson(const QJsonObject &obj)
     a.challengeText = obj["challengeText"].toString();
     a.wakeUpCheckEnabled = obj["wakeUpCheckEnabled"].toBool(false);
     a.wakeUpCheckInterval = obj["wakeUpCheckInterval"].toInt(3);
+
+    // Phase 1 fields with backward-compat defaults
+    if (obj.contains("challengeMode")) {
+        a.challengeMode = obj["challengeMode"].toString("typing");
+    } else {
+        // Migrate from old enableChallenge bool
+        a.challengeMode = a.enableChallenge ? "typing" : "none";
+    }
+    a.soundscape = obj["soundscape"].toString();
+    a.maxSnoozes = obj["maxSnoozes"].toInt(-1);
+    a.mathDifficulty = obj["mathDifficulty"].toInt(0);
+    a.escalatingWake = obj["escalatingWake"].toBool(false);
+    a.escalatingTimeout = obj["escalatingTimeout"].toInt(60);
+    a.note = obj["note"].toString();
+
     return a;
 }
 
@@ -84,6 +108,15 @@ QVariantMap Alarm::toVariantMap() const
     map["challengeText"] = challengeText;
     map["wakeUpCheckEnabled"] = wakeUpCheckEnabled;
     map["wakeUpCheckInterval"] = wakeUpCheckInterval;
+
+    map["soundscape"] = soundscape;
+    map["maxSnoozes"] = maxSnoozes;
+    map["challengeMode"] = challengeMode;
+    map["mathDifficulty"] = mathDifficulty;
+    map["escalatingWake"] = escalatingWake;
+    map["escalatingTimeout"] = escalatingTimeout;
+    map["note"] = note;
+
     return map;
 }
 
@@ -113,6 +146,19 @@ Alarm Alarm::fromVariantMap(const QVariantMap &map)
     a.challengeText = map.value("challengeText").toString();
     a.wakeUpCheckEnabled = map.value("wakeUpCheckEnabled", false).toBool();
     a.wakeUpCheckInterval = map.value("wakeUpCheckInterval", 3).toInt();
+
+    if (map.contains("challengeMode")) {
+        a.challengeMode = map.value("challengeMode", "typing").toString();
+    } else {
+        a.challengeMode = a.enableChallenge ? "typing" : "none";
+    }
+    a.soundscape = map.value("soundscape").toString();
+    a.maxSnoozes = map.value("maxSnoozes", -1).toInt();
+    a.mathDifficulty = map.value("mathDifficulty", 0).toInt();
+    a.escalatingWake = map.value("escalatingWake", false).toBool();
+    a.escalatingTimeout = map.value("escalatingTimeout", 60).toInt();
+    a.note = map.value("note").toString();
+
     return a;
 }
 
@@ -156,7 +202,6 @@ void AlarmManager::addAlarm(const QVariantMap &alarm)
 void AlarmManager::addTransientAlarm(const QVariantMap &alarm)
 {
     m_alarms.append(Alarm::fromVariantMap(alarm));
-    // Do NOT save to file — transient alarms (snooze) are lost on restart
     emit alarmsChanged();
 }
 
@@ -182,7 +227,6 @@ void AlarmManager::loadFromFile()
 {
     QFile file(m_filePath);
     if (!file.exists()) {
-        // Start with empty alarm list — no defaults
         m_alarms.clear();
         saveToFile();
         return;
@@ -221,7 +265,6 @@ void AlarmManager::saveToFile()
 
     QJsonArray arr;
     for (const Alarm &a : m_alarms) {
-        // Don't persist transient (snooze) alarms
         if (a.isSnooze) continue;
         arr.append(a.toJson());
     }
@@ -234,4 +277,19 @@ void AlarmManager::saveToFile()
 QString AlarmManager::alarmsFilePath() const
 {
     return m_filePath;
+}
+
+int AlarmManager::snoozeCount(int alarmIndex) const
+{
+    return m_snoozeCounts.value(alarmIndex, 0);
+}
+
+void AlarmManager::resetSnoozeCount(int alarmIndex)
+{
+    m_snoozeCounts.remove(alarmIndex);
+}
+
+void AlarmManager::incrementSnooze(int alarmIndex)
+{
+    m_snoozeCounts[alarmIndex] = m_snoozeCounts.value(alarmIndex, 0) + 1;
 }

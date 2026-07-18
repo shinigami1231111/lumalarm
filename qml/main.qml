@@ -283,11 +283,20 @@ Window {
             var alarms = alarmManager.alarms
             if (index < 0 || index >= alarms.length) return
             var a = alarms[index]
+            ringingOverlay.alarmIndex = index
             ringingOverlay.alarmHour = a.hour; ringingOverlay.alarmMinute = a.minute
             ringingOverlay.alarmMedia = a.soundFile
             ringingOverlay.alarmData = a
             ringingOverlay.ringing = true
         }
         function onCountdownUpdated(seconds) { root.countdownValue = seconds }
+        function onSoundscapeStarting(index) {
+            var alarms = alarmManager.alarms
+            if (index < 0 || index >= alarms.length) return
+            var a = alarms[index]
+            if (a.soundscape && a.soundscape !== "") {
+                audioPlayer.playSoundscape(a.soundscape, 5)
+            }
+        }
     }
 }

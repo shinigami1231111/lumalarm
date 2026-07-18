@@ -1,5 +1,6 @@
 #include "Scheduler.h"
 #include <QDebug>
+#include <cmath>
 
 Scheduler::Scheduler(AlarmManager *manager, QObject *parent)
     : QObject(parent)
@@ -43,14 +44,12 @@ int Scheduler::secondsUntilNextAlarm() const
             continue;
         }
 
-        // Check if any day is selected
         bool hasDays = false;
         for (int d = 0; d < 7; ++d) {
             if (a.days[d]) { hasDays = true; break; }
         }
 
         if (!hasDays) {
-            // One-shot: fire at the next occurrence of this time (today or tomorrow)
             QDateTime dt(now.date(), alarmTime);
             if (dt <= now)
                 dt = dt.addDays(1);
@@ -60,7 +59,6 @@ int Scheduler::secondsUntilNextAlarm() const
             continue;
         }
 
-        // Regular alarm: find next occurrence by day
         for (int dayOffset = 0; dayOffset < 7; ++dayOffset) {
             int checkDay = (currentDay + dayOffset) % 7;
             if (!a.days[checkDay]) continue;
@@ -104,10 +102,10 @@ void Scheduler::onCheckTimer()
     QTime currentTime = now.time();
     int currentHour = currentTime.hour();
     int currentMin = currentTime.minute();
+    int currentSec = currentTime.second();
     int currentDay = now.date().dayOfWeek() - 1;
     if (currentDay < 0) currentDay = 6;
 
-    // Emit countdown every second
     int secs = secondsUntilNextAlarm();
     emit countdownUpdated(secs);
 
@@ -127,27 +125,63 @@ void Scheduler::onCheckTimer()
             return;
         }
 
-        // Check if alarm time matches current clock minute
+        // Check if alarm time matches current clock
         if (a.hour != currentHour || a.minute != currentMin)
-            continue;
+            goto check_soundscape;
 
-        int currentTick = currentHour * 60 + currentMin;
-        if (currentTick == m_lastTriggeredMin)
-            continue; // already triggered this minute
+        {
+            int currentTick = currentHour * 60 + currentMin;
+            if (currentTick == m_lastTriggeredMin)
+                goto check_soundscape;
 
-        // Check if any day is selected
-        bool hasDays = false;
-        for (int d = 0; d < 7; ++d) {
-            if (a.days[d]) { hasDays = true; break; }
+            bool hasDays = false;
+            for (int d = 0; d < 7; ++d) {
+                if (a.days[d]) { hasDays = true; break; }
+            }
+
+            if (hasDays && !a.days[currentDay])
+                goto check_soundscape;
+
+            // Alarm fires now
+            m_soundscapeFired.remove(i);
+            emit alarmTriggered(i);
+            m_lastTriggeredMin = currentTick;
+            return;
         }
 
-        if (hasDays && !a.days[currentDay])
-            continue; // not an active day
+check_soundscape:
+        // Check if soundscape should start (~90s before alarm)
+        if (!a.soundscape.isEmpty() && !m_soundscapeFired.contains(i)) {
+            int secondsToAlarm = 0;
+            QDateTime alarmDt(now.date(), alarmTime);
 
-        // Alarm fires now
-        emit alarmTriggered(i);
-        m_lastTriggeredMin = currentTick;
-        return;
+            bool hasDays = false;
+            for (int d = 0; d < 7; ++d) {
+                if (a.days[d]) { hasDays = true; break; }
+            }
+
+            if (a.isSnooze) {
+                if (alarmDt <= now) continue;
+                secondsToAlarm = static_cast<int>(now.secsTo(alarmDt));
+            } else if (!hasDays) {
+                if (alarmDt <= now) alarmDt = alarmDt.addDays(1);
+                secondsToAlarm = static_cast<int>(now.secsTo(alarmDt));
+            } else {
+                for (int dayOffset = 0; dayOffset < 7; ++dayOffset) {
+                    int checkDay = (currentDay + dayOffset) % 7;
+                    if (!a.days[checkDay]) continue;
+                    QDateTime checkDt(now.date().addDays(dayOffset), alarmTime);
+                    if (checkDt <= now) continue;
+                    secondsToAlarm = static_cast<int>(now.secsTo(checkDt));
+                    break;
+                }
+            }
+
+            if (secondsToAlarm > 0 && secondsToAlarm <= 90) {
+                m_soundscapeFired.insert(i);
+                emit soundscapeStarting(i);
+            }
+        }
     }
 
     emit nextAlarmChanged();

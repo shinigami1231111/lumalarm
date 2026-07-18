@@ -32,25 +32,38 @@ int main(int argc, char *argv[])
     Scheduler scheduler(&alarmManager);
 
     // When an alarm triggers: play audio, run command, show overlay
-    // rtcwake is NOT called here because we're already awake at alarm time.
-    // Use wakeManager.prepareWake() BEFORE the alarm to suspend+wake.
     QObject::connect(&scheduler, &Scheduler::alarmTriggered, [&](int index) {
         const auto alarms = alarmManager.alarmList();
         if (index < 0 || index >= alarms.size()) return;
 
         const Alarm &a = alarms[index];
+        alarmManager.resetSnoozeCount(index);
 
         // Execute custom command if enabled
         if (a.enableCommand && !a.command.isEmpty()) {
             QProcess::startDetached(a.command);
         }
 
-        // Play alarm sound with 2.5s delay after wake for audio reinit
+        // Escalating wake stage 1: brightness ramp via brightnessctl
+        if (a.escalatingWake) {
+            for (int i = 1; i <= 15; ++i) {
+                int pct = qMin(100, i * 100 / 15);
+                QTimer::singleShot(i * 1000, [pct]() {
+                    QProcess::startDetached("brightnessctl", {"s", QString::number(pct) + "%"});
+                });
+            }
+        }
+
+        // Play alarm sound (or crossfade from soundscape if active)
         if (a.enableSound) {
             audioPlayer.setBaseVolume(a.baseVolume);
             audioPlayer.setFadeDuration(a.fadeDuration);
-            QTimer::singleShot(2500, [&audioPlayer, soundFile = a.soundFile]() {
-                audioPlayer.play(soundFile);
+            QTimer::singleShot(2500, [&audioPlayer, &a]() {
+                if (audioPlayer.isSoundscapePlaying()) {
+                    audioPlayer.crossfadeToMain(a.baseVolume, a.fadeDuration);
+                } else {
+                    audioPlayer.play(a.soundFile);
+                }
             });
         }
 
@@ -60,6 +73,24 @@ int main(int argc, char *argv[])
                 audioPlayer.stop();
             }
         });
+    });
+
+    // Soundscape pre-alarm: play ambient track 90s before alarm
+    QObject::connect(&scheduler, &Scheduler::soundscapeStarting, [&](int index) {
+        const auto alarms = alarmManager.alarmList();
+        if (index < 0 || index >= alarms.size()) return;
+
+        const Alarm &a = alarms[index];
+        if (!a.soundscape.isEmpty()) {
+            audioPlayer.playSoundscape(a.soundscape, 5);
+        }
+    });
+
+    // Log dismiss events with stage info (feeds future statistics)
+    QObject::connect(&alarmManager, &AlarmManager::alarmDismissed, [](int index, int stage) {
+        Q_UNUSED(index);
+        Q_UNUSED(stage);
+        // Future: persist to statistics log
     });
 
     QQmlApplicationEngine engine;
