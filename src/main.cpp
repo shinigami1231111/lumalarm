@@ -2,11 +2,13 @@
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 #include <QQuickStyle>
+#include <QQuickWindow>
 #include <QDir>
 #include <QFile>
 #include <QProcess>
 #include <QStandardPaths>
 #include <QTimer>
+#include <QIcon>
 
 #include "AlarmManager.h"
 #include "AudioPlayer.h"
@@ -108,6 +110,14 @@ int main(int argc, char *argv[])
         Qt::QueuedConnection);
 
     engine.load(QUrl("qrc:/GlassAlarm/qml/main.qml"));
+
+    // Set window icon after QML window is created
+    if (!engine.rootObjects().isEmpty()) {
+        QQuickWindow *win = qobject_cast<QQuickWindow*>(engine.rootObjects().first());
+        if (win) {
+            win->setIcon(QIcon(":/icon.svg"));
+        }
+    }
 
     return app.exec();
 }
