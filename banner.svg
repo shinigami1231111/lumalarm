@@ -1,0 +1,28 @@
+<svg width="1360" height="440" viewBox="0 0 680 220" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<linearGradient id="bandGrad" x1="0" y1="0" x2="680" y2="220" gradientUnits="userSpaceOnUse">
+<stop offset="0%" stop-color="#1b1f3b"/>
+<stop offset="55%" stop-color="#3a2f6b"/>
+<stop offset="100%" stop-color="#a8548c"/>
+</linearGradient>
+<radialGradient id="bandGlow" cx="85%" cy="20%" r="45%">
+<stop offset="0%" stop-color="#ffd166" stop-opacity="0.55"/>
+<stop offset="100%" stop-color="#ffd166" stop-opacity="0"/>
+</radialGradient>
+</defs>
+<rect x="0" y="0" width="680" height="220" rx="28" fill="url(#bandGrad)"/>
+<rect x="0" y="0" width="680" height="220" rx="28" fill="url(#bandGlow)"/>
+<circle cx="90" cy="105" r="2.4" fill="#ffffff" opacity="0.5"/>
+<circle cx="130" cy="70" r="1.8" fill="#ffffff" opacity="0.4"/>
+<circle cx="60" cy="150" r="1.8" fill="#ffffff" opacity="0.35"/>
+<circle cx="150" cy="150" r="2" fill="#ffffff" opacity="0.4"/>
+<circle cx="100" cy="110" r="56" fill="#ffffff" fill-opacity="0.14" stroke="#ffffff" stroke-opacity="0.55" stroke-width="2"/>
+<circle cx="100" cy="76" r="2.5" fill="#fff7ec"/>
+<circle cx="134" cy="110" r="2.5" fill="#fff7ec"/>
+<circle cx="100" cy="144" r="2.5" fill="#fff7ec"/>
+<circle cx="66" cy="110" r="2.5" fill="#fff7ec"/>
+<line x1="100" y1="110" x2="100" y2="80" stroke="#fff7ec" stroke-width="5" stroke-linecap="round"/>
+<line x1="100" y1="110" x2="122" y2="122" stroke="#fff7ec" stroke-width="5" stroke-linecap="round"/>
+<text x="200" y="122" font-family="sans-serif" font-size="56" font-weight="500" fill="#ffffff">Lumalarm</text>
+<text x="202" y="156" font-family="sans-serif" font-size="18" font-weight="400" fill="#f4e8ff" fill-opacity="0.85">A glass alarm clock that wakes your PC up for you</text>
+</svg>

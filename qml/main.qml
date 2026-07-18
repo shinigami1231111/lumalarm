@@ -6,6 +6,7 @@ import GlassAlarm
 
 Window {
     id: root
+    icon: "qrc:/icon.svg"
     visible: true
     width: 960
     height: 660

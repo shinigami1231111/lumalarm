@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🔔 Lumalarm
+<img src="banner.svg" alt="Lumalarm" width="680">
 
 **A glassmorphism alarm clock for Linux, built with Qt 6 (QML + C++)**
 
