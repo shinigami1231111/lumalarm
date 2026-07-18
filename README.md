@@ -53,11 +53,11 @@ That's the core idea. Everything else below — timer, stopwatch, sound manager,
 
 | Alarms | Timer |
 |---|---|
-| ![Alarms](screenshots/alarms.jpeg) | ![Timer](screenshots/timer.jpeg) |
+| ![Alarms](Screenshots/Screenshot_20260718_130324.jpeg) | ![Timer](Screenshots/Screenshot_20260718_130340.jpeg) |
 
 | Stopwatch | Sound Manager |
 |---|---|
-| ![Stopwatch](screenshots/stopwatch.jpeg) | ![Sounds](screenshots/sounds.jpeg) |
+| ![Stopwatch](Screenshots/Screenshot_20260718_130357.jpeg) | ![Sounds](Screenshots/Screenshot_20260718_130408.jpeg) |
 
 ---
 
