@@ -15,6 +15,7 @@ set(SOURCES
     src/Scheduler.cpp
     src/WakeManager.cpp
     src/ConfigManager.cpp
+    src/ThemeManager.cpp
 )
 
 set(HEADERS
@@ -23,6 +24,7 @@ set(HEADERS
     src/Scheduler.h
     src/WakeManager.h
     src/ConfigManager.h
+    src/ThemeManager.h
 )
 
 set(QML_FILES

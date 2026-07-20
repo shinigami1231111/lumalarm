@@ -3,21 +3,33 @@
 #include <QQmlContext>
 #include <QQuickStyle>
 #include <QQuickWindow>
+#include <QSurfaceFormat>
 #include <QDir>
 #include <QFile>
 #include <QProcess>
 #include <QStandardPaths>
 #include <QTimer>
 #include <QIcon>
+#include <QFont>
+#include <QFontDatabase>
+#include <QFontInfo>
 
 #include "AlarmManager.h"
 #include "AudioPlayer.h"
 #include "Scheduler.h"
 #include "WakeManager.h"
 #include "ConfigManager.h"
+#include "ThemeManager.h"
 
 int main(int argc, char *argv[])
 {
+    // True window-level transparency: request an ARGB visual with an 8-bit
+    // alpha buffer so the Wayland/X11 compositor sees real per-pixel alpha
+    // (required for compositor-side blur to work).
+    QSurfaceFormat format = QSurfaceFormat::defaultFormat();
+    format.setAlphaBufferSize(8);
+    QSurfaceFormat::setDefaultFormat(format);
+
     QGuiApplication app(argc, argv);
     app.setApplicationName("Lumalarm");
     app.setOrganizationName("Lumalarm");
@@ -26,6 +38,7 @@ int main(int argc, char *argv[])
 
     qmlRegisterUncreatableType<AlarmManager>("GlassAlarm", 1, 0, "AlarmManager", "Singleton");
     qmlRegisterUncreatableType<AudioPlayer>("GlassAlarm", 1, 0, "AudioPlayer", "Singleton");
+    qmlRegisterUncreatableType<ThemeManager>("GlassAlarm", 1, 0, "ThemeManager", "Singleton");
 
     AlarmManager alarmManager;
     AudioPlayer audioPlayer;
@@ -106,6 +119,7 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("alarmManager", &alarmManager);
     engine.rootContext()->setContextProperty("audioPlayer", &audioPlayer);
     engine.rootContext()->setContextProperty("configManager", &configManager);
+    engine.rootContext()->setContextProperty("themeManager", configManager.theme());
     engine.rootContext()->setContextProperty("wakeManager", &wakeManager);
     engine.rootContext()->setContextProperty("scheduler", &scheduler);
 
@@ -123,6 +137,27 @@ int main(int argc, char *argv[])
         QQuickWindow *win = qobject_cast<QQuickWindow*>(engine.rootObjects().first());
         if (win) {
             win->setIcon(QIcon(":/icon.svg"));
+        }
+    }
+
+    // Apply the theme's font family if it resolves to an installed font.
+    // Falls back silently to the system default when unavailable.
+    {
+        QString family = configManager.theme()->font_family().trimmed();
+        if (!family.isEmpty()) {
+            QFontDatabase db;
+            // Accept if the family is installed (case-insensitive); otherwise
+            // silently keep the system default — never crash on a missing font.
+            bool available = db.families().contains(family, Qt::CaseInsensitive);
+            if (!available) {
+                for (const QString &fam : db.families()) {
+                    if (fam.contains(family, Qt::CaseInsensitive)) { available = true; break; }
+                }
+            }
+            if (available) {
+                QFont f(family);
+                app.setFont(f);
+            }
         }
     }
 

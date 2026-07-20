@@ -71,6 +71,121 @@ ColumnLayout {
 
             Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: Qt.rgba(1,1,1,0.07) }
 
+            // ---- Theming / ricing ----
+            Text { text: "Theming"; color: configManager.themeTextSecondary; font.pixelSize: 13; font.bold: true; Layout.bottomMargin: -4 }
+
+            RowLayout {
+                Layout.fillWidth: true; spacing: 14
+                Text { text: "Blur Mode"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.preferredWidth: 180 }
+                Item { Layout.fillWidth: true }
+                RowLayout {
+                    spacing: 6
+                    GlassButton {
+                        text: "Compositor"
+                        pixelSize: 12; implicitWidth: 100; implicitHeight: 30; radius: 7
+                        property bool active: themeManager.blur_mode === "compositor"
+                        baseColor: active ? Qt.rgba(0.2, 0.6, 1, 0.28) : Qt.rgba(1, 1, 1, 0.06)
+                        textColor: active ? Qt.rgba(0.6, 0.85, 1, 1) : configManager.themeTextSecondary
+                        borderColor: active ? Qt.rgba(0.4, 0.8, 1, 0.4) : Qt.rgba(1, 1, 1, 0.1)
+                        onClicked: themeManager.blur_mode = "compositor"
+                    }
+                    GlassButton {
+                        text: "App (fallback)"
+                        pixelSize: 12; implicitWidth: 110; implicitHeight: 30; radius: 7
+                        property bool active: themeManager.blur_mode === "app"
+                        baseColor: active ? Qt.rgba(0.2, 0.6, 1, 0.28) : Qt.rgba(1, 1, 1, 0.06)
+                        textColor: active ? Qt.rgba(0.6, 0.85, 1, 1) : configManager.themeTextSecondary
+                        borderColor: active ? Qt.rgba(0.4, 0.8, 1, 0.4) : Qt.rgba(1, 1, 1, 0.1)
+                        onClicked: themeManager.blur_mode = "app"
+                    }
+                }
+            }
+
+            Text {
+                text: "Compositor: window stays transparent and Hyprland/Sway blur the desktop behind it. App: panel is opaque (no compositor blur needed)."
+                color: Qt.rgba(1, 0.7, 0.3, 0.85)
+                font.pixelSize: 12; wrapMode: Text.Wrap; Layout.fillWidth: true
+            }
+
+            Text { text: "Palette Presets"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.bottomMargin: -6 }
+            Flow {
+                Layout.fillWidth: true
+                spacing: 8
+                Repeater {
+                    model: themeManager.presetNames()
+                    GlassButton {
+                        text: modelData
+                        pixelSize: 12; implicitHeight: 32; radius: 7; implicitWidth: Math.max(120, text.length * 8 + 24)
+                        onClicked: themeManager.applyPreset(modelData)
+                    }
+                }
+            }
+
+            RowLayout {
+                Layout.fillWidth: true; spacing: 14
+                Text { text: "Border Color"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.preferredWidth: 180 }
+                Item { Layout.fillWidth: true }
+                ColorEdit { color: themeManager.border_color; onPicked: themeManager.border_color = hex }
+            }
+
+            RowLayout {
+                Layout.fillWidth: true; spacing: 14
+                Text { text: "Corner Radius"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.preferredWidth: 180 }
+                Item { Layout.fillWidth: true }
+                Spinny { from: 0; to: 40; value: themeManager.corner_radius; suffix: " px"; onChanged: themeManager.corner_radius = v }
+            }
+
+            RowLayout {
+                Layout.fillWidth: true; spacing: 14
+                Text { text: "Card Opacity"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.preferredWidth: 180 }
+                Item { Layout.fillWidth: true }
+                Slider {
+                    id: cardOpacitySlider
+                    from: 0.0; to: 1.0; stepSize: 0.01
+                    value: themeManager.card_opacity
+                    implicitWidth: 200
+                    onPressedChanged: { if (!pressed && value !== themeManager.card_opacity) themeManager.card_opacity = value }
+                }
+                Text { text: Math.round(cardOpacitySlider.value * 100) + "%"; color: configManager.themeTextSecondary; font.pixelSize: 14; Layout.preferredWidth: 46; horizontalAlignment: Text.AlignRight }
+            }
+
+            RowLayout {
+                Layout.fillWidth: true; spacing: 14
+                Text { text: "Font Family"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.preferredWidth: 180 }
+                Item { Layout.fillWidth: true }
+                TextField {
+                    Layout.preferredWidth: 220; implicitHeight: 34
+                    text: themeManager.font_family
+                    color: configManager.themeTextPrimary; font.pixelSize: 13
+                    placeholderText: "system default"
+                    background: Rectangle { radius: 7; color: Qt.rgba(1,1,1,0.06); border.color: Qt.rgba(1,1,1,0.1); border.width: 1 }
+                    onEditingFinished: themeManager.font_family = text.trim()
+                }
+            }
+
+            RowLayout {
+                Layout.fillWidth: true; spacing: 8
+                GlassButton {
+                    text: themeManager.pywalAvailable() ? "Import from pywal" : "pywal not found"
+                    pixelSize: 12
+                    enabled: themeManager.pywalAvailable()
+                    baseColor: themeManager.pywalAvailable() ? Qt.rgba(0.3, 0.6, 1, 0.2) : Qt.rgba(1, 1, 1, 0.05)
+                    hoverColor: Qt.rgba(0.3, 0.6, 1, 0.3)
+                    onClicked: themeManager.importFromPywal()
+                }
+                Text {
+                    text: "Reads ~/.cache/wal/colors.json (manual, no auto-apply)"
+                    color: configManager.themeTextSecondary; font.pixelSize: 12; Layout.fillWidth: true
+                }
+            }
+
+            Text {
+                text: "Theme is stored in ~/.config/lumalarm/theme.conf and reloads live when you edit it."
+                color: configManager.themeTextSecondary; font.pixelSize: 12; wrapMode: Text.Wrap; Layout.fillWidth: true
+            }
+
+            Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: Qt.rgba(1,1,1,0.07) }
+
             // ---- Interface ----
             Text { text: "Interface"; color: configManager.themeTextSecondary; font.pixelSize: 13; font.bold: true; Layout.bottomMargin: -4 }
 
@@ -168,7 +283,13 @@ ColumnLayout {
                         configManager.themeAccent = "#3d7fff"
                         configManager.themeTextPrimary = "#ffffff"
                         configManager.themeTextSecondary = "#808090"
-                        configManager.themeOpacity = 0.90
+                        configManager.themeOpacity = 0.55
+                        themeManager.border_color = "#3d7fff"
+                        themeManager.blur_mode = "compositor"
+                        themeManager.blur_radius = 20
+                        themeManager.card_opacity = 0.55
+                        themeManager.font_family = ""
+                        themeManager.corner_radius = 18
                         configManager.defaultSnooze = 1
                         configManager.defaultFadeDuration = 15
                         configManager.defaultWakeMode = "mem"

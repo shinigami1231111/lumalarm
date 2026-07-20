@@ -13,10 +13,25 @@ Window {
     minimumHeight: 540
     title: "Lumalarm"
 
+    // Frameless + on-top. Native decorations are opaque and would break the
+    // per-pixel-alpha (compositor blur) effect, so we never use them.
     flags: Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
     color: "transparent"
 
     property int countdownValue: -1
+
+    // True window-level transparency helpers.
+    // In "compositor" blur mode the background is drawn with a REAL rgba alpha
+    // (not QML opacity) so the Wayland/X11 compositor sees genuine per-pixel
+    // transparency and can blur the desktop behind the window.
+    // In "app" blur mode (no compositor blur available) we force the panel to
+    // be nearly opaque to avoid transparency artifacts on X11/GNOME.
+    property bool compositorBlur: themeManager.blur_mode === "compositor"
+    property real bgAlpha: compositorBlur ? themeManager.card_opacity : Math.max(themeManager.card_opacity, 0.92)
+    property color bgBase: themeManager.background_color
+    property color accentColor: themeManager.accent_color
+    property color bgWithAlpha: Qt.alpha(bgBase, bgAlpha)
+    property int cornerRadius: themeManager.corner_radius
 
 
     property string currentMode: "alarms"
@@ -38,19 +53,21 @@ Window {
     Rectangle {
         id: windowRoot
         anchors.fill: parent
-        radius: 18
+        radius: root.cornerRadius
         color: "transparent"
         clip: false
-        border.color: Qt.rgba(configManager.themeAccent.r, configManager.themeAccent.g, configManager.themeAccent.b, 0.45)
+        border.color: Qt.alpha(root.accentColor, 0.45)
         border.width: 1.5
 
         Rectangle {
             id: bgLayer
             anchors.fill: parent
-            radius: 18
+            radius: root.cornerRadius
             clip: true
-            color: configManager.themeBg
-            opacity: configManager.themeOpacity
+            // Real per-pixel alpha — NOT QML opacity — so the compositor's
+            // own blur works on genuinely transparent window pixels.
+            color: root.bgWithAlpha
+            opacity: 1
 
             Rectangle {
                 anchors.fill: parent
@@ -75,7 +92,7 @@ Window {
 
             Rectangle {
                 anchors.fill: parent
-                border.color: configManager.themeAccent
+                border.color: themeManager.accent_color
                 border.width: 1
                 color: "transparent"
                 opacity: 0.12

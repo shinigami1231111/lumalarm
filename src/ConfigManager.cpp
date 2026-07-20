@@ -1,4 +1,5 @@
 #include "ConfigManager.h"
+#include "ThemeManager.h"
 #include <QFileInfoList>
 #include <QFileInfo>
 
@@ -15,6 +16,9 @@ ConfigManager::ConfigManager(QObject *parent)
 
     QString settingsPath = m_configDir + "/settings.ini";
     m_settings = new QSettings(settingsPath, QSettings::IniFormat, this);
+
+    m_theme = new ThemeManager(this);
+    connect(m_theme, &ThemeManager::themeChanged, this, &ConfigManager::configChanged);
 }
 
 void ConfigManager::migrateOldConfig()
@@ -111,52 +115,52 @@ bool ConfigManager::deleteTone(const QString &fileName)
 
 QString ConfigManager::themeBg() const
 {
-    return m_settings->value("theme/bg", "#0d0d1a").toString();
+    return m_theme->background_color();
 }
 void ConfigManager::setThemeBg(const QString &color)
 {
-    m_settings->setValue("theme/bg", color);
-    emit configChanged();
+    m_theme->set_background_color(color);
 }
 
 QString ConfigManager::themeAccent() const
 {
-    return m_settings->value("theme/accent", "#3d7fff").toString();
+    return m_theme->accent_color();
 }
 void ConfigManager::setThemeAccent(const QString &color)
 {
-    m_settings->setValue("theme/accent", color);
-    emit configChanged();
+    m_theme->set_accent_color(color);
 }
 
 double ConfigManager::themeOpacity() const
 {
-    return m_settings->value("theme/opacity", 0.90).toDouble();
+    return m_theme->card_opacity();
 }
 void ConfigManager::setThemeOpacity(double opacity)
 {
-    m_settings->setValue("theme/opacity", opacity);
-    emit configChanged();
+    m_theme->set_card_opacity(opacity);
 }
 
 QString ConfigManager::themeTextPrimary() const
 {
-    return m_settings->value("theme/textPrimary", "#ffffff").toString();
+    return m_theme->text_primary();
 }
 void ConfigManager::setThemeTextPrimary(const QString &color)
 {
-    m_settings->setValue("theme/textPrimary", color);
-    emit configChanged();
+    m_theme->set_text_primary(color);
 }
 
 QString ConfigManager::themeTextSecondary() const
 {
-    return m_settings->value("theme/textSecondary", "#808090").toString();
+    return m_theme->text_secondary();
 }
 void ConfigManager::setThemeTextSecondary(const QString &color)
 {
-    m_settings->setValue("theme/textSecondary", color);
-    emit configChanged();
+    m_theme->set_text_secondary(color);
+}
+
+ThemeManager *ConfigManager::theme() const
+{
+    return m_theme;
 }
 
 bool ConfigManager::stopwatchShowMs() const

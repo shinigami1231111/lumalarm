@@ -138,9 +138,78 @@ All data lives in `~/.config/lumalarm/`:
 
 | Path | Purpose |
 |---|---|
-| `settings.ini` | Theme colors, opacity, defaults |
+| `theme.conf` | **Theme** — colors, blur mode, opacity, font, corner radius (hand-editable, live-reloaded) |
+| `settings.ini` | Non-theme app behavior (snooze, fade, wake mode, stopwatch) |
 | `alarms.json` | Alarm list (persisted, human-readable) |
 | `tones/` | Imported alarm sound files |
+
+---
+
+## Theming
+
+Lumalarm is built for **ricing / tiling-WM users** (Hyprland, Sway, etc.) and uses
+**true window-level transparency** — the window surface has a real per-pixel alpha
+channel, so a Wayland/X11 compositor can blur the desktop *behind* it. It does **not**
+fake transparency with a translucent gray rectangle.
+
+### `theme.conf`
+
+Located at `~/.config/lumalarm/theme.conf` (KDE-style `key=value`, easy to hand-edit
+and commit to a dotfiles repo). Editing it **reloads the theme live** — no restart.
+
+| Key | Meaning | Example |
+|---|---|---|
+| `background_color` | App background (RGB hex) | `#1e1e2e` |
+| `accent_color` | Accent / highlight | `#cba6f7` |
+| `text_primary` | Primary text | `#cdd6f4` |
+| `text_secondary` | Secondary text | `#a6adc8` |
+| `border_color` | Window/card border | `#cba6f7` |
+| `blur_radius` | (reserved) blur radius hint | `20` |
+| `blur_mode` | `compositor` or `app` | `compositor` |
+| `card_opacity` | Background alpha 0.0–1.0 (real alpha) | `0.55` |
+| `font_family` | Nerd/font family, blank = system | `JetBrains Mono` |
+| `corner_radius` | Window corner radius (px) | `18` |
+
+### Built-in palette presets
+
+Selectable from **Settings → Theming**; each writes a complete `theme.conf` you can
+then hand-tune:
+
+- **Catppuccin Mocha**
+- **Nord**
+- **Gruvbox Dark**
+- **Rose Pine**
+- **Tokyo Night**
+
+### Blur mode
+
+- **Compositor** (default, for Hyprland/Sway): the window stays genuinely transparent
+  and the compositor blurs the desktop behind it. Add this window rule so your compositor
+  actually blurs Lumalarm:
+
+  ```ini
+  # Hyprland (~/.config/hypr/hyprland.conf)
+  windowrulev2 = blur, class:^(lumalarm)$
+  ```
+
+  For Sway, blur through a background tool (e.g. `swaybg` + a blur shader, or a fork
+  that supports it); Lumalarm simply exposes the transparent surface.
+
+- **App** (fallback for X11 / GNOME without compositor blur): the panel is drawn
+  nearly opaque so there are no transparency artifacts where no compositor blur exists.
+
+### pywal import
+
+Manual only (no auto-apply on wallpaper change). From **Settings → Theming → Import
+from pywal**, if `~/.cache/wal/colors.json` exists Lumalarm maps its roles
+(`background`, `foreground`, `color1`/`color4`, `color8`) onto the theme fields.
+If the file is absent, the button is disabled and nothing happens.
+
+### Fonts
+
+`font_family` is free-text. If the font isn't installed, Lumalarm silently falls back
+to the system default — it never crashes on a missing font.
+
 
 To add tones without the GUI:
 

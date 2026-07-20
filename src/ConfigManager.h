@@ -9,6 +9,8 @@
 #include <QDir>
 #include <QFile>
 
+class ThemeManager;
+
 class ConfigManager : public QObject
 {
     Q_OBJECT
@@ -46,13 +48,14 @@ public:
 
     Q_INVOKABLE QString configFilePath() const;
 
-    // Theme getters/setters
+    // Theme getters/setters (delegated to ThemeManager)
     QString themeBg() const;
     void setThemeBg(const QString &color);
 
     QString themeAccent() const;
     void setThemeAccent(const QString &color);
 
+    // Retained for compatibility; maps to card_opacity in theme.conf.
     double themeOpacity() const;
     void setThemeOpacity(double opacity);
 
@@ -61,6 +64,8 @@ public:
 
     QString themeTextSecondary() const;
     void setThemeTextSecondary(const QString &color);
+
+    ThemeManager *theme() const;
 
     bool stopwatchShowMs() const;
     void setStopwatchShowMs(bool show);
@@ -75,6 +80,7 @@ private:
     QSettings *m_settings;
     QString m_configDir;
     QString m_tonesDir;
+    ThemeManager *m_theme;
     void migrateOldConfig();
 };
 
