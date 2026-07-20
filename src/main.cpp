@@ -20,6 +20,7 @@
 #include "WakeManager.h"
 #include "ConfigManager.h"
 #include "ThemeManager.h"
+#include "BlurManager.h"
 
 int main(int argc, char *argv[])
 {
@@ -44,6 +45,7 @@ int main(int argc, char *argv[])
     AudioPlayer audioPlayer;
     ConfigManager configManager;
     WakeManager wakeManager;
+    BlurManager blurManager;
     Scheduler scheduler(&alarmManager);
     scheduler.restoreSnoozes();
 
@@ -122,6 +124,7 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("themeManager", configManager.theme());
     engine.rootContext()->setContextProperty("wakeManager", &wakeManager);
     engine.rootContext()->setContextProperty("scheduler", &scheduler);
+    engine.rootContext()->setContextProperty("blurManager", &blurManager);
 
     QObject::connect(
         &engine,
@@ -137,6 +140,22 @@ int main(int argc, char *argv[])
         QQuickWindow *win = qobject_cast<QQuickWindow*>(engine.rootObjects().first());
         if (win) {
             win->setIcon(QIcon(":/icon.svg"));
+
+            // KWin blur-behind must be requested after the window exists.
+            auto applyBlur = [&]() {
+                bool compositor = configManager.theme()->blur_mode() == "compositor";
+                blurManager.setBlurEnabled(win, compositor);
+            };
+            // Apply once shown, on every resize, and when blur mode changes.
+            QObject::connect(win, &QWindow::visibleChanged, [&](bool vis) {
+                if (vis) applyBlur();
+            });
+            QObject::connect(win, &QWindow::xChanged, applyBlur);
+            QObject::connect(win, &QWindow::yChanged, applyBlur);
+            QObject::connect(win, &QWindow::widthChanged, applyBlur);
+            QObject::connect(win, &QWindow::heightChanged, applyBlur);
+            QObject::connect(configManager.theme(), &ThemeManager::themeChanged, applyBlur);
+            applyBlur();
         }
     }
 

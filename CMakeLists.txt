@@ -8,6 +8,24 @@ set(CMAKE_AUTORCC ON)
 
 find_package(Qt6 REQUIRED COMPONENTS Core Multimedia Qml Quick QuickControls2)
 
+# Optional KDE blur-behind support (KWin). Enabled automatically when
+# KWindowSystem is found; can be forced off with -DLUMALARM_ENABLE_KDE_BLUR=OFF.
+option(LUMALARM_ENABLE_KDE_BLUR "Enable KDE/KWin native blur-behind (requires KWindowSystem)" ON)
+if(LUMALARM_ENABLE_KDE_BLUR)
+    find_package(KF6WindowSystem)
+    if(KF6WindowSystem_FOUND)
+        message(STATUS "Lumalarm: KDE blur-behind support ENABLED (KF6WindowSystem found)")
+        add_definitions(-DLUMALARM_ENABLE_KDE_BLUR)
+    else()
+        message(WARNING "LUMALARM_ENABLE_KDE_BLUR is ON but KF6WindowSystem was not found. "
+                        "Building WITHOUT KDE blur-behind support (transparency still works; "
+                        "KWin blur must be done via other means).")
+        set(LUMALARM_ENABLE_KDE_BLUR OFF)
+    endif()
+else()
+    message(STATUS "Lumalarm: KDE blur-behind support DISABLED (LUMALARM_ENABLE_KDE_BLUR=OFF)")
+endif()
+
 set(SOURCES
     src/main.cpp
     src/AlarmManager.cpp
@@ -16,6 +34,7 @@ set(SOURCES
     src/WakeManager.cpp
     src/ConfigManager.cpp
     src/ThemeManager.cpp
+    src/BlurManager.cpp
 )
 
 set(HEADERS
@@ -25,6 +44,7 @@ set(HEADERS
     src/WakeManager.h
     src/ConfigManager.h
     src/ThemeManager.h
+    src/BlurManager.h
 )
 
 set(QML_FILES
@@ -69,6 +89,10 @@ target_link_libraries(lumalarm PRIVATE
     Qt6::Quick
     Qt6::QuickControls2
 )
+
+if(LUMALARM_ENABLE_KDE_BLUR)
+    target_link_libraries(lumalarm PRIVATE KF6::WindowSystem)
+endif()
 
 install(TARGETS lumalarm RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(FILES ${QML_FILES} DESTINATION ${CMAKE_INSTALL_DATADIR}/lumalarm/qml)

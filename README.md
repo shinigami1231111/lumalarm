@@ -86,13 +86,14 @@ That suspend-to-wake behavior is the core power of Lumalarm. Everything else —
 - **Qt 6** — Core, Multimedia, Qml, Quick, Declarative
 - **CMake** ≥ 3.16
 - **C++17** compiler (GCC or Clang)
+- **KF6WindowSystem** *(optional but recommended for KDE Plasma users)* — provides KWin blur-behind; package `kwindowsystem` (Arch), `libkf6windowsystem-dev` (Debian/Ubuntu), `kf6-kwindowsystem` (Fedora). If absent, the app still builds/runs without KWin-native blur.
 - **rtcwake** *(optional)* — from `util-linux`, needed for suspend-to-RAM
 
 <details>
 <summary><b>Arch Linux</b></summary>
 
 ```bash
-sudo pacman -S cmake qt6-base qt6-multimedia qt6-declarative
+sudo pacman -S cmake qt6-base qt6-multimedia qt6-declarative kwindowsystem
 ```
 </details>
 
@@ -100,7 +101,7 @@ sudo pacman -S cmake qt6-base qt6-multimedia qt6-declarative
 <summary><b>Ubuntu / Debian</b></summary>
 
 ```bash
-sudo apt install cmake build-essential qt6-base-dev qt6-multimedia-dev qt6-declarative-dev
+sudo apt install cmake build-essential qt6-base-dev qt6-multimedia-dev qt6-declarative-dev libkf6windowsystem-dev
 ```
 </details>
 
@@ -108,7 +109,7 @@ sudo apt install cmake build-essential qt6-base-dev qt6-multimedia-dev qt6-decla
 <summary><b>Fedora</b></summary>
 
 ```bash
-sudo dnf install cmake qt6-qtbase-devel qt6-qtmultimedia-devel qt6-qtdeclarative-devel
+sudo dnf install cmake qt6-qtbase-devel qt6-qtmultimedia-devel qt6-qtdeclarative-devel kf6-kwindowsystem
 ```
 </details>
 
@@ -184,19 +185,34 @@ then hand-tune:
 ### Blur mode
 
 - **Compositor** (default, for Hyprland/Sway): the window stays genuinely transparent
-  and the compositor blurs the desktop behind it. Add this window rule so your compositor
-  actually blurs Lumalarm:
+  and the compositor blurs the desktop behind it.
 
-  ```ini
-  # Hyprland (~/.config/hypr/hyprland.conf)
-  windowrulev2 = blur, class:^(lumalarm)$
-  ```
+  - **Hyprland / Sway users:** add a window rule so your compositor actually blurs Lumalarm:
 
-  For Sway, blur through a background tool (e.g. `swaybg` + a blur shader, or a fork
-  that supports it); Lumalarm simply exposes the transparent surface.
+    ```ini
+    # Hyprland (~/.config/hypr/hyprland.conf)
+    windowrulev2 = blur, class:^(lumalarm)$
+    ```
+
+    For Sway, blur through a background tool (e.g. `swaybg` + a blur shader, or a fork
+    that supports it); Lumalarm simply exposes the transparent surface. This is the
+    only step needed on Hyprland — Hyprland's rule-based blur works on the existing
+    transparent window with no extra code.
+
+  - **KDE Plasma (KWin) users:** transparent windows are **not** blurred automatically
+    by KWin the way they are under Hyprland. Lumalarm additionally requests blur-behind
+    via KWindowSystem, but two things are required on your side:
+    1. The **KWindowSystem** runtime dependency must be installed (see Dependencies),
+       and Lumalarm must have been built with KDE blur support (it is by default when
+       the library is present).
+    2. The **"Blur" desktop effect must be enabled** in
+       *System Settings → Desktop Effects → Blur*. With it off, KWin shows plain
+       transparency (no crash, no broken visuals) — that's expected KWin behavior.
+    The blur-behind request is re-applied on resize and whenever you switch blur modes.
 
 - **App** (fallback for X11 / GNOME without compositor blur): the panel is drawn
   nearly opaque so there are no transparency artifacts where no compositor blur exists.
+  In this mode Lumalarm does **not** request KWin blur-behind at all.
 
 ### pywal import
 
