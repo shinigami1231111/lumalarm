@@ -5,161 +5,256 @@ import GlassAlarm
 
 ColumnLayout {
     id: root
-    spacing: 16
+    spacing: 18
+    property bool __allowThemeWrite: false
 
     Text {
-        text: "Theme"
+        text: "Settings"
         color: configManager.themeTextPrimary
-        font.pixelSize: 22
+        font.pixelSize: 24
         font.bold: true
     }
 
-    Rectangle {
-        Layout.fillWidth: true; Layout.preferredHeight: 1
-        color: Qt.rgba(1, 1, 1, 0.08)
-    }
-
-    RowLayout {
-        Layout.fillWidth: true; spacing: 24
-
-        ColumnLayout {
-            Layout.fillWidth: true; spacing: 8
-            ColorField { label: "Background"; prop: "themeBg" }
-            ColorField { label: "Accent"; prop: "themeAccent" }
-            ColorField { label: "Text Primary"; prop: "themeTextPrimary" }
-            ColorField { label: "Text Secondary"; prop: "themeTextSecondary" }
-        }
+    ScrollView {
+        Layout.fillWidth: true
+        Layout.fillHeight: true
+        contentWidth: availableWidth
+        clip: true
+        ScrollBar.vertical.policy: ScrollBar.AsNeeded
 
         ColumnLayout {
-            Layout.fillWidth: true; spacing: 8
-            ThemeSpinBox { label: "Bg Opacity"; fromVal: 0.1; toVal: 1.0; cfgProp: "themeOpacity"; step: 0.05; decimals: 2 }
-        }
-    }
+            width: parent.width
+            spacing: 16
 
-    Rectangle {
-        Layout.fillWidth: true; Layout.preferredHeight: 1
-        color: Qt.rgba(1, 1, 1, 0.08)
-    }
+            // ---- Appearance ----
+            Text { text: "Appearance"; color: configManager.themeTextSecondary; font.pixelSize: 13; font.bold: true; Layout.bottomMargin: -4 }
 
-    RowLayout {
-        Layout.fillWidth: true; spacing: 14
-        Text { text: "Show ms in stopwatch"; color: configManager.themeTextSecondary; font.pixelSize: 16; Layout.alignment: Qt.AlignVCenter }
-        Item { Layout.fillWidth: true }
-        Item { width: 44; height: 24
-            Rectangle {
-                anchors.fill: parent; radius: 12
-                color: configManager.stopwatchShowMs ? Qt.lighter(configManager.themeAccent, 1.4) : Qt.rgba(1, 1, 1, 0.15)
-                border.color: configManager.stopwatchShowMs ? configManager.themeAccent : Qt.rgba(1, 1, 1, 0.2)
-                border.width: 1
-                Behavior on color { ColorAnimation { duration: 200 } }
+             ColumnLayout {
+                Layout.fillWidth: true
+                spacing: 12
 
-                Rectangle {
-                    x: configManager.stopwatchShowMs ? 22 : 2; y: 2; width: 20; height: 20; radius: 10
-                    color: configManager.stopwatchShowMs ? configManager.themeAccent : Qt.rgba(1, 1, 1, 0.5)
-                    Behavior on x { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
-                    Behavior on color { ColorAnimation { duration: 200 } }
+                SettingRow {
+                    label: "Background"
+                    control: ColorEdit { color: configManager.themeBg; onPicked: { if (root.__allowThemeWrite) configManager.themeBg = hex } }
                 }
-
-                MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: configManager.stopwatchShowMs = !configManager.stopwatchShowMs }
+                SettingRow {
+                    label: "Accent"
+                    control: ColorEdit { color: configManager.themeAccent; onPicked: { if (root.__allowThemeWrite) configManager.themeAccent = hex } }
+                }
+                SettingRow {
+                    label: "Text Primary"
+                    control: ColorEdit { color: configManager.themeTextPrimary; onPicked: { if (root.__allowThemeWrite) configManager.themeTextPrimary = hex } }
+                }
+                SettingRow {
+                    label: "Text Secondary"
+                    control: ColorEdit { color: configManager.themeTextSecondary; onPicked: { if (root.__allowThemeWrite) configManager.themeTextSecondary = hex } }
+                }
             }
-        }
-    }
-
-    Item { Layout.fillHeight: true }
-
-    RowLayout {
-        Layout.fillWidth: true; Layout.bottomMargin: 4; spacing: 14
-        Item { Layout.fillWidth: true }
-        GlassButton {
-            text: "Reset Defaults"; pixelSize: 14
-            baseColor: Qt.rgba(1, 0.3, 0.3, 0.12); hoverColor: Qt.rgba(1, 0.3, 0.3, 0.2)
-            onClicked: {
-                configManager.themeBg = "#0d0d1a"
-                configManager.themeAccent = "#3d7fff"
-                configManager.themeTextPrimary = "#ffffff"
-                configManager.themeTextSecondary = "#808090"
-                configManager.themeOpacity = 0.90
-                configManager.stopwatchShowMs = true
-            }
-        }
-    }
-
-    component ColorField: RowLayout {
-        id: cf; Layout.fillWidth: true; spacing: 14
-        property string label; property string prop
-
-        Text { text: cf.label; color: configManager.themeTextSecondary; font.pixelSize: 16; Layout.preferredWidth: 150 }
-
-        Rectangle {
-            id: swatch; Layout.preferredWidth: 28; Layout.preferredHeight: 28; radius: 7
-            border.color: Qt.rgba(1, 1, 1, 0.2); border.width: 1
-            color: configManager[cf.prop] || "#000000"
-            MouseArea {
-                anchors.fill: parent; cursorShape: Qt.PointingHandCursor
-                onClicked: { picker.currentColor = configManager[cf.prop] || "#000000"; picker.prop = cf.prop; picker.open() }
-            }
-        }
-
-        TextField {
-            id: colorInput; Layout.fillWidth: true; height: 32
-            color: configManager.themeTextPrimary; font.pixelSize: 14
-            text: configManager[cf.prop] || ""; leftPadding: 10
-            background: Rectangle { radius: 7; color: Qt.rgba(1, 1, 1, 0.06); border.color: Qt.rgba(1, 1, 1, 0.1); border.width: 1 }
-            onTextChanged: { if (text.length === 7 && text[0] === '#') configManager[cf.prop] = text }
-        }
-
-        ColorPickerPopup { id: picker }
-    }
-
-    component ThemeSpinBox: RowLayout {
-        id: cs; Layout.fillWidth: true; spacing: 14
-        property string label; property real fromVal: 0; property real toVal: 1; property string cfgProp; property real step: 1; property int decimals: 0
-
-        Text { text: cs.label; color: configManager.themeTextSecondary; font.pixelSize: 16; Layout.preferredWidth: 150 }
-
-        Rectangle {
-            Layout.fillWidth: true; Layout.preferredHeight: 38; radius: 8
-            color: Qt.rgba(1, 1, 1, 0.06); border.color: Qt.rgba(1, 1, 1, 0.1); border.width: 1
 
             RowLayout {
-                anchors.fill: parent; anchors.margins: 2; spacing: 2
+                Layout.fillWidth: true
+                spacing: 14
+                Text { text: "Background Opacity"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.preferredWidth: 180 }
+                Item { Layout.fillWidth: true }
+                Slider {
+                    id: opSlider
+                    from: 0.0; to: 1.0; stepSize: 0.01
+                    value: configManager.themeOpacity
+                    implicitWidth: 200
+                    onPressedChanged: {
+                        if (!pressed && value !== configManager.themeOpacity)
+                            configManager.themeOpacity = value
+                    }
+                }
+                Text { text: Math.round(opSlider.value * 100) + "%"; color: configManager.themeTextSecondary; font.pixelSize: 14; Layout.preferredWidth: 46; horizontalAlignment: Text.AlignRight }
+            }
 
+            Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: Qt.rgba(1,1,1,0.07) }
+
+            // ---- Interface ----
+            Text { text: "Interface"; color: configManager.themeTextSecondary; font.pixelSize: 13; font.bold: true; Layout.bottomMargin: -4 }
+
+            RowLayout {
+                Layout.fillWidth: true; spacing: 14
+                Text { text: "Time Picker Style"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.preferredWidth: 180 }
+                Item { Layout.fillWidth: true }
+                RowLayout {
+                    spacing: 6
+                    Repeater {
+                        id: styleRepeater
+                        model: [
+                            {t: "Wheels", v: 0},
+                            {t: "Dual Clocks", v: 1},
+                            {t: "Single Clock", v: 2}
+                        ]
+                        GlassButton {
+                            text: modelData.t
+                            pixelSize: 12
+                            implicitWidth: 92; implicitHeight: 30; radius: 7
+                            property bool active: configManager.timePickerStyle === modelData.v
+                            baseColor: active ? Qt.rgba(0.2, 0.6, 1, 0.28) : Qt.rgba(1, 1, 1, 0.06)
+                            textColor: active ? Qt.rgba(0.6, 0.85, 1, 1) : configManager.themeTextSecondary
+                            borderColor: active ? Qt.rgba(0.4, 0.8, 1, 0.4) : Qt.rgba(1, 1, 1, 0.1)
+                            onClicked: configManager.timePickerStyle = modelData.v
+                        }
+                    }
+                }
+            }
+
+            Text {
+                text: "Note: the Dual Clocks and Single Clock pickers are rendered with Canvas-style drawing and may feel laggy or glitchy on some systems. Wheels is the smoothest option."
+                color: Qt.rgba(1, 0.7, 0.3, 0.85)
+                font.pixelSize: 12
+                wrapMode: Text.Wrap
+                Layout.fillWidth: true
+            }
+
+            Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: Qt.rgba(1,1,1,0.07) }
+
+            // ---- Alarm Defaults ----
+            Text { text: "Alarm Defaults"; color: configManager.themeTextSecondary; font.pixelSize: 13; font.bold: true; Layout.bottomMargin: -4 }
+
+            RowLayout {
+                Layout.fillWidth: true; spacing: 14
+                Text { text: "Default Snooze"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.preferredWidth: 180 }
+                Item { Layout.fillWidth: true }
+                Spinny { from: 1; to: 60; value: configManager.defaultSnooze; suffix: " min"; onChanged: configManager.defaultSnooze = v }
+            }
+            RowLayout {
+                Layout.fillWidth: true; spacing: 14
+                Text { text: "Default Fade"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.preferredWidth: 180 }
+                Item { Layout.fillWidth: true }
+                Spinny { from: 5; to: 60; value: configManager.defaultFadeDuration; step: 5; suffix: " sec"; onChanged: configManager.defaultFadeDuration = v }
+            }
+            RowLayout {
+                Layout.fillWidth: true; spacing: 14
+                Text { text: "Default Wake Mode"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.preferredWidth: 180 }
+                Item { Layout.fillWidth: true }
+                RoundedCombo {
+                    id: wakeCombo
+                    model: ["mem", "disk", "none"]
+                    currentIndex: Math.max(0, wakeCombo.find(configManager.defaultWakeMode))
+                    Layout.preferredWidth: 140
+                    onActivated: configManager.defaultWakeMode = currentText
+                }
+            }
+
+            Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: Qt.rgba(1,1,1,0.07) }
+
+            // ---- Behavior ----
+            Text { text: "Behavior"; color: configManager.themeTextSecondary; font.pixelSize: 13; font.bold: true; Layout.bottomMargin: -4 }
+
+            RowLayout {
+                Layout.fillWidth: true; spacing: 14
+                Text { text: "Show milliseconds in stopwatch"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.fillWidth: true }
+                ToggleSwitch {
+                    checked: configManager.stopwatchShowMs
+                    onToggled: function(v) { configManager.stopwatchShowMs = v }
+                }
+            }
+
+            Item { Layout.fillHeight: true }
+
+            RowLayout {
+                Layout.fillWidth: true; Layout.bottomMargin: 4
+                Item { Layout.fillWidth: true }
+                GlassButton {
+                    text: "Reset to Defaults"
+                    pixelSize: 13
+                    baseColor: Qt.rgba(1, 0.3, 0.3, 0.12)
+                    hoverColor: Qt.rgba(1, 0.3, 0.3, 0.22)
+                    onClicked: {
+                        configManager.themeBg = "#0d0d1a"
+                        configManager.themeAccent = "#3d7fff"
+                        configManager.themeTextPrimary = "#ffffff"
+                        configManager.themeTextSecondary = "#808090"
+                        configManager.themeOpacity = 0.90
+                        configManager.defaultSnooze = 1
+                        configManager.defaultFadeDuration = 15
+                        configManager.defaultWakeMode = "mem"
+                        configManager.stopwatchShowMs = true
+                    }
+                }
+            }
+        }
+    }
+
+    // ---------- Reusable bits ----------
+    component SettingRow: RowLayout {
+        property string label
+        default property alias control: holder.data
+        spacing: 14
+        Text { text: label; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.alignment: Qt.AlignVCenter }
+        Item { Layout.fillWidth: true }
+        Item {
+            id: holder
+            Layout.alignment: Qt.AlignVCenter
+            implicitWidth: childrenRect.width
+            implicitHeight: childrenRect.height
+        }
+    }
+
+    component ColorEdit: RowLayout {
+        id: cer
+        property string color: "#ffffff"
+        signal picked(string hex)
+        spacing: 8
+        onColorChanged: { if (initialized) hexField.text = cer.color }
+        property bool initialized: false
+        Rectangle {
+            width: 30; height: 30; radius: 7
+            border.color: Qt.rgba(1,1,1,0.2); border.width: 1
+            color: cer.color
+            MouseArea {
+                anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                onPressed: { root.__allowThemeWrite = true }
+                onClicked: { picker.currentColor = cer.color; picker.open() }
+            }
+        }
+        TextField {
+            id: hexField
+            text: cer.color
+            color: configManager.themeTextPrimary; font.pixelSize: 13
+            leftPadding: 8; implicitWidth: 110; implicitHeight: 30
+            background: Rectangle { radius: 7; color: Qt.rgba(1,1,1,0.06); border.color: Qt.rgba(1,1,1,0.1); border.width: 1 }
+            Component.onCompleted: { initialized = true }
+            onEditingFinished: { if (text.length === 7 && text[0] === '#') cer.picked(text) }
+        }
+        ColorPickerPopup {
+            id: picker
+            onColorPicked: cer.picked(hex)
+        }
+    }
+
+    component Spinny: RowLayout {
+        id: sn
+        property int from: 0; property int to: 100; property int value: 0; property int step: 1; property string suffix: ""
+        signal changed(int v)
+        spacing: 8
+        property int current: sn.value
+        onCurrentChanged: sn.changed(current)
+        Rectangle {
+            Layout.preferredWidth: 130; Layout.preferredHeight: 38; radius: 8
+            color: Qt.rgba(1,1,1,0.06); border.color: Qt.rgba(1,1,1,0.1); border.width: 1
+            RowLayout {
+                anchors.fill: parent; anchors.margins: 2; spacing: 2
                 Text {
                     Layout.fillWidth: true; Layout.fillHeight: true
                     verticalAlignment: Qt.AlignVCenter; horizontalAlignment: Qt.AlignHCenter
-                    color: configManager.themeTextPrimary; font.pixelSize: 16; font.bold: true
-                    text: {
-                        var v = configManager[cs.cfgProp]
-                        if (v === undefined) v = 0
-                        return Number(v).toFixed(cs.decimals)
-                    }
+                    color: configManager.themeTextPrimary; font.pixelSize: 15; font.bold: true
+                    text: sn.current + sn.suffix
                 }
-
                 ColumnLayout { spacing: 1; Layout.preferredWidth: 22
-                    Rectangle {
-                        Layout.fillWidth: true; Layout.preferredHeight: 14; radius: 4
-                        color: mouseUp.containsMouse ? Qt.rgba(1,1,1,0.15) : "transparent"
+                    Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 14; radius: 4
+                        color: upMa.containsMouse ? Qt.rgba(1,1,1,0.15) : "transparent"
                         Text { text: "▲"; anchors.centerIn: parent; color: configManager.themeTextSecondary; font.pixelSize: 10 }
-                        MouseArea {
-                            id: mouseUp; anchors.fill: parent; hoverEnabled: true
-                            onClicked: {
-                                var v = (configManager[cs.cfgProp] || 0) + cs.step
-                                configManager[cs.cfgProp] = Math.min(cs.toVal, v)
-                            }
-                        }
-                    }
-                    Rectangle {
-                        Layout.fillWidth: true; Layout.preferredHeight: 14; radius: 4
-                        color: mouseDn.containsMouse ? Qt.rgba(1,1,1,0.15) : "transparent"
+                        MouseArea { id: upMa; anchors.fill: parent; hoverEnabled: true
+                            onClicked: sn.current = Math.min(sn.to, sn.current + sn.step) } }
+                    Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 14; radius: 4
+                        color: dnMa.containsMouse ? Qt.rgba(1,1,1,0.15) : "transparent"
                         Text { text: "▼"; anchors.centerIn: parent; color: configManager.themeTextSecondary; font.pixelSize: 10 }
-                        MouseArea {
-                            id: mouseDn; anchors.fill: parent; hoverEnabled: true
-                            onClicked: {
-                                var v = (configManager[cs.cfgProp] || 0) - cs.step
-                                configManager[cs.cfgProp] = Math.max(cs.fromVal, v)
-                            }
-                        }
-                    }
+                        MouseArea { id: dnMa; anchors.fill: parent; hoverEnabled: true
+                            onClicked: sn.current = Math.max(sn.from, sn.current - sn.step) } }
                 }
             }
         }
@@ -167,169 +262,76 @@ ColumnLayout {
 
     component ColorPickerPopup: Popup {
         id: popup
-        property string prop
         property string currentColor: "#ffffff"
-
-        x: Math.max(0, Math.min(200, popup.parent ? (popup.parent.width - width) / 2 : 0))
-        y: popup.parent ? popup.parent.height + 4 : 0
-        width: 300; height: 360
+        width: 300; height: 340
+        z: 1000
+        parent: Overlay.overlay
+        x: Math.max(8, (Overlay.overlay.width - width) / 2)
+        y: Math.max(8, (Overlay.overlay.height - height) / 2)
         closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
         padding: 0
-
-        background: Rectangle {
-            color: Qt.rgba(0.08, 0.08, 0.12, 0.95)
-            radius: 12
-            border.color: Qt.rgba(1, 1, 1, 0.12)
-            border.width: 1
-        }
+        background: Rectangle { color: Qt.rgba(0.08,0.08,0.12,0.97); radius: 14; border.color: Qt.rgba(1,1,1,0.12); border.width: 1 }
 
         function hsvToHex(h, s, v) {
             h = ((h % 360) + 360) % 360
             var hi = Math.floor(h / 60)
             var f = h / 60 - hi
-            var p = v * (1 - s)
-            var q = v * (1 - f * s)
-            var t = v * (1 - (1 - f) * s)
-            var r = 0, g = 0, b = 0
-            if (hi === 0) { r = v; g = t; b = p }
-            else if (hi === 1) { r = q; g = v; b = p }
-            else if (hi === 2) { r = p; g = v; b = t }
-            else if (hi === 3) { r = p; g = q; b = v }
-            else if (hi === 4) { r = t; g = p; b = v }
-            else { r = v; g = p; b = q }
-            var ri = Math.round(r * 255)
-            var gi = Math.round(g * 255)
-            var bi = Math.round(b * 255)
-            return '#' + ri.toString(16).padStart(2, '0') + gi.toString(16).padStart(2, '0') + bi.toString(16).padStart(2, '0')
+            var p = v * (1 - s), q = v * (1 - f * s), t = v * (1 - (1 - f) * s)
+            var r=0,g=0,b=0
+            if (hi===0){r=v;g=t;b=p} else if(hi===1){r=q;g=v;b=p} else if(hi===2){r=p;g=v;b=t}
+            else if(hi===3){r=p;g=q;b=v} else if(hi===4){r=t;g=p;b=v} else {r=v;g=p;b=q}
+            var ri=Math.round(r*255),gi=Math.round(g*255),bi=Math.round(b*255)
+            return '#'+ri.toString(16).padStart(2,'0')+gi.toString(16).padStart(2,'0')+bi.toString(16).padStart(2,'0')
         }
-
         function hexToHsv(hex) {
-            hex = hex.replace('#', '')
-            if (hex.length < 6) hex = hex.padEnd(6, '0')
-            var r = parseInt(hex.substring(0, 2), 16) / 255
-            var g = parseInt(hex.substring(2, 4), 16) / 255
-            var b = parseInt(hex.substring(4, 6), 16) / 255
-            var mx = Math.max(r, g, b), mn = Math.min(r, g, b)
-            var h = 0, s = 0, v = mx, d = mx - mn
-            if (mx !== 0) s = d / mx
-            if (mx !== mn) {
-                if (mx === r) h = ((g - b) / d + (g < b ? 6 : 0)) * 60
-                else if (mx === g) h = ((b - r) / d + 2) * 60
-                else h = ((r - g) / d + 4) * 60
-            }
-            return { h: h, s: s, v: v }
+            hex = hex.replace('#',''); if (hex.length < 6) hex = hex.padEnd(6,'0')
+            var r=parseInt(hex.substring(0,2),16)/255,g=parseInt(hex.substring(2,4),16)/255,b=parseInt(hex.substring(4,6),16)/255
+            var mx=Math.max(r,g,b),mn=Math.min(r,g,b),h=0,s=0,v=mx,d=mx-mn
+            if (mx!==0) s=d/mx
+            if (mx!==mn){ if(mx===r)h=((g-b)/d+(g<b?6:0))*60; else if(mx===g)h=((b-r)/d+2)*60; else h=((r-g)/d+4)*60 }
+            return {h:h,s:s,v:v}
         }
-
         property var hsv: hexToHsv(currentColor)
-
-        function updateConfig() {
-            var hex = hsvToHex(hsv.h, hsv.s, hsv.v)
-            if (prop) configManager[prop] = hex
-        }
-
-        onCurrentColorChanged: { hsv = hexToHsv(currentColor) }
+        function emitHex() { colorPicked(hsvToHex(hsv.h,hsv.s,hsv.v)) }
+        signal colorPicked(string hex)
+        onCurrentColorChanged: hsv = hexToHsv(currentColor)
+        onColorPicked: currentColor = hex
 
         ColumnLayout {
-            anchors.fill: parent
-            anchors.margins: 20
-            spacing: 14
-
+            anchors.fill: parent; anchors.margins: 18; spacing: 12
             Rectangle {
-                id: svSquare
-                Layout.fillWidth: true
-                Layout.preferredHeight: 180
-                clip: true
-
+                id: svSquare; Layout.fillWidth: true; Layout.preferredHeight: 170; clip: true; radius: 8
                 Rectangle { anchors.fill: parent; color: "white" }
-
-                Rectangle {
-                    anchors.fill: parent
-                    gradient: Gradient {
-                        orientation: Gradient.Horizontal
-                        GradientStop { position: 0.0; color: "white" }
-                        GradientStop { position: 1.0; color: popup.hsvToHex(popup.hsv.h, 1, 1) }
-                    }
-                }
-
-                Rectangle {
-                    anchors.fill: parent
-                    gradient: Gradient {
-                        orientation: Gradient.Vertical
-                        GradientStop { position: 0.0; color: "transparent" }
-                        GradientStop { position: 1.0; color: "black" }
-                    }
-                }
-
+                Rectangle { anchors.fill: parent; gradient: Gradient { orientation: Gradient.Horizontal; GradientStop { position: 0; color: "white" } GradientStop { position: 1; color: popup.hsvToHex(popup.hsv.h,1,1) } } }
+                Rectangle { anchors.fill: parent; gradient: Gradient { orientation: Gradient.Vertical; GradientStop { position: 0; color: "transparent" } GradientStop { position: 1; color: "black" } } }
                 MouseArea {
                     anchors.fill: parent
-                    onPressed: pickSV(mouse.x, mouse.y)
-                    onPositionChanged: { if (pressed) pickSV(mouse.x, mouse.y) }
-                    function pickSV(mx, my) {
-                        popup.hsv.s = Math.min(1, Math.max(0, mx / svSquare.width))
-                        popup.hsv.v = Math.min(1, Math.max(0, 1 - my / svSquare.height))
-                        popup.updateConfig()
-                    }
+                    onPressed: pk(mouse.x,mouse.y); onPositionChanged: { if(pressed) pk(mouse.x,mouse.y) }
+                    function pk(x,y){ popup.hsv.s=Math.min(1,Math.max(0,x/svSquare.width)); popup.hsv.v=Math.min(1,Math.max(0,1-y/svSquare.height)); popup.emitHex() }
                 }
-
-                Rectangle {
-                    x: popup.hsv.s * parent.width - 5
-                    y: (1 - popup.hsv.v) * parent.height - 5
-                    width: 10; height: 10; radius: 5
-                    border.color: "white"; border.width: 2
-                    color: "transparent"
-                }
+                Rectangle { x: popup.hsv.s*parent.width-5; y: (1-popup.hsv.v)*parent.height-5; width:10; height:10; radius:5; border.color:"white"; border.width:2; color:"transparent" }
             }
-
             Rectangle {
-                id: hueBar
-                Layout.fillWidth: true
-                Layout.preferredHeight: 14
-                radius: 7
-                gradient: Gradient {
-                    orientation: Gradient.Horizontal
-                    GradientStop { position: 0.00; color: "#ff0000" }
-                    GradientStop { position: 0.17; color: "#ffff00" }
-                    GradientStop { position: 0.33; color: "#00ff00" }
-                    GradientStop { position: 0.50; color: "#00ffff" }
-                    GradientStop { position: 0.67; color: "#0000ff" }
-                    GradientStop { position: 0.83; color: "#ff00ff" }
-                    GradientStop { position: 1.00; color: "#ff0000" }
-                }
-
+                id: hueBar; Layout.fillWidth: true; Layout.preferredHeight: 14; radius: 7
+                gradient: Gradient { orientation: Gradient.Horizontal
+                    GradientStop { position:0.00; color:"#ff0000" } GradientStop { position:0.17; color:"#ffff00" }
+                    GradientStop { position:0.33; color:"#00ff00" } GradientStop { position:0.50; color:"#00ffff" }
+                    GradientStop { position:0.67; color:"#0000ff" } GradientStop { position:0.83; color:"#ff00ff" }
+                    GradientStop { position:1.00; color:"#ff0000" } }
                 MouseArea {
                     anchors.fill: parent
-                    onPressed: pickHue(mouse.x)
-                    onPositionChanged: { if (pressed) pickHue(mouse.x) }
-                    function pickHue(mx) {
-                        popup.hsv.h = Math.min(360, Math.max(0, (mx / hueBar.width) * 360))
-                        popup.updateConfig()
-                    }
+                    onPressed: ph(mouse.x); onPositionChanged: { if(pressed) ph(mouse.x) }
+                    function ph(x){ popup.hsv.h=Math.min(360,Math.max(0,(x/hueBar.width)*360)); popup.emitHex() }
                 }
-
-                Rectangle {
-                    x: (popup.hsv.h / 360) * parent.width - 5
-                    y: -1; width: 10; height: 16; radius: 3
-                    border.color: "white"; border.width: 2
-                    color: "transparent"
-                }
+                Rectangle { x: (popup.hsv.h/360)*parent.width-5; y:-1; width:10; height:16; radius:3; border.color:"white"; border.width:2; color:"transparent" }
             }
-
-            RowLayout {
-                Layout.fillWidth: true; spacing: 14
-                Rectangle { Layout.preferredWidth: 28; Layout.preferredHeight: 28; radius: 6; border.color: Qt.rgba(1, 1, 1, 0.2); border.width: 1; color: popup.currentColor }
-                Rectangle { Layout.preferredWidth: 28; Layout.preferredHeight: 28; radius: 6; border.color: Qt.rgba(1, 1, 1, 0.2); border.width: 1; color: popup.hsvToHex(popup.hsv.h, popup.hsv.s, popup.hsv.v) }
+            RowLayout { Layout.fillWidth: true; spacing: 10
+                Rectangle { Layout.preferredWidth: 28; Layout.preferredHeight: 28; radius: 6; border.color: Qt.rgba(1,1,1,0.2); border.width: 1; color: popup.currentColor }
                 TextField {
-                    Layout.fillWidth: true; height: 32
-                    color: configManager.themeTextPrimary; font.pixelSize: 14
-                    text: popup.hsvToHex(popup.hsv.h, popup.hsv.s, popup.hsv.v)
-                    leftPadding: 10
-                    background: Rectangle { radius: 7; color: Qt.rgba(1, 1, 1, 0.08); border.color: Qt.rgba(1, 1, 1, 0.12); border.width: 1 }
-                    onTextChanged: {
-                        if (text.length === 7 && text[0] === '#') {
-                            popup.hsv = popup.hexToHsv(text)
-                            if (popup.prop) configManager[popup.prop] = text
-                        }
-                    }
+                    Layout.fillWidth: true; height: 32; color: configManager.themeTextPrimary; font.pixelSize: 14
+                    text: popup.hsvToHex(popup.hsv.h,popup.hsv.s,popup.hsv.v); leftPadding: 10
+                    background: Rectangle { radius: 7; color: Qt.rgba(1,1,1,0.08); border.color: Qt.rgba(1,1,1,0.12); border.width: 1 }
+                    onEditingFinished: { if (text.length===7 && text[0]==='#'){ popup.hsv = popup.hexToHsv(text); popup.colorPicked(text) } }
                 }
             }
         }

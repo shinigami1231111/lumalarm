@@ -1,8 +1,12 @@
 build/
+build-local/
+pkg/
 *.o
 *.user
 CMakeCache.txt
 CMakeFiles/
+*.pkg.tar.zst
+PKGBUILD.local
 .qmlls.ini
 .qmlls.build.ini
 meta_types/

@@ -1,6 +1,11 @@
 #include "Scheduler.h"
 #include <QDebug>
-#include <cmath>
+#include <QFile>
+#include <QJsonDocument>
+#include <QJsonArray>
+#include <QJsonObject>
+#include <QStandardPaths>
+#include <QDir>
 
 Scheduler::Scheduler(AlarmManager *manager, QObject *parent)
     : QObject(parent)
@@ -11,6 +16,8 @@ Scheduler::Scheduler(AlarmManager *manager, QObject *parent)
     m_checkTimer->start(1000);
 
     connect(m_manager, &AlarmManager::alarmsChanged, this, &Scheduler::nextAlarmChanged);
+
+    loadSnoozes();
 }
 
 int Scheduler::nextAlarmSeconds() const
@@ -33,16 +40,6 @@ int Scheduler::secondsUntilNextAlarm() const
         if (!a.enabled) continue;
 
         QTime alarmTime(a.hour, a.minute, 0);
-
-        if (a.isSnooze) {
-            QDateTime snoozeDt(now.date(), alarmTime);
-            if (snoozeDt <= now)
-                continue;
-            int diff = static_cast<int>(now.secsTo(snoozeDt));
-            if (bestDiff < 0 || diff < bestDiff)
-                bestDiff = diff;
-            continue;
-        }
 
         bool hasDays = false;
         for (int d = 0; d < 7; ++d) {
@@ -76,24 +73,77 @@ int Scheduler::secondsUntilNextAlarm() const
     return bestDiff;
 }
 
-void Scheduler::snooze(int snoozeMinutes)
+void Scheduler::startSnoozeTimer(const QString &alarmId, int snoozeMinutes)
+{
+    if (alarmId.isEmpty() || snoozeMinutes <= 0) return;
+
+    QDateTime fireAt = QDateTime::currentDateTime().addSecs(snoozeMinutes * 60);
+    armSnooze(alarmId, fireAt, true);
+}
+
+void Scheduler::cancelSnooze(const QString &alarmId)
+{
+    auto it = m_snoozes.find(alarmId);
+    if (it != m_snoozes.end()) {
+        if (it->timer) {
+            it->timer->stop();
+            it->timer->deleteLater();
+        }
+        m_snoozes.erase(it);
+        saveSnoozes();
+    }
+}
+
+void Scheduler::armSnooze(const QString &alarmId, const QDateTime &fireAt, bool persist)
+{
+    // Remove any existing snooze for this alarm first.
+    cancelSnooze(alarmId);
+
+    SnoozeEntry entry;
+    entry.alarmId = alarmId;
+    entry.fireAt = fireAt;
+    entry.timer = new QTimer(this);
+    entry.timer->setSingleShot(true);
+    connect(entry.timer, &QTimer::timeout, this, [this, alarmId]() {
+        fireSnooze(alarmId);
+    });
+
+    qint64 ms = QDateTime::currentDateTime().msecsTo(fireAt);
+    if (ms < 0) ms = 0;
+    entry.timer->start(static_cast<int>(ms));
+
+    m_snoozes.insert(alarmId, entry);
+    if (persist) saveSnoozes();
+}
+
+void Scheduler::fireSnooze(const QString &alarmId)
+{
+    m_snoozes.remove(alarmId);
+    saveSnoozes();
+
+    int index = m_manager->indexOfId(alarmId);
+    if (index < 0) return;                       // alarm removed while snoozing
+    const auto alarms = m_manager->alarmList();
+    if (!alarms[index].enabled) return;          // alarm disabled while snoozing
+
+    emit alarmTriggered(index);
+}
+
+void Scheduler::restoreSnoozes()
 {
     QDateTime now = QDateTime::currentDateTime();
-    QDateTime snoozeTime = now.addSecs(snoozeMinutes * 60);
-
-    Alarm snoozeAlarm;
-    snoozeAlarm.hour = snoozeTime.time().hour();
-    snoozeAlarm.minute = snoozeTime.time().minute();
-    snoozeAlarm.isSnooze = true;
-    snoozeAlarm.enabled = true;
-    snoozeAlarm.wakeMode = "none";
-    snoozeAlarm.fadeDuration = 5;
-    snoozeAlarm.baseVolume = 20;
-    snoozeAlarm.autoStopDuration = 60;
-    snoozeAlarm.enableSound = true;
-    snoozeAlarm.soundFile.clear();
-
-    m_manager->addTransientAlarm(snoozeAlarm.toVariantMap());
+    // loadSnoozes() already populated m_snoozes with persisted fire times but
+    // no timers yet; arm each one (skip if its fire time already passed).
+    QHash<QString, SnoozeEntry> persisted = m_snoozes;
+    m_snoozes.clear();
+    for (auto it = persisted.begin(); it != persisted.end(); ++it) {
+        if (it->fireAt <= now) {
+            // Snooze window already elapsed while we were closed: ring now.
+            fireSnooze(it->alarmId);
+        } else {
+            armSnooze(it->alarmId, it->fireAt, false);
+        }
+    }
 }
 
 void Scheduler::onCheckTimer()
@@ -102,9 +152,15 @@ void Scheduler::onCheckTimer()
     QTime currentTime = now.time();
     int currentHour = currentTime.hour();
     int currentMin = currentTime.minute();
-    int currentSec = currentTime.second();
     int currentDay = now.date().dayOfWeek() - 1;
     if (currentDay < 0) currentDay = 6;
+
+    // Detect system resume from suspend (timer gap > 3s)
+    qint64 gap = m_lastCheckTime.msecsTo(now);
+    if (gap > 3000 && m_lastCheckTime.isValid()) {
+        emit systemResumed();
+    }
+    m_lastCheckTime = now;
 
     int secs = secondsUntilNextAlarm();
     emit countdownUpdated(secs);
@@ -115,15 +171,6 @@ void Scheduler::onCheckTimer()
         if (!a.enabled) continue;
 
         QTime alarmTime(a.hour, a.minute, 0);
-
-        if (a.isSnooze) {
-            QDateTime alarmDt(now.date(), alarmTime);
-            if (alarmDt > now) continue;
-            emit alarmTriggered(i);
-            m_manager->removeAlarm(i);
-            m_lastTriggeredMin = currentHour * 60 + currentMin;
-            return;
-        }
 
         // Check if alarm time matches current clock
         if (a.hour != currentHour || a.minute != currentMin)
@@ -160,10 +207,7 @@ check_soundscape:
                 if (a.days[d]) { hasDays = true; break; }
             }
 
-            if (a.isSnooze) {
-                if (alarmDt <= now) continue;
-                secondsToAlarm = static_cast<int>(now.secsTo(alarmDt));
-            } else if (!hasDays) {
+            if (!hasDays) {
                 if (alarmDt <= now) alarmDt = alarmDt.addDays(1);
                 secondsToAlarm = static_cast<int>(now.secsTo(alarmDt));
             } else {
@@ -185,4 +229,69 @@ check_soundscape:
     }
 
     emit nextAlarmChanged();
+}
+
+QString Scheduler::snoozeFilePath() const
+{
+    QString configDir = QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + "/lumalarm";
+    QDir().mkpath(configDir);
+    return configDir + "/snoozes.json";
+}
+
+void Scheduler::saveSnoozes()
+{
+    QString path = snoozeFilePath();
+    if (m_snoozes.isEmpty()) {
+        QFile::remove(path);
+        return;
+    }
+
+    QFile file(path);
+    if (!file.open(QIODevice::WriteOnly))
+        return;
+
+    QJsonArray arr;
+    for (auto it = m_snoozes.begin(); it != m_snoozes.end(); ++it) {
+        QJsonObject obj;
+        obj["alarmId"] = it->alarmId;
+        obj["fireAt"] = it->fireAt.toString(Qt::ISODate);
+        arr.append(obj);
+    }
+
+    QJsonDocument doc(arr);
+    file.write(doc.toJson(QJsonDocument::Indented));
+    file.close();
+}
+
+void Scheduler::loadSnoozes()
+{
+    m_snoozes.clear();
+    QFile file(snoozeFilePath());
+    if (!file.exists())
+        return;
+    if (!file.open(QIODevice::ReadOnly))
+        return;
+
+    QByteArray data = file.readAll();
+    file.close();
+    if (data.trimmed().isEmpty())
+        return;
+
+    QJsonDocument doc = QJsonDocument::fromJson(data);
+    if (!doc.isArray())
+        return;
+
+    QJsonArray arr = doc.array();
+    for (const QJsonValue &val : arr) {
+        QJsonObject obj = val.toObject();
+        QString id = obj["alarmId"].toString();
+        QDateTime fireAt = QDateTime::fromString(obj["fireAt"].toString(), Qt::ISODate);
+        if (id.isEmpty() || !fireAt.isValid())
+            continue;
+        SnoozeEntry entry;
+        entry.alarmId = id;
+        entry.fireAt = fireAt;
+        entry.timer = nullptr;   // armed later by restoreSnoozes()
+        m_snoozes.insert(id, entry);
+    }
 }

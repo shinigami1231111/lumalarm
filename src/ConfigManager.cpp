@@ -29,7 +29,7 @@ void ConfigManager::migrateOldConfig()
 
 int ConfigManager::defaultSnooze() const
 {
-    return m_settings->value("alarm/defaultSnooze", 5).toInt();
+    return qMax(1, m_settings->value("alarm/defaultSnooze", 1).toInt());
 }
 
 void ConfigManager::setDefaultSnooze(int minutes)
@@ -91,8 +91,10 @@ QString ConfigManager::copyToTones(const QString &sourcePath)
     if (QFile::exists(destPath))
         return fileName;
 
-    if (QFile::copy(sourcePath, destPath))
+    if (QFile::copy(sourcePath, destPath)) {
+        emit configChanged();
         return fileName;
+    }
 
     return QString();
 }
@@ -101,7 +103,10 @@ bool ConfigManager::deleteTone(const QString &fileName)
 {
     if (fileName.isEmpty()) return false;
     QString filePath = m_tonesDir + "/" + fileName;
-    return QFile::remove(filePath);
+    bool ok = QFile::remove(filePath);
+    if (ok)
+        emit configChanged();
+    return ok;
 }
 
 QString ConfigManager::themeBg() const
@@ -161,6 +166,16 @@ bool ConfigManager::stopwatchShowMs() const
 void ConfigManager::setStopwatchShowMs(bool show)
 {
     m_settings->setValue("stopwatch/showMs", show);
+    emit configChanged();
+}
+
+int ConfigManager::timePickerStyle() const
+{
+    return m_settings->value("ui/timePickerStyle", 0).toInt();
+}
+void ConfigManager::setTimePickerStyle(int style)
+{
+    m_settings->setValue("ui/timePickerStyle", qBound(0, style, 2));
     emit configChanged();
 }
 

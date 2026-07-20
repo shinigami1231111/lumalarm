@@ -3,6 +3,7 @@
 QJsonObject Alarm::toJson() const
 {
     QJsonObject obj;
+    obj["id"] = id;
     obj["hour"] = hour;
     obj["minute"] = minute;
 
@@ -34,6 +35,8 @@ QJsonObject Alarm::toJson() const
     obj["escalatingWake"] = escalatingWake;
     obj["escalatingTimeout"] = escalatingTimeout;
     obj["note"] = note;
+    obj["snoozeInterval"] = snoozeInterval;
+    obj["name"] = name;
 
     return obj;
 }
@@ -41,6 +44,9 @@ QJsonObject Alarm::toJson() const
 Alarm Alarm::fromJson(const QJsonObject &obj)
 {
     Alarm a;
+    a.id = obj["id"].toString();
+    if (a.id.isEmpty())
+        a.id = QUuid::createUuid().toString(QUuid::WithoutBraces);
     a.hour = obj["hour"].toInt(7);
     a.minute = obj["minute"].toInt(0);
 
@@ -78,6 +84,8 @@ Alarm Alarm::fromJson(const QJsonObject &obj)
     a.escalatingWake = obj["escalatingWake"].toBool(false);
     a.escalatingTimeout = obj["escalatingTimeout"].toInt(60);
     a.note = obj["note"].toString();
+    a.snoozeInterval = obj["snoozeInterval"].toInt(0);
+    a.name = obj["name"].toString();
 
     return a;
 }
@@ -85,6 +93,7 @@ Alarm Alarm::fromJson(const QJsonObject &obj)
 QVariantMap Alarm::toVariantMap() const
 {
     QVariantMap map;
+    map["id"] = id;
     map["hour"] = hour;
     map["minute"] = minute;
 
@@ -116,6 +125,8 @@ QVariantMap Alarm::toVariantMap() const
     map["escalatingWake"] = escalatingWake;
     map["escalatingTimeout"] = escalatingTimeout;
     map["note"] = note;
+    map["snoozeInterval"] = snoozeInterval;
+    map["name"] = name;
 
     return map;
 }
@@ -123,6 +134,9 @@ QVariantMap Alarm::toVariantMap() const
 Alarm Alarm::fromVariantMap(const QVariantMap &map)
 {
     Alarm a;
+    a.id = map.value("id").toString();
+    if (a.id.isEmpty())
+        a.id = QUuid::createUuid().toString(QUuid::WithoutBraces);
     a.hour = map.value("hour", 7).toInt();
     a.minute = map.value("minute", 0).toInt();
 
@@ -158,6 +172,8 @@ Alarm Alarm::fromVariantMap(const QVariantMap &map)
     a.escalatingWake = map.value("escalatingWake", false).toBool();
     a.escalatingTimeout = map.value("escalatingTimeout", 60).toInt();
     a.note = map.value("note").toString();
+    a.snoozeInterval = map.value("snoozeInterval", 0).toInt();
+    a.name = map.value("name").toString();
 
     return a;
 }
@@ -199,16 +215,20 @@ void AlarmManager::addAlarm(const QVariantMap &alarm)
     emit alarmsChanged();
 }
 
-void AlarmManager::addTransientAlarm(const QVariantMap &alarm)
+int AlarmManager::indexOfId(const QString &id) const
 {
-    m_alarms.append(Alarm::fromVariantMap(alarm));
-    emit alarmsChanged();
+    for (int i = 0; i < m_alarms.size(); ++i) {
+        if (m_alarms[i].id == id)
+            return i;
+    }
+    return -1;
 }
 
 void AlarmManager::removeAlarm(int index)
 {
     if (index >= 0 && index < m_alarms.size()) {
         m_alarms.removeAt(index);
+        m_snoozeCounts.remove(index);
         saveToFile();
         emit alarmsChanged();
     }
@@ -218,6 +238,7 @@ void AlarmManager::updateAlarm(int index, const QVariantMap &alarm)
 {
     if (index >= 0 && index < m_alarms.size()) {
         m_alarms[index] = Alarm::fromVariantMap(alarm);
+        m_snoozeCounts.remove(index);
         saveToFile();
         emit alarmsChanged();
     }

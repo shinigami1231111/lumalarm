@@ -29,11 +29,25 @@ GlassCard {
     // Phase 1 fields
     property string editSoundscape: ""
     property int editMaxSnoozes: -1
+    property int editSnoozeInterval: 0
+    property bool soundPreviewing: false
+    property bool scPreviewing: false
+
+    Connections {
+        target: audioPlayer
+        function onIsPlayingChanged() {
+            if (!audioPlayer.isPlaying) {
+                soundPreviewing = false
+                scPreviewing = false
+            }
+        }
+    }
     property string editChallengeMode: "none"
     property int editMathDifficulty: 0
     property bool editEscalatingWake: false
     property int editEscalatingTimeout: 60
     property string editNote: ""
+    property string editName: ""
 
     function loadAlarm(index) {
         var alarms = alarmManager.alarms
@@ -60,11 +74,13 @@ GlassCard {
 
         editSoundscape = a.soundscape || ""
         editMaxSnoozes = a.maxSnoozes !== undefined ? a.maxSnoozes : -1
+        editSnoozeInterval = a.snoozeInterval && a.snoozeInterval > 0 ? a.snoozeInterval : configManager.defaultSnooze
         editChallengeMode = a.challengeMode || "none"
         editMathDifficulty = a.mathDifficulty || 0
         editEscalatingWake = a.escalatingWake || false
         editEscalatingTimeout = a.escalatingTimeout || 60
         editNote = a.note || ""
+        editName = a.name || ""
 
         hasSelection = true
         Qt.callLater(function() {
@@ -93,12 +109,14 @@ GlassCard {
         editWakeUpCheck = false
         editWakeUpInterval = 3
         editSoundscape = ""
-        editMaxSnoozes = -1
+        editMaxSnoozes = 1
+        editSnoozeInterval = configManager.defaultSnooze
         editChallengeMode = "none"
         editMathDifficulty = 0
         editEscalatingWake = false
         editEscalatingTimeout = 60
         editNote = ""
+        editName = ""
     }
 
     function commitAlarm() {
@@ -124,11 +142,13 @@ GlassCard {
             "wakeUpCheckInterval": editWakeUpInterval,
             "soundscape": editSoundscape,
             "maxSnoozes": editMaxSnoozes,
+            "snoozeInterval": editSnoozeInterval === configManager.defaultSnooze ? 0 : editSnoozeInterval,
             "challengeMode": editChallengeMode,
             "mathDifficulty": editMathDifficulty,
             "escalatingWake": editEscalatingWake,
             "escalatingTimeout": editEscalatingTimeout,
-            "note": editNote
+            "note": editNote,
+            "name": editName.trim()
         }
 
         if (editIndex >= 0) {
@@ -156,94 +176,129 @@ GlassCard {
             font.bold: true
         }
 
+        ColumnLayout {
+            spacing: 4
+            Layout.fillWidth: true
+            Text {
+                text: "Name (optional)"
+                color: configManager.themeTextSecondary; font.pixelSize: 12
+            }
+            TextField {
+                id: nameField
+                Layout.fillWidth: true
+                text: editName
+                placeholderText: "e.g. Morning, Work, Wake up"
+                color: configManager.themeTextPrimary; font.pixelSize: 14
+                background: Rectangle {
+                    color: Qt.rgba(1,1,1,0.05); radius: 8
+                    border.color: Qt.rgba(1,1,1,0.12); border.width: 1
+                }
+                onTextChanged: editName = text
+            }
+        }
+
         RowLayout {
-            spacing: 12
+            spacing: 16
 
+            // Time picker — style chosen in Settings (Wheels / Dual Clocks / Single Clock)
             ColumnLayout {
-                spacing: 3
-                Label {
-                    text: "Hour"
-                    color: configManager.themeTextSecondary
-                    font.pixelSize: 14
+                spacing: 10
+                Layout.alignment: Qt.AlignVCenter
+
+                Loader {
+                    id: pickerLoader
+                    Layout.alignment: Qt.AlignHCenter
+                    property int pickStyle: configManager.timePickerStyle
+                    sourceComponent: pickStyle === 0 ? wheelPicker :
+                                      pickStyle === 1 ? dualPicker : singlePicker
+                    onLoaded: {
+                        item.hour = editHour
+                        item.minute = editMinute
+                    }
+                    Connections {
+                        target: pickerLoader.item
+                        function onTimeChanged(h, m) { editHour = h; editMinute = m }
+                    }
                 }
-                TextField {
-                    id: hourField
-                    text: {
-                        var h = editHour % 12
-                        return (h === 0 ? 12 : h).toString()
-                    }
-                    onTextChanged: {
-                        var v = parseInt(text)
-                        if (isNaN(v) || v < 1) v = 12
-                        if (v > 12) v = 12
-                        editHour = amPmBtn.isPM ? (v % 12) + 12 : v % 12
-                    }
-                    validator: IntValidator { bottom: 1; top: 12 }
+
+                Text {
+                    text: ("00" + (editHour % 12 || 12)).slice(-2) + ":" + ("00" + editMinute).slice(-2)
                     color: configManager.themeTextPrimary
-                    horizontalAlignment: TextInput.AlignHCenter
-                    inputMethodHints: Qt.ImhDigitsOnly
-                    background: Rectangle {
-                        color: Qt.rgba(1,1,1,0.1)
-                        radius: 8
-                        border.color: Qt.rgba(1,1,1,0.2)
+                    font.pixelSize: 28; font.bold: true
+                    Layout.alignment: Qt.AlignHCenter
+                }
+
+                RowLayout {
+                    spacing: 6
+                    Layout.alignment: Qt.AlignHCenter
+                    GlassButton {
+                        text: "AM"
+                        pixelSize: 12; implicitWidth: 46; implicitHeight: 28; radius: 6
+                        property bool isPM: editHour >= 12
+                        baseColor: isPM ? Qt.rgba(1, 1, 1, 0.1) : Qt.rgba(0.2, 0.6, 1, 0.3)
+                        onClicked: { if (isPM) editHour -= 12 }
                     }
-                    implicitWidth: 76
-                    topPadding: 6
-                    bottomPadding: 6
+                    GlassButton {
+                        text: "PM"
+                        pixelSize: 12; implicitWidth: 46; implicitHeight: 28; radius: 6
+                        property bool isPM: editHour >= 12
+                        baseColor: isPM ? Qt.rgba(0.2, 0.6, 1, 0.3) : Qt.rgba(1, 1, 1, 0.1)
+                        onClicked: { if (!isPM) editHour += 12 }
+                    }
                 }
             }
 
-            ColumnLayout {
-                spacing: 3
-                Label {
-                    text: "Minute"
-                    color: configManager.themeTextSecondary
-                    font.pixelSize: 14
-                }
-                TextField {
-                    id: minuteField
-                    text: ("00" + editMinute).slice(-2)
-                    onTextChanged: {
-                        var v = parseInt(text)
-                        if (isNaN(v) || v < 0) v = 0
-                        if (v > 59) v = 59
-                        editMinute = v
-                    }
-                    validator: IntValidator { bottom: 0; top: 59 }
-                    color: configManager.themeTextPrimary
-                    horizontalAlignment: TextInput.AlignHCenter
-                    inputMethodHints: Qt.ImhDigitsOnly
-                    background: Rectangle {
-                        color: Qt.rgba(1,1,1,0.1)
-                        radius: 8
-                        border.color: Qt.rgba(1,1,1,0.2)
-                    }
-                    implicitWidth: 76
-                    topPadding: 6
-                    bottomPadding: 6
-                }
-            }
+            Item { width: 8 }
 
             ColumnLayout {
-                spacing: 3
-                Label {
-                    text: "Period"
-                    color: configManager.themeTextSecondary
-                    font.pixelSize: 14
-                }
-                GlassButton {
-                    id: amPmBtn
-                    property bool isPM: editHour >= 12
-                    text: isPM ? "PM" : "AM"
-                    pixelSize: 12
-                    implicitWidth: 50
-                    implicitHeight: 32
-                    radius: 8
-                    baseColor: isPM ? Qt.rgba(0.2, 0.6, 1, 0.3) : Qt.rgba(1, 1, 1, 0.1)
-                    onClicked: {
-                        isPM = !isPM
-                        var h = parseInt(hourField.text) || 12
-                        editHour = isPM ? (h % 12) + 12 : h % 12
+                spacing: 6
+                Layout.alignment: Qt.AlignVCenter
+
+                RowLayout {
+                    spacing: 8
+                    ColumnLayout {
+                        spacing: 2
+                        Label { text: "Hour"; color: configManager.themeTextSecondary; font.pixelSize: 12 }
+                        TextField {
+                            text: {
+                                var h = editHour % 12
+                                return (h === 0 ? 12 : h).toString()
+                            }
+                            onTextChanged: {
+                                var v = parseInt(text)
+                                if (isNaN(v) || v < 1) v = 12
+                                if (v > 12) v = 12
+                                var isPM = editHour >= 12
+                                editHour = isPM ? (v % 12) + 12 : v % 12
+                            }
+                            validator: IntValidator { bottom: 1; top: 12 }
+                            color: configManager.themeTextPrimary
+                            horizontalAlignment: TextInput.AlignHCenter
+                            inputMethodHints: Qt.ImhDigitsOnly
+                            implicitWidth: 50; implicitHeight: 30
+                            background: Rectangle { color: Qt.rgba(1,1,1,0.1); radius: 6; border.color: Qt.rgba(1,1,1,0.2) }
+                            topPadding: 4; bottomPadding: 4
+                        }
+                    }
+                    ColumnLayout {
+                        spacing: 2
+                        Label { text: "Min"; color: configManager.themeTextSecondary; font.pixelSize: 12 }
+                        TextField {
+                            text: ("00" + editMinute).slice(-2)
+                            onTextChanged: {
+                                var v = parseInt(text)
+                                if (isNaN(v) || v < 0) v = 0
+                                if (v > 59) v = 59
+                                editMinute = v
+                            }
+                            validator: IntValidator { bottom: 0; top: 59 }
+                            color: configManager.themeTextPrimary
+                            horizontalAlignment: TextInput.AlignHCenter
+                            inputMethodHints: Qt.ImhDigitsOnly
+                            implicitWidth: 50; implicitHeight: 30
+                            background: Rectangle { color: Qt.rgba(1,1,1,0.1); radius: 6; border.color: Qt.rgba(1,1,1,0.2) }
+                            topPadding: 4; bottomPadding: 4
+                        }
                     }
                 }
             }
@@ -308,29 +363,44 @@ GlassCard {
             RoundedCombo {
                 id: soundCmb
                 Layout.fillWidth: true
-                model: configManager.availableTones()
+                model: {
+                    var t = configManager.availableTones()
+                    t.unshift("none")
+                    return t
+                }
                 onActivated: {
-                    editSoundFile = currentText
+                    editSoundFile = currentIndex === 0 ? "" : currentText
                 }
                 Component.onCompleted: {
-                    currentIndex = Math.max(0, find(editSoundFile))
+                    currentIndex = editSoundFile === "" ? 0 : Math.max(0, find(editSoundFile))
                 }
                 Connections {
                     target: configManager
                     function onConfigChanged() {
-                        soundCmb.model = configManager.availableTones()
+                        var idx = soundCmb.currentIndex
+                        var prev = soundCmb.currentText
+                        var t = configManager.availableTones()
+                        t.unshift("none")
+                        soundCmb.model = t
+                        soundCmb.currentIndex = prev === "" || idx === 0 ? 0 : Math.max(0, soundCmb.find(prev))
                     }
                 }
             }
 
             GlassButton {
-                text: "▶"
+                text: root.soundPreviewing ? "■" : "▶"
                 pixelSize: 11
                 implicitWidth: 32; implicitHeight: 28
                 radius: 8
                 onClicked: {
-                    if (soundCmb.currentIndex >= 0)
+                    if (root.soundPreviewing) {
+                        audioPlayer.stop()
+                        root.soundPreviewing = false
+                    } else if (soundCmb.currentIndex > 0) {
+                        audioPlayer.stop()
                         audioPlayer.preview(soundCmb.currentText)
+                        root.soundPreviewing = true
+                    }
                 }
             }
         }
@@ -461,7 +531,7 @@ GlassCard {
                 Layout.fillWidth: true
                 model: {
                     var t = configManager.availableTones()
-                    t.unshift("(none)")
+                    t.unshift("none")
                     return t
                 }
                 onActivated: {
@@ -472,38 +542,93 @@ GlassCard {
                 }
             }
             GlassButton {
-                text: "▶"
+                text: root.scPreviewing ? "■" : "▶"
                 pixelSize: 11
                 implicitWidth: 32; implicitHeight: 28; radius: 8
                 onClicked: {
-                    if (scCmb.currentIndex > 0)
+                    if (root.scPreviewing) {
+                        audioPlayer.stop()
+                        root.scPreviewing = false
+                    } else if (scCmb.currentIndex > 0) {
+                        audioPlayer.stop()
                         audioPlayer.preview(scCmb.currentText)
+                        root.scPreviewing = true
+                    }
                 }
             }
         }
 
-        // --- Snooze Limit ---
-        ValueCtrl {
-            label: "Max Snoozes"; value: editMaxSnoozes === -1 ? 99 : editMaxSnoozes
-            minVal: 0; maxVal: 20; step: 1; suffix: editMaxSnoozes === -1 ? " (∞)" : ""
-            onValueChanged: {
-                if (value === 99) editMaxSnoozes = -1
-                else editMaxSnoozes = value
+        // --- Snooze ---
+        GlassCard {
+            id: snoozeCard
+            Layout.fillWidth: true
+            cardColor: Qt.rgba(1, 1, 1, 0.04)
+            Layout.preferredHeight: snoozeBody.implicitHeight + 32
+
+            ColumnLayout {
+                id: snoozeBody
+                x: 16; width: parent.width - 32; y: 16
+                spacing: 12
+                RowLayout {
+                    Layout.fillWidth: true
+                    Text { text: "Snooze"; color: configManager.themeTextPrimary; font.pixelSize: 16; font.bold: true; Layout.alignment: Qt.AlignVCenter }
+                    Item { Layout.fillWidth: true }
+                    ToggleSwitch {
+                        checked: editMaxSnoozes !== 0
+                        onToggled: function(v) {
+                            if (!v) editMaxSnoozes = 0
+                            else if (editMaxSnoozes === 0) editMaxSnoozes = 1
+                        }
+                    }
+                }
+
+                ValueCtrl {
+                    visible: editMaxSnoozes !== 0
+                    label: "Max Snoozes"; value: editMaxSnoozes === -1 ? 99 : editMaxSnoozes
+                    minVal: 1; maxVal: 20; step: 1; suffix: editMaxSnoozes === -1 ? " (∞)" : ""
+                    onValueChanged: {
+                        if (value >= 99) editMaxSnoozes = -1
+                        else editMaxSnoozes = value
+                    }
+                }
+
+                ValueCtrl {
+                    visible: editMaxSnoozes !== 0
+                    label: "Snooze Interval"; value: editSnoozeInterval
+                    minVal: 1; maxVal: 60; step: 1; suffix: editSnoozeInterval === configManager.defaultSnooze ? " min (global)" : " min"
+                    onValueChanged: editSnoozeInterval = value
+                }
             }
         }
 
         // --- Escalating Wake ---
-        GlassCheckBox {
-            labelText: "Escalating Wake"
-            checked: editEscalatingWake
-            onCheckedChanged: editEscalatingWake = checked
-        }
+        GlassCard {
+            id: escCard
+            Layout.fillWidth: true
+            cardColor: Qt.rgba(1, 1, 1, 0.04)
+            Layout.preferredHeight: escBody.implicitHeight + 32
 
-        ValueCtrl {
-            visible: editEscalatingWake
-            label: "Force challenge after"; value: editEscalatingTimeout
-            minVal: 15; maxVal: 300; step: 15; suffix: "s"
-            onValueChanged: editEscalatingTimeout = value
+            ColumnLayout {
+                id: escBody
+                x: 16; width: parent.width - 32; y: 16
+                spacing: 12
+                RowLayout {
+                    Layout.fillWidth: true
+                    Text { text: "Escalating Wake"; color: configManager.themeTextPrimary; font.pixelSize: 16; font.bold: true; Layout.alignment: Qt.AlignVCenter }
+                    Item { Layout.fillWidth: true }
+                    ToggleSwitch {
+                        checked: editEscalatingWake
+                        onToggled: function(v) { editEscalatingWake = v }
+                    }
+                }
+
+                ValueCtrl {
+                    visible: editEscalatingWake
+                    label: "Force challenge after"; value: editEscalatingTimeout
+                    minVal: 15; maxVal: 300; step: 15; suffix: "s"
+                    onValueChanged: editEscalatingTimeout = value
+                }
+            }
         }
 
         // --- Note ---
@@ -578,6 +703,25 @@ GlassCard {
                     }
                 }
             }
+        }
+    }
+
+    Component {
+        id: wheelPicker
+        WheelTimePicker {
+            hour: editHour; minute: editMinute
+        }
+    }
+    Component {
+        id: dualPicker
+        DualClockPicker {
+            hour: editHour; minute: editMinute
+        }
+    }
+    Component {
+        id: singlePicker
+        UnifiedClockPicker {
+            hour: editHour; minute: editMinute
         }
     }
 }

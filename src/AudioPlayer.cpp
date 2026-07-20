@@ -85,8 +85,28 @@ bool AudioPlayer::isSoundscapePlaying() const
     return m_scPlayer->playbackState() == QMediaPlayer::PlayingState;
 }
 
+void AudioPlayer::reinitializeAudio()
+{
+    auto *oldOut = m_audioOutput;
+    m_audioOutput = new QAudioOutput(this);
+    m_player->setAudioOutput(m_audioOutput);
+    m_audioOutput->setVolume(oldOut ? oldOut->volume() : (m_volume / 100.0));
+    if (oldOut) {
+        oldOut->deleteLater();
+    }
+
+    auto *oldSc = m_scAudioOutput;
+    m_scAudioOutput = new QAudioOutput(this);
+    m_scPlayer->setAudioOutput(m_scAudioOutput);
+    m_scAudioOutput->setVolume(oldSc ? oldSc->volume() : 0);
+    if (oldSc) {
+        oldSc->deleteLater();
+    }
+}
+
 void AudioPlayer::play(const QString &filePath)
 {
+    m_looping = true;
     m_fadeTimer->stop();
     m_player->stop();
 
@@ -115,6 +135,7 @@ void AudioPlayer::preview(const QString &filePath)
 
 void AudioPlayer::stop()
 {
+    m_looping = false;
     m_fadeTimer->stop();
     m_scFadeTimer->stop();
     m_player->stop();
@@ -213,11 +234,16 @@ void AudioPlayer::onMediaError(QMediaPlayer::Error error)
 void AudioPlayer::onMediaStatusChanged(QMediaPlayer::MediaStatus status)
 {
     if (status == QMediaPlayer::EndOfMedia) {
-        if (m_fadeTimer->isActive()) {
-            m_fadeTimer->stop();
-            m_audioOutput->setVolume(m_volume / 100.0);
+        if (m_looping) {
+            m_player->setPosition(0);
+            QTimer::singleShot(0, m_player, &QMediaPlayer::play);
+        } else {
+            if (m_fadeTimer->isActive()) {
+                m_fadeTimer->stop();
+                m_audioOutput->setVolume(m_volume / 100.0);
+            }
+            emit isPlayingChanged();
         }
-        emit isPlayingChanged();
     }
 }
 

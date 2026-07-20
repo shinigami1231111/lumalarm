@@ -17,6 +17,8 @@ Window {
     color: "transparent"
 
     property int countdownValue: -1
+
+
     property string currentMode: "alarms"
     property bool hasNextAlarm: false
 
@@ -24,7 +26,7 @@ Window {
         hasNextAlarm = scheduler.secondsUntilNextAlarm() > 0
     }
     onCountdownValueChanged: checkNextAlarm()
-    Connections { target: alarmManager; function onAlarmListChanged() { root.checkNextAlarm() } }
+    Connections { target: alarmManager; function onAlarmListChanged() { root.checkNextAlarm(); armBtn.armed = false } }
     Connections {
         target: configManager
         function onConfigChanged() {
@@ -38,11 +40,15 @@ Window {
         anchors.fill: parent
         radius: 18
         color: "transparent"
-        clip: true
+        clip: false
+        border.color: Qt.rgba(configManager.themeAccent.r, configManager.themeAccent.g, configManager.themeAccent.b, 0.45)
+        border.width: 1.5
 
         Rectangle {
             id: bgLayer
             anchors.fill: parent
+            radius: 18
+            clip: true
             color: configManager.themeBg
             opacity: configManager.themeOpacity
 
@@ -109,13 +115,6 @@ Window {
                         Layout.alignment: Qt.AlignVCenter
                     }
                     GlassButton {
-                        text: "\u25A0 Stop"; pixelSize: 11; implicitWidth: 70; implicitHeight: 28; buttonRadius: 8
-                        visible: audioPlayer.isPlaying
-                        baseColor: Qt.rgba(1, 0.2, 0.2, 0.2); hoverColor: Qt.rgba(1, 0.2, 0.2, 0.35)
-                        Layout.alignment: Qt.AlignVCenter
-                        onClicked: audioPlayer.stop()
-                    }
-                    GlassButton {
                         text: "\u2715"; pixelSize: 16; implicitWidth: 40; implicitHeight: 40; buttonRadius: 20
                         baseColor: Qt.rgba(1, 1, 1, 0.06); hoverColor: Qt.rgba(1, 0.2, 0.2, 0.25)
                         Layout.alignment: Qt.AlignVCenter
@@ -136,35 +135,18 @@ Window {
             }
 
             Rectangle {
-                Layout.fillWidth: true; Layout.preferredHeight: 44; color: "transparent"
-                Row {
-                    anchors.centerIn: parent; spacing: 8
-                    Repeater {
-                        model: [
-                            {label: "Alarms", mode: "alarms", icon: "🔔"},
-                            {label: "Timer", mode: "timer", icon: "⏱"},
-                            {label: "Stopwatch", mode: "stopwatch", icon: "⏱"},
-                            {label: "Sounds", mode: "sounds", icon: "🎵"},
-                            {label: "Settings", mode: "settings", icon: "⚙"}
-                        ]
-                        Rectangle {
-                            id: tp
-                            property bool isActive: currentMode === modelData.mode
-                            width: tr.implicitWidth + 32; height: 36; radius: 18
-                            color: isActive ? Qt.rgba(1, 1, 1, 0.1) : "transparent"
-                            border.color: isActive ? Qt.rgba(1, 1, 1, 0.15) : "transparent"
-                            border.width: 1
-                            Behavior on color { ColorAnimation { duration: 150 } }
-
-                            Row {
-                                id: tr; anchors.centerIn: parent; spacing: 6
-                                Text { text: modelData.icon; color: tp.isActive ? configManager.themeTextPrimary : configManager.themeTextSecondary; font.pixelSize: 16 }
-                                Text { text: modelData.label; color: tp.isActive ? configManager.themeTextPrimary : configManager.themeTextSecondary; font.pixelSize: 16; font.bold: tp.isActive }
-                            }
-
-                            MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: currentMode = modelData.mode }
-                        }
-                    }
+                Layout.fillWidth: true; Layout.preferredHeight: 52; color: "transparent"
+                SegmentedControl {
+                    anchors.centerIn: parent
+                    items: [
+                        {label: "Alarms", mode: "alarms", icon: "alarms"},
+                        {label: "Timer", mode: "timer", icon: "timer"},
+                        {label: "Stopwatch", mode: "stopwatch", icon: "stopwatch"},
+                        {label: "Sounds", mode: "sounds", icon: "sounds"},
+                        {label: "Settings", mode: "settings", icon: "settings"}
+                    ]
+                    current: currentMode
+                    onSelected: function(m) { currentMode = m }
                 }
             }
 
@@ -177,7 +159,7 @@ Window {
                 Layout.fillWidth: true; Layout.fillHeight: true; spacing: 0
 
                 Rectangle {
-                    Layout.preferredWidth: 300; Layout.minimumWidth: 260; Layout.fillHeight: true
+                    Layout.preferredWidth: 264; Layout.minimumWidth: 240; Layout.fillHeight: true
                     color: "transparent"; visible: currentMode === "alarms"
 
                     AlarmListView {
@@ -234,16 +216,31 @@ Window {
                             Item { Layout.fillWidth: true }
                             GlassButton {
                                 id: armBtn
-                                text: "Arm & Suspend"; pixelSize: 12
-                                baseColor: root.hasNextAlarm ? Qt.rgba(0.3, 0.75, 0.95, 0.12) : Qt.rgba(1, 1, 1, 0.06)
-                                hoverColor: root.hasNextAlarm ? Qt.rgba(0.3, 0.75, 0.95, 0.22) : Qt.rgba(1, 1, 1, 0.15)
-                                borderColor: root.hasNextAlarm ? Qt.rgba(0.4, 0.8, 1, 0.3) : Qt.rgba(1, 1, 1, 0.1)
-                                textColor: root.hasNextAlarm ? Qt.rgba(0.5, 0.85, 1, 1) : configManager.themeTextSecondary
+                                property bool armed: false
+                                text: !root.hasNextAlarm ? "No alarm armed" : (armed ? "Armed ✓" : "Arm Wake")
+                                pixelSize: 12
+                                baseColor: !root.hasNextAlarm ? Qt.rgba(1, 1, 1, 0.05)
+                                            : (armed ? Qt.rgba(0.3, 0.85, 0.4, 0.18) : Qt.rgba(0.3, 0.75, 0.95, 0.12))
+                                hoverColor: !root.hasNextAlarm ? Qt.rgba(1, 1, 1, 0.1)
+                                            : (armed ? Qt.rgba(0.3, 0.85, 0.4, 0.28) : Qt.rgba(0.3, 0.75, 0.95, 0.22))
+                                borderColor: !root.hasNextAlarm ? Qt.rgba(1, 1, 1, 0.08)
+                                            : (armed ? Qt.rgba(0.3, 0.9, 0.4, 0.35) : Qt.rgba(0.4, 0.8, 1, 0.3))
+                                textColor: !root.hasNextAlarm ? configManager.themeTextSecondary
+                                            : (armed ? Qt.rgba(0.5, 0.95, 0.6, 1) : Qt.rgba(0.5, 0.85, 1, 1))
                                 enabled: root.hasNextAlarm
                                 opacity: root.hasNextAlarm ? 1.0 : 0.5
                                 onClicked: {
+                                    if (!root.hasNextAlarm) return
                                     var s = scheduler.secondsUntilNextAlarm()
-                                    if (s > 0) wakeManager.prepareWake(s, wakeModeCombo.currentText)
+                                    if (s <= 0) return
+                                    wakeManager.prepareWake(s, wakeModeCombo.currentText)
+                                    armed = true
+                                    armResetTimer.restart()
+                                }
+                                Timer {
+                                    id: armResetTimer
+                                    interval: 3000; repeat: false
+                                    onTriggered: armed = false
                                 }
                             }
                         }
@@ -264,25 +261,18 @@ Window {
         visible: ringingOverlay.ringing || ringingOverlay.wakeUpActive
         RingingOverlay {
             id: ringingOverlay
-            onReTriggerAlarm: {
-                var a = ringingOverlay.alarmData
-                if (a.soundFile && a.soundFile !== "") {
-                    audioPlayer.setBaseVolume(a.baseVolume || 20)
-                    audioPlayer.setFadeDuration(a.fadeDuration || 15)
-                    audioPlayer.play(a.soundFile)
-                }
-                ringingOverlay.ringing = true
-            }
         }
     }
 
     Connections {
         target: scheduler
         function onAlarmTriggered(index) {
+            ringingOverlay.cancelSnooze()
             var alarms = alarmManager.alarms
             if (index < 0 || index >= alarms.length) return
             var a = alarms[index]
             ringingOverlay.alarmIndex = index
+            ringingOverlay.alarmId = a.id || ""
             ringingOverlay.alarmHour = a.hour; ringingOverlay.alarmMinute = a.minute
             ringingOverlay.alarmMedia = a.soundFile
             ringingOverlay.alarmData = a

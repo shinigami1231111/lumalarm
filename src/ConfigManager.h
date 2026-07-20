@@ -23,6 +23,7 @@ class ConfigManager : public QObject
     Q_PROPERTY(QString themeTextPrimary READ themeTextPrimary WRITE setThemeTextPrimary NOTIFY configChanged)
     Q_PROPERTY(QString themeTextSecondary READ themeTextSecondary WRITE setThemeTextSecondary NOTIFY configChanged)
     Q_PROPERTY(bool stopwatchShowMs READ stopwatchShowMs WRITE setStopwatchShowMs NOTIFY configChanged)
+    Q_PROPERTY(int timePickerStyle READ timePickerStyle WRITE setTimePickerStyle NOTIFY configChanged)
 
 public:
     explicit ConfigManager(QObject *parent = nullptr);
@@ -63,6 +64,9 @@ public:
 
     bool stopwatchShowMs() const;
     void setStopwatchShowMs(bool show);
+
+    int timePickerStyle() const;
+    void setTimePickerStyle(int style);
 
 signals:
     void configChanged();

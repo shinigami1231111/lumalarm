@@ -12,8 +12,10 @@
 #include <QDir>
 #include <QStandardPaths>
 #include <QHash>
+#include <QUuid>
 
 struct Alarm {
+    QString id = QUuid::createUuid().toString(QUuid::WithoutBraces);
     int hour = 7;
     int minute = 0;
     QVector<bool> days = {false, false, false, false, false, false, false};
@@ -35,11 +37,13 @@ struct Alarm {
     // Phase 1: Smarter Wake Experience
     QString soundscape;
     int maxSnoozes = -1;          // -1 = unlimited, 0 = no snooze
-    QString challengeMode = "typing"; // "none", "typing", "math"
+    QString challengeMode = "none"; // "none", "typing", "math"
     int mathDifficulty = 0;       // 0=easy (add/sub), 1=hard (mul)
     bool escalatingWake = false;
     int escalatingTimeout = 60;   // seconds before forced challenge
     QString note;
+    int snoozeInterval = 0;  // 0 = use global default
+    QString name;           // optional display name
 
     QJsonObject toJson() const;
     static Alarm fromJson(const QJsonObject &obj);
@@ -61,12 +65,10 @@ public:
 
     Q_INVOKABLE void addAlarm(const QVariantMap &alarm);
     Q_INVOKABLE void removeAlarm(int index);
+    Q_INVOKABLE int indexOfId(const QString &id) const;
     Q_INVOKABLE void updateAlarm(int index, const QVariantMap &alarm);
     Q_INVOKABLE void loadFromFile();
     Q_INVOKABLE void saveToFile();
-
-    // Adds a transient alarm (e.g. snooze) that won't be persisted to alarms.json
-    Q_INVOKABLE void addTransientAlarm(const QVariantMap &alarm);
 
     // Snooze tracking (in-memory only, resets each time alarm fires fresh)
     Q_INVOKABLE int snoozeCount(int alarmIndex) const;

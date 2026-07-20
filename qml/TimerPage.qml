@@ -5,57 +5,50 @@ import GlassAlarm
 
 ColumnLayout {
     id: root
-    spacing: 22
+    spacing: 16
 
     property int remainingSecs: 0
     property bool timerRunning: false
     property string timerSoundFile: ""
+    property bool timerPreviewing: false
+
+    property var hourField: null
+    property var minField: null
+    property var secField: null
+
+    Connections {
+        target: audioPlayer
+        function onIsPlayingChanged() { if (!audioPlayer.isPlaying) timerPreviewing = false }
+    }
+
     property var timerObj: Timer {
-        interval: 1000
-        repeat: true
+        interval: 1000; repeat: true
         onTriggered: {
-            if (root.remainingSecs > 0) {
-                root.remainingSecs--
-            } else {
-                stop()
-                root.timerRunning = false
-                if (root.timerSoundFile !== "")
-                    audioPlayer.play(root.timerSoundFile)
-            }
+            if (root.remainingSecs > 0) root.remainingSecs--
+            else { stop(); root.timerRunning = false; if (root.timerSoundFile !== "") audioPlayer.play(root.timerSoundFile) }
         }
     }
 
     function formatTime(secs) {
-        var h = Math.floor(secs / 3600)
-        var m = Math.floor((secs % 3600) / 60)
-        var s = secs % 60
-        return ("00" + h).slice(-2) + ":" +
-               ("00" + m).slice(-2) + ":" +
-               ("00" + s).slice(-2)
+        var h = Math.floor(secs / 3600), m = Math.floor((secs % 3600) / 60), s = secs % 60
+        return ("00"+h).slice(-2) + ":" + ("00"+m).slice(-2) + ":" + ("00"+s).slice(-2)
     }
 
-    Text {
-        text: "Countdown Timer"
-        color: configManager.themeTextPrimary
-        font.pixelSize: 22
-        font.bold: true
-    }
+    Text { text: "Timer"; color: configManager.themeTextPrimary; font.pixelSize: 24; font.bold: true }
 
     Item { Layout.fillHeight: true }
 
     Text {
         text: formatTime(remainingSecs)
         color: configManager.themeTextPrimary
-        font.pixelSize: 80
-        font.bold: true
-        opacity: 0.9
+        font.pixelSize: 76; font.bold: true; opacity: 0.92
         Layout.alignment: Qt.AlignHCenter
-        font.letterSpacing: 4
+        font.letterSpacing: 3
     }
 
     Text {
-        text: timerRunning ? "Running" : (remainingSecs > 0 ? "Paused" : "Set time below")
-        color: timerRunning ? Qt.rgba(0.3,1,0.3,0.7) : configManager.themeTextSecondary
+        text: timerRunning ? "Running" : (remainingSecs > 0 ? "Paused" : "Set a duration")
+        color: timerRunning ? Qt.rgba(0.3,1,0.3,0.8) : configManager.themeTextSecondary
         font.pixelSize: 14
         Layout.alignment: Qt.AlignHCenter
     }
@@ -63,128 +56,94 @@ ColumnLayout {
     Item { Layout.fillHeight: true }
 
     RowLayout {
-        spacing: 18
+        spacing: 14
         Layout.alignment: Qt.AlignHCenter
-
-        ColumnLayout {
-            spacing: 3
-            Label { text: "Hours"; color: configManager.themeTextSecondary; font.pixelSize: 14; Layout.alignment: Qt.AlignHCenter }
-            TextField {
-                id: hourField
-                text: "00"
-                validator: IntValidator { bottom: 0; top: 99 }
-                color: configManager.themeTextPrimary; horizontalAlignment: TextInput.AlignHCenter
-                inputMethodHints: Qt.ImhDigitsOnly
-                implicitWidth: 60; topPadding: 8; bottomPadding: 8
-                background: Rectangle { color: Qt.rgba(1,1,1,0.1); radius: 8; border.color: Qt.rgba(1,1,1,0.2) }
-            }
-        }
-
-        ColumnLayout {
-            spacing: 3
-            Label { text: "Minutes"; color: configManager.themeTextSecondary; font.pixelSize: 14; Layout.alignment: Qt.AlignHCenter }
-            TextField {
-                id: minField
-                text: "05"
-                validator: IntValidator { bottom: 0; top: 59 }
-                color: configManager.themeTextPrimary; horizontalAlignment: TextInput.AlignHCenter
-                inputMethodHints: Qt.ImhDigitsOnly
-                implicitWidth: 60; topPadding: 8; bottomPadding: 8
-                background: Rectangle { color: Qt.rgba(1,1,1,0.1); radius: 8; border.color: Qt.rgba(1,1,1,0.2) }
-            }
-        }
-
-        ColumnLayout {
-            spacing: 3
-            Label { text: "Seconds"; color: configManager.themeTextSecondary; font.pixelSize: 14; Layout.alignment: Qt.AlignHCenter }
-            TextField {
-                id: secField
-                text: "00"
-                validator: IntValidator { bottom: 0; top: 59 }
-                color: configManager.themeTextPrimary; horizontalAlignment: TextInput.AlignHCenter
-                inputMethodHints: Qt.ImhDigitsOnly
-                implicitWidth: 60; topPadding: 8; bottomPadding: 8
-                background: Rectangle { color: Qt.rgba(1,1,1,0.1); radius: 8; border.color: Qt.rgba(1,1,1,0.2) }
-            }
-        }
-    }
-
-    RowLayout {
-        spacing: 18
-        Layout.alignment: Qt.AlignHCenter
-
-        GlassButton {
-            text: timerRunning ? "Pause" : "Start"
-            baseColor: timerRunning ? Qt.rgba(1,0.6,0,0.25) : Qt.rgba(0.3,1,0.3,0.2)
-            hoverColor: timerRunning ? Qt.rgba(1,0.6,0,0.35) : Qt.rgba(0.3,1,0.3,0.35)
-            onClicked: {
-                if (timerRunning) {
-                    timerObj.stop()
-                    timerRunning = false
-                } else {
-                    if (remainingSecs === 0) {
-                        var h = parseInt(hourField.text) || 0
-                        var m = parseInt(minField.text) || 0
-                        var s = parseInt(secField.text) || 0
-                        remainingSecs = h * 3600 + m * 60 + s
-                    }
-                    if (remainingSecs > 0) {
-                        timerRunning = true
-                        timerObj.start()
+        Repeater {
+            model: [
+                {label: "Hours", max: 99},
+                {label: "Min", max: 59},
+                {label: "Sec", max: 59}
+            ]
+            ColumnLayout {
+                spacing: 4
+                Label { text: modelData.label; color: configManager.themeTextSecondary; font.pixelSize: 13; Layout.alignment: Qt.AlignHCenter }
+                TextField {
+                    text: "00"
+                    validator: IntValidator { bottom: 0; top: modelData.max }
+                    color: configManager.themeTextPrimary; horizontalAlignment: TextInput.AlignHCenter
+                    inputMethodHints: Qt.ImhDigitsOnly
+                    implicitWidth: 64; implicitHeight: 44
+                    font.pixelSize: 18
+                    background: Rectangle { color: Qt.rgba(1,1,1,0.08); radius: 10; border.color: Qt.rgba(1,1,1,0.15); border.width: 1 }
+                    Component.onCompleted: {
+                        if (modelData.label === "Hours") hourField = this
+                        else if (modelData.label === "Min") minField = this
+                        else secField = this
                     }
                 }
             }
-            enabled: !timerRunning || remainingSecs > 0
         }
-
-        GlassButton {
-            text: "Reset"
-            baseColor: Qt.rgba(1,0.2,0.2,0.15)
-            hoverColor: Qt.rgba(1,0.2,0.2,0.3)
-            onClicked: {
-                timerObj.stop()
-                timerRunning = false
-                remainingSecs = 0
-                audioPlayer.stop()
-            }
-        }
-    }
-
-    Item { height: 8 }
-
-    Rectangle {
-        Layout.fillWidth: true; Layout.preferredHeight: 1
-        color: Qt.rgba(1, 1, 1, 0.06)
     }
 
     RowLayout {
-        Layout.fillWidth: true; spacing: 8
-        Text { text: "Sound when done:"; color: configManager.themeTextSecondary; font.pixelSize: 14; Layout.alignment: Qt.AlignVCenter }
+        spacing: 12
+        Layout.alignment: Qt.AlignHCenter
+        GlassButton {
+            text: timerRunning ? "Pause" : "Start"
+            pixelSize: 14
+            implicitWidth: 110; implicitHeight: 40
+            filled: !timerRunning
+            baseColor: timerRunning ? Qt.rgba(1,0.6,0,0.22) : Qt.rgba(0.3,1,0.3,0.18)
+            hoverColor: timerRunning ? Qt.rgba(1,0.6,0,0.32) : Qt.rgba(0.3,1,0.3,0.3)
+            onClicked: {
+                if (timerRunning) { timerObj.stop(); timerRunning = false }
+                else {
+                    if (remainingSecs === 0) {
+                        var h = parseInt(hourField.text)||0, m = parseInt(minField.text)||0, s = parseInt(secField.text)||0
+                        remainingSecs = h*3600 + m*60 + s
+                    }
+                    if (remainingSecs > 0) { timerRunning = true; timerObj.start() }
+                }
+            }
+        }
+        GlassButton {
+            text: "Reset"
+            pixelSize: 14
+            implicitWidth: 100; implicitHeight: 40
+            baseColor: Qt.rgba(1,0.2,0.2,0.15)
+            hoverColor: Qt.rgba(1,0.2,0.2,0.28)
+            onClicked: { timerObj.stop(); timerRunning = false; remainingSecs = 0; audioPlayer.stop() }
+        }
+    }
 
+    Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: Qt.rgba(1,1,1,0.07) }
+
+    RowLayout {
+        Layout.fillWidth: true; spacing: 10
+        Text { text: "Sound when done:"; color: configManager.themeTextSecondary; font.pixelSize: 14; Layout.alignment: Qt.AlignVCenter }
         RoundedCombo {
             id: timerSoundCmb
             Layout.fillWidth: true
-            model: {
-                var tones = configManager.availableTones()
-                var arr = ["None"]
-                for (var i = 0; i < tones.length; i++)
-                    arr.push(tones[i])
-                return arr
-            }
-            onActivated: {
-                timerSoundFile = (currentIndex === 0) ? "" : currentText
+            model: { var t = configManager.availableTones(); var a = ["none"]; for (var i=0;i<t.length;i++) a.push(t[i]); return a }
+            onActivated: timerSoundFile = (currentIndex === 0) ? "" : currentText
+        }
+        GlassButton {
+            text: timerPreviewing ? "■" : "▶"
+            pixelSize: 11; implicitWidth: 36; implicitHeight: 30; radius: 8
+            onClicked: {
+                if (timerPreviewing) { audioPlayer.stop(); timerPreviewing = false }
+                else if (timerSoundCmb.currentIndex > 0) { audioPlayer.stop(); audioPlayer.preview(timerSoundCmb.currentText); timerPreviewing = true }
             }
         }
+    }
 
-        GlassButton {
-            text: "▶"
-            pixelSize: 11
-            implicitWidth: 32; implicitHeight: 28
-            radius: 8
-            onClicked: {
-                if (timerSoundCmb.currentIndex > 0)
-                    audioPlayer.preview(timerSoundCmb.currentText)
-            }
+    Connections {
+        target: configManager
+        function onConfigChanged() {
+            var prev = timerSoundCmb.currentText
+            var t = configManager.availableTones(); var a = ["none"]; for (var i=0;i<t.length;i++) a.push(t[i])
+            timerSoundCmb.model = a
+            timerSoundCmb.currentIndex = (prev === "" || timerSoundCmb.find(prev) < 0) ? 0 : timerSoundCmb.find(prev)
         }
     }
 

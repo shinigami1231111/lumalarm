@@ -32,6 +32,7 @@ int main(int argc, char *argv[])
     ConfigManager configManager;
     WakeManager wakeManager;
     Scheduler scheduler(&alarmManager);
+    scheduler.restoreSnoozes();
 
     // When an alarm triggers: play audio, run command, show overlay
     QObject::connect(&scheduler, &Scheduler::alarmTriggered, [&](int index) {
@@ -56,17 +57,18 @@ int main(int argc, char *argv[])
             }
         }
 
-        // Play alarm sound (or crossfade from soundscape if active)
+        // Play alarm sound immediately
         if (a.enableSound) {
-            audioPlayer.setBaseVolume(a.baseVolume);
-            audioPlayer.setFadeDuration(a.fadeDuration);
-            QTimer::singleShot(2500, [&audioPlayer, &a]() {
-                if (audioPlayer.isSoundscapePlaying()) {
-                    audioPlayer.crossfadeToMain(a.baseVolume, a.fadeDuration);
-                } else {
-                    audioPlayer.play(a.soundFile);
-                }
-            });
+            QString sf = a.soundFile;
+            int bv = a.baseVolume;
+            int fd = a.fadeDuration;
+            audioPlayer.setBaseVolume(bv);
+            audioPlayer.setFadeDuration(fd);
+            if (audioPlayer.isSoundscapePlaying()) {
+                audioPlayer.crossfadeToMain(bv, fd);
+            } else {
+                audioPlayer.play(sf);
+            }
         }
 
         // Auto-stop the alarm after the configured duration
@@ -86,6 +88,11 @@ int main(int argc, char *argv[])
         if (!a.soundscape.isEmpty()) {
             audioPlayer.playSoundscape(a.soundscape, 5);
         }
+    });
+
+    // Reinitialize audio on system resume (fixes PipeWire/PulseAudio after suspend)
+    QObject::connect(&scheduler, &Scheduler::systemResumed, [&audioPlayer]() {
+        audioPlayer.reinitializeAudio();
     });
 
     // Log dismiss events with stage info (feeds future statistics)

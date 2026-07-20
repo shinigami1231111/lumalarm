@@ -73,8 +73,13 @@ private:
     int m_scCurrentVolume = 0;
     bool m_crossfading = false;
 
+    bool m_looping = false;
+
     void startFade();
     QString resolvePath(const QString &filePath) const;
+
+public slots:
+    void reinitializeAudio();
 };
 
 #endif // AUDIOPLAYER_H

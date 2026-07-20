@@ -11,9 +11,12 @@ Rectangle {
     property bool wakeUpActive: false
     property var alarmData: ({})
     property int alarmIndex: -1
+    property string alarmId: ""
     property int alarmHour: 0
     property int alarmMinute: 0
     property string alarmMedia: ""
+
+    property bool snoozing: false
 
     // Challenge state
     property bool challengeDone: false
@@ -40,7 +43,12 @@ Rectangle {
 
     signal stopAlarm()
     signal snoozeAlarm()
-    signal reTriggerAlarm()
+
+    function cancelSnooze() {
+        snoozing = false
+        if (alarmId !== "")
+            scheduler.cancelSnooze(alarmId)
+    }
 
     visible: ringing || wakeUpActive
     anchors.fill: parent
@@ -191,10 +199,11 @@ Rectangle {
             if (wakeCountdown <= 0) {
                 wakeCountdownTimer.stop()
                 wakeUpActive = false
-                reTriggerAlarm()
+                root.wakeFromSnooze()
             }
         }
     }
+
 
     function startWakeCheck() {
         wakeUpActive = true
@@ -214,6 +223,14 @@ Rectangle {
             color: "#FFFFFF"; font.pixelSize: 52; font.bold: true; opacity: 0.9
             Layout.alignment: Qt.AlignHCenter
             style: Text.Raised; styleColor: Qt.rgba(0,0,0,0.5)
+        }
+
+        Text {
+            visible: alarmData.name && alarmData.name !== ""
+            text: alarmData.name
+            color: Qt.rgba(1, 1, 1, 0.85); font.pixelSize: 26; font.bold: true
+            Layout.alignment: Qt.AlignHCenter
+            style: Text.Raised; styleColor: Qt.rgba(0,0,0,0.3)
         }
 
         Text {
@@ -320,6 +337,7 @@ Rectangle {
                 onClicked: {
                     audioPlayer.stop()
                     ringing = false
+                    cancelSnooze()
                     alarmManager.alarmDismissed(alarmIndex, escalateStage)
                     if (alarmData.wakeUpCheckEnabled) {
                         wakeDelayTimer.interval = alarmData.wakeUpCheckInterval * 60 * 1000
@@ -340,6 +358,7 @@ Rectangle {
 
                 property bool snoozeAllowed: {
                     if (!root.ringing) return false
+                    if (root.alarmId === "") return false
                     var maxS = alarmData.maxSnoozes
                     if (maxS === -1) return true
                     if (maxS === 0) return false
@@ -351,16 +370,26 @@ Rectangle {
                     audioPlayer.stop()
                     ringing = false
                     alarmManager.incrementSnooze(alarmIndex)
-                    scheduler.snooze(configManager.defaultSnooze())
+                    scheduler.startSnoozeTimer(root.alarmId, snoozeMin)
                 }
+
+                property int snoozeMin: alarmData.snoozeInterval && alarmData.snoozeInterval > 0 ? alarmData.snoozeInterval : configManager.defaultSnooze
             }
         }
 
-        // Snooze limit indicator
+        // Snooze status indicator
         Text {
-            visible: !snoozeBtn.snoozeAllowed && alarmData.maxSnoozes !== -1
-            text: "Snooze limit reached"
-            color: Qt.rgba(1, 0.6, 0, 0.7); font.pixelSize: 13
+            visible: ringing && alarmData.maxSnoozes !== 0
+            text: {
+                if (!snoozeBtn.snoozeAllowed)
+                    return "Snooze limit reached"
+                var used = alarmManager.snoozeCount(alarmIndex)
+                if (alarmData.maxSnoozes === -1)
+                    return used > 0 ? "Snoozed " + used + " times" : ""
+                return "Snoozes: " + used + " / " + alarmData.maxSnoozes
+            }
+            color: !snoozeBtn.snoozeAllowed ? Qt.rgba(1, 0.6, 0, 0.7) : Qt.rgba(1,1,1,0.4)
+            font.pixelSize: 13
             Layout.alignment: Qt.AlignHCenter
         }
     }

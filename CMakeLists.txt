@@ -38,6 +38,12 @@ set(QML_FILES
     qml/SettingsPage.qml
     qml/RoundedCombo.qml
     qml/GlassCheckBox.qml
+    qml/ClockFace.qml
+    qml/ToggleSwitch.qml
+    qml/SegmentedControl.qml
+    qml/WheelTimePicker.qml
+    qml/DualClockPicker.qml
+    qml/UnifiedClockPicker.qml
 )
 
 qt6_add_executable(lumalarm ${SOURCES} ${HEADERS})
@@ -46,6 +52,12 @@ qt6_add_qml_module(lumalarm
     URI GlassAlarm
     VERSION 1.0
     QML_FILES ${QML_FILES}
+    RESOURCES
+        resources/icons/alarms.svg
+        resources/icons/timer.svg
+        resources/icons/stopwatch.svg
+        resources/icons/sounds.svg
+        resources/icons/settings.svg
 )
 
 target_link_libraries(lumalarm PRIVATE
