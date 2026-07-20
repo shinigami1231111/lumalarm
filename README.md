@@ -26,17 +26,26 @@ That suspend-to-wake behavior is the core power of Lumalarm. Everything else —
 
 ## Screenshots
 
-| Alarms | Settings |
-|---|---|
-| ![Alarms](screenshots/alarms.jpeg) | ![Settings](screenshots/settings.jpeg) |
+**Alarms**
 
-| Timer | Stopwatch |
-|---|---|
-| ![Timer](screenshots/timer.jpeg) | ![Stopwatch](screenshots/stopwatch.jpeg) |
+![Alarms 1](screenshots/alarms-1.jpeg)
+![Alarms 2](screenshots/alarms-2.jpeg)
 
-| Sound Manager | Ringing |
-|---|---|
-| ![Sounds](screenshots/sounds.jpeg) | ![Ringing](screenshots/ringing.jpeg) |
+**Timer**
+
+![Timer](screenshots/timer.jpeg)
+
+**Stopwatch**
+
+![Stopwatch](screenshots/stopwatch.jpeg)
+
+**Sound Manager**
+
+![Sounds](screenshots/sounds.jpeg)
+
+**Settings**
+
+![Settings](screenshots/settings.jpeg)
 
 ---
 
