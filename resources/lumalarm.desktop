@@ -1,6 +1,6 @@
 [Desktop Entry]
 Name=Lumalarm
-Comment=Glassmorphism alarm clock with rtcwake suspend support
+Comment=Smart alarm clock with rtcwake suspend-to-wake support
 Exec=lumalarm
 Icon=lumalarm
 Terminal=false

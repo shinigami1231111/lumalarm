@@ -61,18 +61,18 @@ ColumnLayout {
             GlassCard {
                 id: cardDelegate
                 anchors.fill: parent
-                property bool isOff: !alarmData.enabled
+                property bool isOff: !(alarmManager.alarms && alarmManager.alarms[realIndex] ? alarmManager.alarms[realIndex].enabled : alarmData.enabled)
                 cardColor: {
                     if (root.selectedIndex === realIndex) return Qt.rgba(configManager.themeAccent.r, configManager.themeAccent.g, configManager.themeAccent.b, 0.22)
-                    if (isOff) return Qt.rgba(1,1,1,0.025)
+                    if (isOff) return Qt.rgba(0.4, 0.4, 0.5, 0.06)
                     return Qt.rgba(1,1,1,0.06)
                 }
                 borderColor: {
                     if (root.selectedIndex === realIndex) return configManager.themeAccent
-                    if (isOff) return Qt.rgba(1,1,1,0.06)
+                    if (isOff) return Qt.rgba(1,1,1,0.04)
                     return Qt.rgba(1,1,1,0.1)
                 }
-                opacity: isOff ? 0.6 : 1.0
+                opacity: isOff ? 0.5 : 1.0
 
                 MouseArea { anchors.fill: parent; onClicked: root.selectedIndex = realIndex }
 
@@ -124,14 +124,6 @@ ColumnLayout {
                         }
                     }
 
-                    Text {
-                        visible: isOff
-                        text: "Off"
-                        color: Qt.rgba(1,1,1,0.35)
-                        font.pixelSize: 11; font.bold: true
-                        Layout.alignment: Qt.AlignVCenter
-                    }
-
                     ToggleSwitch {
                         Layout.alignment: Qt.AlignVCenter
                         checked: alarmData.enabled
@@ -140,6 +132,8 @@ ColumnLayout {
                             a.enabled = v
                             alarmManager.updateAlarm(realIndex, a)
                             if (!v && alarmData.id) scheduler.cancelSnooze(alarmData.id)
+                            alarmListView.model = null
+                            alarmListView.model = root.sortedAlarms
                         }
                     }
 

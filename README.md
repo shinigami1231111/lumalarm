@@ -1,10 +1,8 @@
 <div align="center">
 
-<img src="banner.svg" alt="Lumalarm" width="680">
+**Lumalarm** — a smart alarm clock for Linux that wakes your computer from sleep
 
-**A glassmorphism alarm clock for Linux, built with Qt 6 (QML + C++)**
-
-Suspend-to-RAM wake scheduling · typing challenges · wake-up verification · timer · stopwatch · sound manager
+Suspend-to-RAM wake scheduling · anti-oversleep challenges · timer · stopwatch · sound manager
 
 [![License: GPLv3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 [![Qt](https://img.shields.io/badge/Qt-6-41CD52?logo=qt)](https://www.qt.io/)
@@ -14,35 +12,40 @@ Suspend-to-RAM wake scheduling · typing challenges · wake-up verification · t
 
 ---
 
-## Why Lumalarm?
+## The idea
 
-Most alarm clocks assume your PC is already on. **Lumalarm doesn't.** Hit **Arm & Suspend** and it puts your Linux machine to sleep (via `rtcwake`), then wakes it back up automatically right before your alarm fires — no need to leave your computer running all night just to hear an alarm in the morning.
+**Lumalarm is an alarm clock that turns your Linux PC into a real alarm clock.**
 
-And once it wakes you, it makes sure you actually **get up**: a typing challenge or a "still awake?" check keeps you honest, instead of trusting a snooze button you'll hit in your sleep.
+Most alarm apps assume your computer is already awake. Lumalarm doesn't. Hit **Arm & Suspend** and it puts the machine to sleep (via `rtcwake`), then wakes it back up automatically — right before your alarm fires. No leaving the PC running all night just to hear a beep in the morning.
 
-That's the core idea. Everything else below — timer, stopwatch, sound manager, glassmorphism theming — is a bonus on top.
+And once it wakes you, it makes sure you actually **get up**: a typing or math challenge, a "still awake?" check, and escalating prompts keep you honest instead of letting you hit snooze in your sleep.
+
+That suspend-to-wake behavior is the core power of Lumalarm. Everything else — the timer, stopwatch, sound manager, and the clean themable interface — is built on top of it.
 
 ---
 
-## Table of Contents
+## Screenshots
 
-- [Features](#features)
-- [Screenshots](#screenshots)
-- [Installation](#installation)
-  - [Dependencies](#dependencies)
-  - [Build from Source](#build-from-source)
-- [Configuration](#configuration)
-- [rtcwake Setup](#rtcwake-setup)
-- [Contributing](#contributing)
-- [License](#license)
+| Alarms | Settings |
+|---|---|
+| ![Alarms](screenshots/alarms.jpeg) | ![Settings](screenshots/settings.jpeg) |
+
+| Timer | Stopwatch |
+|---|---|
+| ![Timer](screenshots/timer.jpeg) | ![Stopwatch](screenshots/stopwatch.jpeg) |
+
+| Sound Manager | Ringing |
+|---|---|
+| ![Sounds](screenshots/sounds.jpeg) | ![Ringing](screenshots/ringing.jpeg) |
 
 ---
 
 ## Features
 
-- **Alarms** — recurring or one-shot, with typing challenges and a "still awake?" check to stop you from oversleeping
+- **Alarms that wake a sleeping PC** — recurring or one-shot, scheduled to wake the machine from suspend via `rtcwake`
+- **Anti-oversleep challenges** — typing challenge or math problem to dismiss an alarm
+- **"Still awake?" check** — verifies you're up instead of trusting the snooze button
 - **Soundscape wake** — ambient track plays quietly 90s before the alarm, ramps in, then crossfades to the main tone
-- **Math challenge** — alternative to typing challenge; solve an arithmetic problem to dismiss
 - **Snooze limiting** — set a max number of snoozes per alarm (or disable snooze entirely)
 - **Escalating wake** — screen brightness ramp, then sound, then forced challenge if you don't respond
 - **Alarm notes** — attach a note ("flight to Istanbul") shown prominently when the alarm fires
@@ -50,19 +53,20 @@ That's the core idea. Everything else below — timer, stopwatch, sound manager,
 - **Sound manager** — import and preview your own tones (`wav`, `mp3`, `ogg`, `flac`, `aac`)
 - **Volume fade-in & auto-stop** — wakes you up gently instead of blasting you out of bed
 - **Custom commands** — run any shell command when an alarm fires
-- **Fully themeable** — glassmorphism UI with a built-in HSV color picker for background, accent, and opacity
+- **Fully themeable** — a built-in color picker for background, accent, and opacity, plus a selectable time-picker style (wheels, dual clocks, single clock)
 
 ---
 
-## Screenshots
+## Table of Contents
 
-| Alarms | Timer |
-|---|---|
-| ![Alarms](Screenshots/Screenshot_20260718_130324.jpeg) | ![Timer](Screenshots/Screenshot_20260718_130340.jpeg) |
-
-| Stopwatch | Sound Manager |
-|---|---|
-| ![Stopwatch](Screenshots/Screenshot_20260718_130357.jpeg) | ![Sounds](Screenshots/Screenshot_20260718_130408.jpeg) |
+- [Installation](#installation)
+  - [Dependencies](#dependencies)
+  - [Build from Source](#build-from-source)
+  - [AUR](#aur)
+- [Configuration](#configuration)
+- [rtcwake Setup](#rtcwake-setup)
+- [Contributing](#contributing)
+- [License](#license)
 
 ---
 
@@ -70,7 +74,7 @@ That's the core idea. Everything else below — timer, stopwatch, sound manager,
 
 ### Dependencies
 
-- **Qt 6** — Core, Multimedia, Qml, Quick, QuickControls2
+- **Qt 6** — Core, Multimedia, Qml, Quick, Declarative
 - **CMake** ≥ 3.16
 - **C++17** compiler (GCC or Clang)
 - **rtcwake** *(optional)* — from `util-linux`, needed for suspend-to-RAM
@@ -79,7 +83,7 @@ That's the core idea. Everything else below — timer, stopwatch, sound manager,
 <summary><b>Arch Linux</b></summary>
 
 ```bash
-sudo pacman -S cmake qt6-base qt6-multimedia qt6-declarative qt6-quickcontrols2
+sudo pacman -S cmake qt6-base qt6-multimedia qt6-declarative
 ```
 </details>
 
@@ -87,7 +91,7 @@ sudo pacman -S cmake qt6-base qt6-multimedia qt6-declarative qt6-quickcontrols2
 <summary><b>Ubuntu / Debian</b></summary>
 
 ```bash
-sudo apt install cmake build-essential qt6-base-dev qt6-multimedia-dev qt6-declarative-dev qt6-quickcontrols2-dev
+sudo apt install cmake build-essential qt6-base-dev qt6-multimedia-dev qt6-declarative-dev
 ```
 </details>
 
@@ -95,7 +99,7 @@ sudo apt install cmake build-essential qt6-base-dev qt6-multimedia-dev qt6-decla
 <summary><b>Fedora</b></summary>
 
 ```bash
-sudo dnf install cmake qt6-qtbase-devel qt6-qtmultimedia-devel qt6-qtdeclarative-devel qt6-qtquickcontrols2-devel
+sudo dnf install cmake qt6-qtbase-devel qt6-qtmultimedia-devel qt6-qtdeclarative-devel
 ```
 </details>
 
@@ -109,7 +113,13 @@ cmake --build build -j$(nproc)
 ./build/lumalarm
 ```
 
-> An AUR `PKGBUILD` is also included in the repository for Arch Linux packaging.
+### AUR
+
+```bash
+paru -S lumalarm
+# or, with yay:
+yay -S lumalarm
+```
 
 ---
 

@@ -100,8 +100,7 @@ Window {
 
                 RowLayout {
                     anchors.fill: parent; anchors.leftMargin: 20; anchors.rightMargin: 10; spacing: 12
-                    Text { text: "Luma"; color: configManager.themeTextSecondary; font.pixelSize: 22; font.bold: true; Layout.alignment: Qt.AlignVCenter }
-                    Text { text: "larm"; color: configManager.themeTextPrimary; font.pixelSize: 22; font.bold: true; Layout.alignment: Qt.AlignVCenter }
+                    Text { text: "Lumalarm"; color: configManager.themeTextPrimary; font.pixelSize: 22; font.bold: true; Layout.alignment: Qt.AlignVCenter }
                     Item { Layout.fillWidth: true }
                     Text {
                         text: {
