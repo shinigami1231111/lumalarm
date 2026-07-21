@@ -76,35 +76,20 @@ ColumnLayout {
 
             RowLayout {
                 Layout.fillWidth: true; spacing: 14
-                Text { text: "Blur Mode"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.preferredWidth: 180 }
+                Text { text: "Compositor Blur"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.preferredWidth: 180 }
                 Item { Layout.fillWidth: true }
-                RowLayout {
-                    spacing: 6
-                    GlassButton {
-                        text: "Compositor"
-                        pixelSize: 12; implicitWidth: 100; implicitHeight: 30; radius: 7
-                        property bool active: themeManager.blur_mode === "compositor"
-                        baseColor: active ? Qt.rgba(0.2, 0.6, 1, 0.28) : Qt.rgba(1, 1, 1, 0.06)
-                        textColor: active ? Qt.rgba(0.6, 0.85, 1, 1) : configManager.themeTextSecondary
-                        borderColor: active ? Qt.rgba(0.4, 0.8, 1, 0.4) : Qt.rgba(1, 1, 1, 0.1)
-                        onClicked: themeManager.blur_mode = "compositor"
-                    }
-                    GlassButton {
-                        text: "App (fallback)"
-                        pixelSize: 12; implicitWidth: 110; implicitHeight: 30; radius: 7
-                        property bool active: themeManager.blur_mode === "app"
-                        baseColor: active ? Qt.rgba(0.2, 0.6, 1, 0.28) : Qt.rgba(1, 1, 1, 0.06)
-                        textColor: active ? Qt.rgba(0.6, 0.85, 1, 1) : configManager.themeTextSecondary
-                        borderColor: active ? Qt.rgba(0.4, 0.8, 1, 0.4) : Qt.rgba(1, 1, 1, 0.1)
-                        onClicked: themeManager.blur_mode = "app"
-                    }
+                ToggleSwitch {
+                    checked: themeManager.blur_mode === "compositor"
+                    onToggled: function(v) { themeManager.blur_mode = v ? "compositor" : "app" }
                 }
             }
 
             Text {
-                text: "Compositor: window stays transparent and Hyprland/Sway blur the desktop behind it. App: panel is opaque (no compositor blur needed)."
-                color: Qt.rgba(1, 0.7, 0.3, 0.85)
-                font.pixelSize: 12; wrapMode: Text.Wrap; Layout.fillWidth: true
+                text: themeManager.blur_mode === "compositor"
+                    ? "ON — compositor blurs the desktop behind the transparent panel. Requires Hyprland/Sway + a blur window rule."
+                    : "OFF — no compositor blur. Opacity still controls panel transparency."
+                color: configManager.themeTextSecondary; font.pixelSize: 12
+                wrapMode: Text.Wrap; Layout.fillWidth: true
             }
 
             Text { text: "Palette Presets"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.bottomMargin: -6 }

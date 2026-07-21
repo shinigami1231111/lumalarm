@@ -24,10 +24,11 @@ Window {
     // In "compositor" blur mode the background is drawn with a REAL rgba alpha
     // (not QML opacity) so the Wayland/X11 compositor sees genuine per-pixel
     // transparency and can blur the desktop behind the window.
-    // In "app" blur mode (no compositor blur available) we force the panel to
-    // be nearly opaque to avoid transparency artifacts on X11/GNOME.
-    property bool compositorBlur: themeManager.blur_mode === "compositor"
-    property real bgAlpha: compositorBlur ? themeManager.card_opacity : Math.max(themeManager.card_opacity, 0.92)
+    // Blur and opacity are independent.
+    // Opacity (card_opacity) always controls the background alpha.
+    // Blur mode toggles compositor blur on/off behind the transparent panel.
+    property bool blurEnabled: themeManager.blur_mode === "compositor"
+    property real bgAlpha: themeManager.card_opacity
     property color bgBase: themeManager.background_color
     property color accentColor: themeManager.accent_color
     property color bgWithAlpha: Qt.alpha(bgBase, bgAlpha)
