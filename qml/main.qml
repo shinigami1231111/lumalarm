@@ -304,4 +304,20 @@ Window {
             }
         }
     }
+
+    // Audio error surfacing — never fail silently.
+    property string audioErrorText: ""
+    Connections {
+        target: audioPlayer
+        function onPlaybackError(msg) { root.audioErrorText = msg; audioErrorTimer.restart() }
+    }
+    Timer { id: audioErrorTimer; interval: 6000; repeat: false; onTriggered: root.audioErrorText = "" }
+    Text {
+        visible: root.audioErrorText !== ""
+        text: "🔊 " + root.audioErrorText
+        color: "#ff6b6b"; font.pixelSize: 12
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: parent.bottom; anchors.bottomMargin: 8
+        z: 1000
+    }
 }

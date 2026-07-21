@@ -2,6 +2,8 @@
 #include <QUrl>
 #include <QFileInfo>
 #include <QStandardPaths>
+#include <QMediaDevices>
+#include <QAudioDevice>
 
 AudioPlayer::AudioPlayer(QObject *parent)
     : QObject(parent)
@@ -14,6 +16,14 @@ AudioPlayer::AudioPlayer(QObject *parent)
 {
     m_player->setAudioOutput(m_audioOutput);
     m_scPlayer->setAudioOutput(m_scAudioOutput);
+
+    // Explicitly bind to the system default output device so audio is never
+    // routed to a null/muted device.
+    auto dev = QMediaDevices::defaultAudioOutput();
+    m_audioOutput->setDevice(dev);
+    m_scAudioOutput->setDevice(dev);
+    m_audioOutput->setVolume(m_volume / 100.0);
+    m_scAudioOutput->setVolume(0);
 
     connect(m_player, &QMediaPlayer::errorOccurred, this, &AudioPlayer::onMediaError);
     connect(m_player, &QMediaPlayer::mediaStatusChanged, this, &AudioPlayer::onMediaStatusChanged);
@@ -111,7 +121,10 @@ void AudioPlayer::play(const QString &filePath)
     m_player->stop();
 
     QString resolved = resolvePath(filePath);
-    if (resolved.isEmpty()) return;
+    if (resolved.isEmpty()) {
+        emit playbackError("Sound file not found: " + filePath);
+        return;
+    }
 
     m_player->setSource(QUrl::fromLocalFile(resolved));
     m_player->play();
@@ -125,7 +138,10 @@ void AudioPlayer::preview(const QString &filePath)
     m_fadeTimer->stop();
 
     QString resolved = resolvePath(filePath);
-    if (resolved.isEmpty()) return;
+    if (resolved.isEmpty()) {
+        emit playbackError("Sound file not found: " + filePath);
+        return;
+    }
 
     m_player->setSource(QUrl::fromLocalFile(resolved));
     m_audioOutput->setVolume(m_volume / 100.0);
