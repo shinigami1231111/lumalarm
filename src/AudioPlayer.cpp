@@ -17,14 +17,6 @@ AudioPlayer::AudioPlayer(QObject *parent)
     m_player->setAudioOutput(m_audioOutput);
     m_scPlayer->setAudioOutput(m_scAudioOutput);
 
-    // Explicitly bind to the system default output device so audio is never
-    // routed to a null/muted device.
-    auto dev = QMediaDevices::defaultAudioOutput();
-    m_audioOutput->setDevice(dev);
-    m_scAudioOutput->setDevice(dev);
-    m_audioOutput->setVolume(m_volume / 100.0);
-    m_scAudioOutput->setVolume(0);
-
     connect(m_player, &QMediaPlayer::errorOccurred, this, &AudioPlayer::onMediaError);
     connect(m_player, &QMediaPlayer::mediaStatusChanged, this, &AudioPlayer::onMediaStatusChanged);
     connect(m_fadeTimer, &QTimer::timeout, this, &AudioPlayer::onFadeTick);
