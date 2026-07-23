@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="banner.svg" alt="Lumalarm" width="680">
+
 **Lumalarm** — a smart alarm clock for Linux that wakes your computer from sleep
 
 Suspend-to-RAM wake scheduling · anti-oversleep challenges · timer · stopwatch · sound manager
