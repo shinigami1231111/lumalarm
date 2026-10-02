@@ -1,8 +1,8 @@
 #ifndef ALARMMANAGER_H
 #define ALARMMANAGER_H
 
-#include "Alarm.h"
-#include "AlarmModel.h"
+#include "models/Alarm.h"
+#include "models/AlarmModel.h"
 
 #include <QObject>
 #include <QVector>

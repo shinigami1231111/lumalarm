@@ -14,3 +14,4 @@ meta_types/
 .qt/
 moc_*
 qmltypes/
+RELEASE_DEFERRED.md

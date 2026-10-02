@@ -1,6 +1,6 @@
 #include <QtTest>
 
-#include "AlarmModel.h"
+#include "models/AlarmModel.h"
 
 // ============================================================================
 // Unit tests for AlarmModel, the QAbstractListModel that replaced the old

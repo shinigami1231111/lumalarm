@@ -1,6 +1,6 @@
 #include <QtTest>
 
-#include "AlarmModel.h"
+#include "models/AlarmModel.h"
 
 // ============================================================================
 // Regression tests for the selectedId selection behavior documented in

@@ -1,7 +1,7 @@
 #ifndef ALARMMODEL_H
 #define ALARMMODEL_H
 
-#include "Alarm.h"
+#include "models/Alarm.h"
 
 #include <QAbstractListModel>
 #include <QVariantList>

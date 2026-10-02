@@ -1,4 +1,4 @@
-#include "AlarmManager.h"
+#include "managers/AlarmManager.h"
 
 // ── struct Alarm — serialization kept byte-for-byte from the pre-refactor
 // ── version; this is the on-disk schema users upgrading from 1.0.1 rely on.

@@ -1,4 +1,4 @@
-#include "WakeManager.h"
+#include "wake/WakeManager.h"
 
 #include <QDBusConnection>
 #include <QDBusError>
@@ -13,7 +13,7 @@
 #include <QTimeZone>
 #include <unistd.h>
 
-#include "SchedulerState.h"
+#include "wake/SchedulerState.h"
 
 namespace {
 bool isRoot()

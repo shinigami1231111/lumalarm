@@ -5,7 +5,7 @@
 #include <QJsonObject>
 #include <QString>
 #include <QTimeZone>
-#include "AlarmManager.h"
+#include "managers/AlarmManager.h"
 
 // ── Wake-recovery policy ─────────────────────────────────────────────────────
 // Every timing window used to classify a boot relative to a scheduled wake

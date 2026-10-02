@@ -1,4 +1,4 @@
-#include "AudioPlayer.h"
+#include "audio/AudioPlayer.h"
 #include <QUrl>
 #include <QFileInfo>
 #include <QStandardPaths>

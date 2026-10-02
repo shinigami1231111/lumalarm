@@ -1,9 +1,9 @@
 #include <QtTest>
 
-#include "AlarmManager.h"
-#include "SchedulerState.h"
-#include "WakeManager.h"
-#include "Scheduler.h"
+#include "managers/AlarmManager.h"
+#include "wake/SchedulerState.h"
+#include "wake/WakeManager.h"
+#include "wake/Scheduler.h"
 
 // ============================================================================
 // Unit tests for the scheduler wake-recovery logic:

@@ -7,9 +7,9 @@
 #include <QDateTime>
 #include <QHash>
 #include <QString>
-#include "AlarmManager.h"
-#include "SchedulerState.h"
-#include "WakeManager.h"
+#include "managers/AlarmManager.h"
+#include "wake/SchedulerState.h"
+#include "wake/WakeManager.h"
 
 class Scheduler : public QObject
 {

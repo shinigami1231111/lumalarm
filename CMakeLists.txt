@@ -33,28 +33,28 @@ endif()
 
 set(SOURCES
     src/main.cpp
-    src/AlarmManager.cpp
-    src/AlarmModel.cpp
-    src/AudioPlayer.cpp
-    src/Scheduler.cpp
-    src/SchedulerState.cpp
-    src/WakeManager.cpp
-    src/ConfigManager.cpp
-    src/ThemeManager.cpp
-    src/BlurManager.cpp
+    src/managers/AlarmManager.cpp
+    src/models/AlarmModel.cpp
+    src/audio/AudioPlayer.cpp
+    src/wake/Scheduler.cpp
+    src/wake/SchedulerState.cpp
+    src/wake/WakeManager.cpp
+    src/managers/ConfigManager.cpp
+    src/managers/ThemeManager.cpp
+    src/ui/BlurManager.cpp
 )
 
 set(HEADERS
-    src/Alarm.h
-    src/AlarmManager.h
-    src/AlarmModel.h
-    src/AudioPlayer.h
-    src/Scheduler.h
-    src/SchedulerState.h
-    src/WakeManager.h
-    src/ConfigManager.h
-    src/ThemeManager.h
-    src/BlurManager.h
+    src/models/Alarm.h
+    src/managers/AlarmManager.h
+    src/models/AlarmModel.h
+    src/audio/AudioPlayer.h
+    src/wake/Scheduler.h
+    src/wake/SchedulerState.h
+    src/wake/WakeManager.h
+    src/managers/ConfigManager.h
+    src/managers/ThemeManager.h
+    src/ui/BlurManager.h
 )
 
 set(QML_FILES
@@ -77,6 +77,10 @@ set(QML_FILES
 )
 
 qt6_add_executable(lumalarm ${SOURCES} ${HEADERS})
+
+# Sources are grouped into modules under src/ (models/managers/audio/wake/ui);
+# all project includes are rooted at src/ (e.g. #include "wake/Scheduler.h").
+target_include_directories(lumalarm PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 qt6_add_qml_module(lumalarm
     URI GlassAlarm
@@ -118,11 +122,11 @@ if(BUILD_TESTING)
     find_package(Qt6 REQUIRED COMPONENTS Test)
     qt6_add_executable(tst_schedulerlogic
         tests/tst_schedulerlogic.cpp
-        src/AlarmManager.cpp
-        src/AlarmModel.cpp
-        src/Scheduler.cpp
-        src/SchedulerState.cpp
-        src/WakeManager.cpp
+        src/managers/AlarmManager.cpp
+        src/models/AlarmModel.cpp
+        src/wake/Scheduler.cpp
+        src/wake/SchedulerState.cpp
+        src/wake/WakeManager.cpp
     )
     target_include_directories(tst_schedulerlogic PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
     target_link_libraries(tst_schedulerlogic PRIVATE Qt6::Core Qt6::Test Qt6::DBus)
@@ -132,8 +136,8 @@ if(BUILD_TESTING)
     # QVariantList alarm exposure).
     qt6_add_executable(tst_alarmmodel
         tests/tst_alarmmodel.cpp
-        src/AlarmModel.cpp
-        src/AlarmManager.cpp   # provides Alarm::toVariantMap()/fromVariantMap()
+        src/models/AlarmModel.cpp
+        src/managers/AlarmManager.cpp   # provides Alarm::toVariantMap()/fromVariantMap()
     )
     target_include_directories(tst_alarmmodel PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
     target_link_libraries(tst_alarmmodel PRIVATE Qt6::Core Qt6::Test)
@@ -143,8 +147,8 @@ if(BUILD_TESTING)
     # resolved 1.0.2 — QML selection rules mirrored in a minimal C++ harness).
     qt6_add_executable(tst_selectionbehavior
         tests/tst_selectionbehavior.cpp
-        src/AlarmModel.cpp
-        src/AlarmManager.cpp   # provides Alarm::toVariantMap()/fromVariantMap()
+        src/models/AlarmModel.cpp
+        src/managers/AlarmManager.cpp   # provides Alarm::toVariantMap()/fromVariantMap()
     )
     target_include_directories(tst_selectionbehavior PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
     target_link_libraries(tst_selectionbehavior PRIVATE Qt6::Core Qt6::Test)
@@ -159,6 +163,7 @@ if(BUILD_TESTING)
     qt6_add_executable(tst_qmlresources
         tests/tst_qmlresources.cpp
     )
+    target_include_directories(tst_qmlresources PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
     qt6_add_resources(tst_qmlresources tst_qmlresources_res
         PREFIX "${LUMALARM_QML_RESOURCE_PREFIX}"
         BASE "${CMAKE_CURRENT_SOURCE_DIR}"

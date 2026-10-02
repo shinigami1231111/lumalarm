@@ -1,4 +1,4 @@
-#include "BlurManager.h"
+#include "ui/BlurManager.h"
 
 #if defined(LUMALARM_ENABLE_KDE_BLUR)
 #include <KWindowEffects>

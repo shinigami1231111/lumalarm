@@ -17,13 +17,13 @@
 #include <QSystemTrayIcon>
 #include <QMenu>
 
-#include "AlarmManager.h"
-#include "AudioPlayer.h"
-#include "Scheduler.h"
-#include "WakeManager.h"
-#include "ConfigManager.h"
-#include "ThemeManager.h"
-#include "BlurManager.h"
+#include "managers/AlarmManager.h"
+#include "audio/AudioPlayer.h"
+#include "wake/Scheduler.h"
+#include "wake/WakeManager.h"
+#include "managers/ConfigManager.h"
+#include "managers/ThemeManager.h"
+#include "ui/BlurManager.h"
 
 int main(int argc, char *argv[])
 {

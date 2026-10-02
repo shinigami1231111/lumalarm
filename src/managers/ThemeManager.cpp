@@ -1,4 +1,4 @@
-#include "ThemeManager.h"
+#include "managers/ThemeManager.h"
 
 #include <QStandardPaths>
 #include <QDir>

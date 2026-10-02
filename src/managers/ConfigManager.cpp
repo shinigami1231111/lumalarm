@@ -1,5 +1,5 @@
-#include "ConfigManager.h"
-#include "ThemeManager.h"
+#include "managers/ConfigManager.h"
+#include "managers/ThemeManager.h"
 #include <QFileInfoList>
 #include <QFileInfo>
 
