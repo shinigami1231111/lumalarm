@@ -1,12 +1,22 @@
-# Lumalarm C++ style — matches the existing hand-written code.
+# Lumalarm C++ style — describes the code as it is actually written.
 #
-#   4-space indent, no tabs, 100-column limit, attached braces,
-#   Qt naming (PascalCase classes / camelCase methods / m_ members),
-#   include blocks and their order are left exactly as written.
+#   4-space indent, no tabs, 100-column limit, pointer/reference bound to the
+#   variable name (QObject *parent), opening brace on its own line for
+#   function and class definitions, brace-less single-statement control flow,
+#   Qt naming (PascalCase classes / camelCase methods / m_ members).
+#
+# This file was derived from the existing sources rather than imposed on them:
+# `clang-format --dry-run --Werror` over src/, tests/ and helper/ reports 579
+# remaining deviations (down from 1247 before the pointer/brace keys were
+# corrected), all of them comment alignment or single-line `case` bodies that
+# clang-format normalizes rather than preserves. Reformatting the tree is a
+# separate, deliberate commit — treat this config as the target style.
+# Trailing-comment alignment is left at the LLVM default (true), which is what
+# the hand-aligned comments in the sources already are.
 #
 # Check a file without touching it:
 #   clang-format --dry-run --Werror path/to/file.cpp
-#
+
 # Based on LLVM, overridden where Lumalarm differs.
 BasedOnStyle: LLVM
 
@@ -18,18 +28,36 @@ IndentWidth: 4
 TabWidth: 4
 UseTab: Never
 ColumnLimit: 100
-BreakBeforeBraces: Attach
 AlignAfterOpenBracket: Align
 AccessModifierOffset: -4
 NamespaceIndentation: None
 
-# ── spacing / braces ─────────────────────────────────────────────────────────
+# ── pointers and braces ───────────────────────────────────────────────────────
+# `*` and `&` bind to the variable, not the type: const QModelIndex &idx.
+PointerAlignment: Right
+
+# Opening brace on its own line after a function/class definition, attached to
+# control statements; `if (x)\n    y;` bodies stay brace-less.
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterFunction: true
+  AfterClass: true
+  AfterControlStatement: Never
+  AfterNamespace: false
+
+# ── spacing / single-line bodies ──────────────────────────────────────────────
 SpaceAfterCStyleCast: false
 Cpp11BracedListStyle: true
 AllowShortFunctionsOnASingleLine: Empty
+# `if (x)\n    y;` is written with the statement on its own line — keep it that
+# way instead of joining it onto the condition.
 AllowShortIfStatementsOnASingleLine: Never
 AllowShortLoopsOnASingleLine: false
-PointerAlignment: Left
+
+# ── comments ──────────────────────────────────────────────────────────────────
+# Trailing comments are hand-aligned next to the code they annotate; keep them
+# where they are instead of re-flowing the whole file.
+ReflowComments: false
 
 # ── includes ──────────────────────────────────────────────────────────────────
 # Project headers are grouped by hand (Qt first, then ours); never reorder.
