@@ -59,21 +59,21 @@ set(HEADERS
 
 set(QML_FILES
     qml/main.qml
-    qml/GlassButton.qml
-    qml/GlassCard.qml
-    qml/AlarmListView.qml
-    qml/AlarmEditor.qml
-    qml/RingingOverlay.qml
-    qml/SoundManager.qml
-    qml/TimerPage.qml
-    qml/StopwatchPage.qml
-    qml/SettingsPage.qml
-    qml/RoundedCombo.qml
-    qml/GlassCheckBox.qml
-    qml/ClockFace.qml
-    qml/ToggleSwitch.qml
-    qml/SegmentedControl.qml
-    qml/WheelTimePicker.qml
+    qml/components/GlassButton.qml
+    qml/components/GlassCard.qml
+    qml/pages/AlarmListView.qml
+    qml/pages/AlarmEditor.qml
+    qml/overlays/RingingOverlay.qml
+    qml/overlays/SoundManager.qml
+    qml/pages/TimerPage.qml
+    qml/pages/StopwatchPage.qml
+    qml/pages/SettingsPage.qml
+    qml/components/RoundedCombo.qml
+    qml/components/GlassCheckBox.qml
+    qml/pickers/ClockFace.qml
+    qml/components/ToggleSwitch.qml
+    qml/components/SegmentedControl.qml
+    qml/pickers/WheelTimePicker.qml
 )
 
 qt6_add_executable(lumalarm ${SOURCES} ${HEADERS})
