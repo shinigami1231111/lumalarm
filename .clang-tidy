@@ -10,6 +10,9 @@
 # readability entries encode this project's naming conventions
 # (PascalCase classes, camelCase methods, m_ members, UPPER_CASE globals).
 
+# Excluded on purpose: readability-braces-around-statements — the codebase
+# intentionally writes brace-less single-statement control flow
+# (`if (x)\n    y;`), so that check reported 122 deviations from project style.
 Checks: >-
   -*,
   bugprone-*,
@@ -18,7 +21,6 @@ Checks: >-
   modernize-use-override,
   modernize-use-using,
   modernize-use-auto,
-  readability-braces-around-statements,
   readability-identifier-naming,
   readability-container-size-empty
 
@@ -48,7 +50,7 @@ CheckOptions:
     value: CamelCase
   - key: readability-identifier-naming.GlobalConstantCase
     value: UPPER_CASE
-  - key: readability-identifier-naming.LocalConstantCase
-    value: CamelCase
+  # LocalConstantCase is deliberately unset: it flagged idiomatic lowercase
+  # locals (entry, it, row, idx) and produced 71 findings on its own.
   - key: readability-identifier-naming.LocalVariableCase
     value: camelBack
