@@ -1,0 +1,18 @@
+<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN"
+ "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
+<node>
+  <interface name="org.lumalarm.Helper">
+    <method name="ScheduleWake">
+      <arg type="u" name="seconds" direction="in"/>
+      <arg type="b" name="success" direction="out"/>
+      <arg type="s" name="message" direction="out"/>
+    </method>
+    <method name="CancelWake">
+      <arg type="b" name="success" direction="out"/>
+      <arg type="s" name="message" direction="out"/>
+    </method>
+    <method name="GetStatus">
+      <arg type="s" name="status" direction="out"/>
+    </method>
+  </interface>
+</node>

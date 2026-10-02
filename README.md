@@ -75,7 +75,7 @@ That suspend-to-wake behavior is the core power of Lumalarm. Everything else —
   - [Build from Source](#build-from-source)
   - [AUR](#aur)
 - [Configuration](#configuration)
-- [rtcwake Setup](#rtcwake-setup)
+- [Wake Setup (D-Bus helper)](#wake-setup-d-bus-helper)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -237,16 +237,19 @@ cp my-sound.wav ~/.config/lumalarm/tones/
 
 ---
 
-## rtcwake Setup
+## Wake Setup (D-Bus helper)
 
-The "Arm & Suspend" button calls `sudo rtcwake`. To allow passwordless execution:
+Install the package; the wake helper is registered automatically via D-Bus.
+
+Wake scheduling runs behind a privilege boundary: the app calls the `org.lumalarm.Helper` system service, which runs as root and invokes `systemd-run --on-active=… --property=WakeSystem=yes` (systemd ≥ 254) or `rtcwake` directly (older systemd). No sudoers rule and no password prompt are involved.
+
+The helper requires **rtcwake** (`util-linux`) or **systemd ≥ 254**.
+
+**Troubleshooting:** if scheduling fails, check the helper log:
 
 ```bash
-echo "$USER ALL=(ALL) NOPASSWD: /usr/bin/rtcwake" | sudo tee /etc/sudoers.d/lumalarm
-sudo chmod 440 /etc/sudoers.d/lumalarm
+journalctl -u lumalarm-wake-helper
 ```
-
-Without this, you'll be prompted for a password every time the suspend button is clicked.
 
 **Available suspend modes:**
 

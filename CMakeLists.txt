@@ -9,7 +9,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTORCC ON)
 
-find_package(Qt6 6.5 REQUIRED COMPONENTS Core Multimedia Qml Quick QuickControls2 Widgets)
+find_package(Qt6 6.5 REQUIRED COMPONENTS Core Multimedia Qml Quick QuickControls2 Widgets DBus)
 
 qt_standard_project_setup(REQUIRES 6.5)
 
@@ -98,11 +98,19 @@ target_link_libraries(lumalarm PRIVATE
     Qt6::Quick
     Qt6::QuickControls2
     Qt6::Widgets
+    Qt6::DBus
 )
 
 if(LUMALARM_ENABLE_KDE_BLUR)
     target_link_libraries(lumalarm PRIVATE KF6::WindowSystem)
 endif()
+
+# ── Wake helper: privileged D-Bus system service (STG-1.1) ───────────────────
+# Replaces the sudoers NOPASSWD rtcwake rule; see helper/lumalarm-wake-helper.cpp
+qt_add_executable(lumalarm-wake-helper
+    helper/lumalarm-wake-helper.cpp
+)
+target_link_libraries(lumalarm-wake-helper PRIVATE Qt6::Core Qt6::DBus)
 
 # ── Tests ─────────────────────────────────────────────────────────────────────
 include(CTest)
@@ -117,7 +125,7 @@ if(BUILD_TESTING)
         src/WakeManager.cpp
     )
     target_include_directories(tst_schedulerlogic PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
-    target_link_libraries(tst_schedulerlogic PRIVATE Qt6::Core Qt6::Test)
+    target_link_libraries(tst_schedulerlogic PRIVATE Qt6::Core Qt6::Test Qt6::DBus)
     add_test(NAME tst_schedulerlogic COMMAND tst_schedulerlogic)
 
     # AlarmModel unit tests (QAbstractListModel refactor of the old
@@ -173,3 +181,14 @@ install(FILES resources/lumalarm.desktop DESTINATION ${CMAKE_INSTALL_DATADIR}/ap
 install(FILES resources/icon.svg DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/hicolor/scalable/apps RENAME lumalarm.svg)
 install(FILES resources/icon-256.png DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/hicolor/256x256/apps RENAME lumalarm.png)
 install(FILES resources/icon-512.png DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/hicolor/512x512/apps RENAME lumalarm.png)
+
+# ── Wake helper install rules (STG-1.1) ──────────────────────────────────────
+install(TARGETS lumalarm-wake-helper RUNTIME DESTINATION /usr/lib/lumalarm)
+install(FILES data/org.lumalarm.Helper.service DESTINATION /usr/share/dbus-1/system-services)
+install(FILES data/org.lumalarm.schedule.policy DESTINATION /usr/share/polkit-1/actions)
+install(FILES data/lumalarm-wake-helper.service DESTINATION /usr/lib/systemd/system)
+install(FILES data/org.lumalarm.Helper.xml DESTINATION /usr/share/lumalarm)
+# Bus policy punch: the system bus default denies own/method_call, so without
+# this file the helper cannot register its name and no client can reach it
+# (proven empirically: "Request to own name refused by policy").
+install(FILES data/org.lumalarm.Helper.conf DESTINATION /usr/share/dbus-1/system.d)

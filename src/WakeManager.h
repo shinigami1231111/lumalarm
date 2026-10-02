@@ -78,6 +78,18 @@ private:
     static bool runSynchronous(const QString &program, const QStringList &args,
                                int timeoutMs, QString *error, QString *output = nullptr);
 
+    // ── D-Bus helper integration (org.lumalarm.Helper, system bus) ─────────
+    // Outcome of one ScheduleWake attempt against the privileged helper.
+    enum class HelperResult { Scheduled, Unavailable, Declined };
+    // Ask the helper to schedule a wake `seconds` from now. Unavailable
+    // (ServiceUnknown / AccessDenied / transport failure) and Declined
+    // (range or backend rejection) both leave the caller on the legacy
+    // direct-rtcwake path. `message` receives the helper's response text.
+    HelperResult scheduleViaHelper(uint seconds, QString *message);
+    // Ask the helper to cancel the wake it scheduled. True = handled.
+    bool cancelViaHelper(QString *message);
+
+    bool m_helperOwnedWake = false;   // helper owns the currently programmed wake
     QProcess *m_process;
     QString m_state;   // "idle", "arming", "armed", "failed"
     QString m_lastError;
