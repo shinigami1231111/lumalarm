@@ -14,28 +14,12 @@ QJsonObject Alarm::toJson() const
     obj["days"] = daysArr;
 
     obj["wakeMode"] = wakeMode;
-    obj["fadeDuration"] = fadeDuration;
-    obj["baseVolume"] = baseVolume;
     obj["autoStopDuration"] = autoStopDuration;
     obj["enableSound"] = enableSound;
     obj["enableCommand"] = enableCommand;
     obj["command"] = command;
     obj["enabled"] = enabled;
     obj["soundFile"] = soundFile;
-    obj["isSnooze"] = isSnooze;
-    obj["enableChallenge"] = enableChallenge;
-    obj["challengeText"] = challengeText;
-    obj["wakeUpCheckEnabled"] = wakeUpCheckEnabled;
-    obj["wakeUpCheckInterval"] = wakeUpCheckInterval;
-
-    obj["soundscape"] = soundscape;
-    obj["maxSnoozes"] = maxSnoozes;
-    obj["challengeMode"] = challengeMode;
-    obj["mathDifficulty"] = mathDifficulty;
-    obj["escalatingWake"] = escalatingWake;
-    obj["escalatingTimeout"] = escalatingTimeout;
-    obj["note"] = note;
-    obj["snoozeInterval"] = snoozeInterval;
     obj["name"] = name;
 
     return obj;
@@ -57,34 +41,12 @@ Alarm Alarm::fromJson(const QJsonObject &obj)
     }
 
     a.wakeMode = obj["wakeMode"].toString("mem");
-    a.fadeDuration = obj["fadeDuration"].toInt(15);
-    a.baseVolume = obj["baseVolume"].toInt(20);
     a.autoStopDuration = obj["autoStopDuration"].toInt(120);
     a.enableSound = obj["enableSound"].toBool(true);
     a.enableCommand = obj["enableCommand"].toBool(false);
     a.command = obj["command"].toString();
     a.enabled = obj["enabled"].toBool(true);
     a.soundFile = obj["soundFile"].toString();
-    a.isSnooze = obj["isSnooze"].toBool(false);
-    a.enableChallenge = obj["enableChallenge"].toBool(false);
-    a.challengeText = obj["challengeText"].toString();
-    a.wakeUpCheckEnabled = obj["wakeUpCheckEnabled"].toBool(false);
-    a.wakeUpCheckInterval = obj["wakeUpCheckInterval"].toInt(3);
-
-    // Phase 1 fields with backward-compat defaults
-    if (obj.contains("challengeMode")) {
-        a.challengeMode = obj["challengeMode"].toString("typing");
-    } else {
-        // Migrate from old enableChallenge bool
-        a.challengeMode = a.enableChallenge ? "typing" : "none";
-    }
-    a.soundscape = obj["soundscape"].toString();
-    a.maxSnoozes = obj["maxSnoozes"].toInt(-1);
-    a.mathDifficulty = obj["mathDifficulty"].toInt(0);
-    a.escalatingWake = obj["escalatingWake"].toBool(false);
-    a.escalatingTimeout = obj["escalatingTimeout"].toInt(60);
-    a.note = obj["note"].toString();
-    a.snoozeInterval = obj["snoozeInterval"].toInt(0);
     a.name = obj["name"].toString();
 
     return a;
@@ -104,28 +66,12 @@ QVariantMap Alarm::toVariantMap() const
     map["days"] = daysList;
 
     map["wakeMode"] = wakeMode;
-    map["fadeDuration"] = fadeDuration;
-    map["baseVolume"] = baseVolume;
     map["autoStopDuration"] = autoStopDuration;
     map["enableSound"] = enableSound;
     map["enableCommand"] = enableCommand;
     map["command"] = command;
     map["enabled"] = enabled;
     map["soundFile"] = soundFile;
-    map["isSnooze"] = isSnooze;
-    map["enableChallenge"] = enableChallenge;
-    map["challengeText"] = challengeText;
-    map["wakeUpCheckEnabled"] = wakeUpCheckEnabled;
-    map["wakeUpCheckInterval"] = wakeUpCheckInterval;
-
-    map["soundscape"] = soundscape;
-    map["maxSnoozes"] = maxSnoozes;
-    map["challengeMode"] = challengeMode;
-    map["mathDifficulty"] = mathDifficulty;
-    map["escalatingWake"] = escalatingWake;
-    map["escalatingTimeout"] = escalatingTimeout;
-    map["note"] = note;
-    map["snoozeInterval"] = snoozeInterval;
     map["name"] = name;
 
     return map;
@@ -147,32 +93,12 @@ Alarm Alarm::fromVariantMap(const QVariantMap &map)
     }
 
     a.wakeMode = map.value("wakeMode", "mem").toString();
-    a.fadeDuration = map.value("fadeDuration", 15).toInt();
-    a.baseVolume = map.value("baseVolume", 20).toInt();
     a.autoStopDuration = map.value("autoStopDuration", 120).toInt();
     a.enableSound = map.value("enableSound", true).toBool();
     a.enableCommand = map.value("enableCommand", false).toBool();
     a.command = map.value("command").toString();
     a.enabled = map.value("enabled", true).toBool();
     a.soundFile = map.value("soundFile").toString();
-    a.isSnooze = map.value("isSnooze", false).toBool();
-    a.enableChallenge = map.value("enableChallenge", false).toBool();
-    a.challengeText = map.value("challengeText").toString();
-    a.wakeUpCheckEnabled = map.value("wakeUpCheckEnabled", false).toBool();
-    a.wakeUpCheckInterval = map.value("wakeUpCheckInterval", 3).toInt();
-
-    if (map.contains("challengeMode")) {
-        a.challengeMode = map.value("challengeMode", "typing").toString();
-    } else {
-        a.challengeMode = a.enableChallenge ? "typing" : "none";
-    }
-    a.soundscape = map.value("soundscape").toString();
-    a.maxSnoozes = map.value("maxSnoozes", -1).toInt();
-    a.mathDifficulty = map.value("mathDifficulty", 0).toInt();
-    a.escalatingWake = map.value("escalatingWake", false).toBool();
-    a.escalatingTimeout = map.value("escalatingTimeout", 60).toInt();
-    a.note = map.value("note").toString();
-    a.snoozeInterval = map.value("snoozeInterval", 0).toInt();
     a.name = map.value("name").toString();
 
     return a;
@@ -228,7 +154,6 @@ void AlarmManager::removeAlarm(int index)
 {
     if (index >= 0 && index < m_alarms.size()) {
         m_alarms.removeAt(index);
-        m_snoozeCounts.remove(index);
         saveToFile();
         emit alarmsChanged();
     }
@@ -238,7 +163,6 @@ void AlarmManager::updateAlarm(int index, const QVariantMap &alarm)
 {
     if (index >= 0 && index < m_alarms.size()) {
         m_alarms[index] = Alarm::fromVariantMap(alarm);
-        m_snoozeCounts.remove(index);
         saveToFile();
         emit alarmsChanged();
     }
@@ -254,6 +178,7 @@ void AlarmManager::loadFromFile()
     }
 
     if (!file.open(QIODevice::ReadOnly)) {
+        emit persistenceError("Cannot open alarms file: " + file.errorString());
         return;
     }
 
@@ -261,13 +186,37 @@ void AlarmManager::loadFromFile()
     file.close();
 
     if (data.trimmed().isEmpty()) {
-        m_alarms.clear();
-        return;
+        QString backupPath = m_filePath + ".bak";
+        if (QFile::exists(backupPath)) {
+            emit persistenceError("Alarms file empty, loading backup");
+            QFile bak(backupPath);
+            if (bak.open(QIODevice::ReadOnly)) {
+                data = bak.readAll();
+                bak.close();
+            }
+        }
+        if (data.trimmed().isEmpty()) {
+            m_alarms.clear();
+            return;
+        }
     }
 
     QJsonDocument doc = QJsonDocument::fromJson(data);
     if (!doc.isArray()) {
-        return;
+        QString backupPath = m_filePath + ".bak";
+        if (QFile::exists(backupPath)) {
+            emit persistenceError("Alarms file corrupted, loading backup");
+            QFile bak(backupPath);
+            if (bak.open(QIODevice::ReadOnly)) {
+                QByteArray bakData = bak.readAll();
+                bak.close();
+                doc = QJsonDocument::fromJson(bakData);
+            }
+        }
+        if (!doc.isArray()) {
+            emit persistenceError("Alarms file corrupted and no valid backup found");
+            return;
+        }
     }
 
     m_alarms.clear();
@@ -279,38 +228,33 @@ void AlarmManager::loadFromFile()
 
 void AlarmManager::saveToFile()
 {
-    QFile file(m_filePath);
-    if (!file.open(QIODevice::WriteOnly)) {
-        return;
-    }
-
     QJsonArray arr;
     for (const Alarm &a : m_alarms) {
-        if (a.isSnooze) continue;
         arr.append(a.toJson());
     }
 
     QJsonDocument doc(arr);
-    file.write(doc.toJson(QJsonDocument::Indented));
-    file.close();
+    QByteArray data = doc.toJson(QJsonDocument::Indented);
+
+    QSaveFile file(m_filePath);
+    if (!file.open(QIODevice::WriteOnly)) {
+        emit persistenceError("Cannot write alarms file: " + file.errorString());
+        return;
+    }
+
+    QString backupPath = m_filePath + ".bak";
+    if (QFile::exists(m_filePath)) {
+        QFile::remove(backupPath);
+        QFile::copy(m_filePath, backupPath);
+    }
+
+    file.write(data);
+    if (!file.commit()) {
+        emit persistenceError("Failed to commit alarms file: " + file.errorString());
+    }
 }
 
 QString AlarmManager::alarmsFilePath() const
 {
     return m_filePath;
-}
-
-int AlarmManager::snoozeCount(int alarmIndex) const
-{
-    return m_snoozeCounts.value(alarmIndex, 0);
-}
-
-void AlarmManager::resetSnoozeCount(int alarmIndex)
-{
-    m_snoozeCounts.remove(alarmIndex);
-}
-
-void AlarmManager::incrementSnooze(int alarmIndex)
-{
-    m_snoozeCounts[alarmIndex] = m_snoozeCounts.value(alarmIndex, 0) + 1;
 }

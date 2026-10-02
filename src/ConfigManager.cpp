@@ -31,28 +31,6 @@ void ConfigManager::migrateOldConfig()
     }
 }
 
-int ConfigManager::defaultSnooze() const
-{
-    return qMax(1, m_settings->value("alarm/defaultSnooze", 1).toInt());
-}
-
-void ConfigManager::setDefaultSnooze(int minutes)
-{
-    m_settings->setValue("alarm/defaultSnooze", minutes);
-    emit configChanged();
-}
-
-int ConfigManager::defaultFadeDuration() const
-{
-    return m_settings->value("alarm/defaultFadeDuration", 15).toInt();
-}
-
-void ConfigManager::setDefaultFadeDuration(int seconds)
-{
-    m_settings->setValue("alarm/defaultFadeDuration", seconds);
-    emit configChanged();
-}
-
 QString ConfigManager::defaultWakeMode() const
 {
     return m_settings->value("alarm/defaultWakeMode", "mem").toString();
@@ -133,11 +111,12 @@ void ConfigManager::setThemeAccent(const QString &color)
 
 double ConfigManager::themeOpacity() const
 {
-    return m_theme->card_opacity();
+    return m_settings->value("theme/opacity", 0.55).toDouble();
 }
 void ConfigManager::setThemeOpacity(double opacity)
 {
-    m_theme->set_card_opacity(opacity);
+    m_settings->setValue("theme/opacity", qBound(0.0, opacity, 1.0));
+    emit configChanged();
 }
 
 QString ConfigManager::themeTextPrimary() const
@@ -170,16 +149,6 @@ bool ConfigManager::stopwatchShowMs() const
 void ConfigManager::setStopwatchShowMs(bool show)
 {
     m_settings->setValue("stopwatch/showMs", show);
-    emit configChanged();
-}
-
-int ConfigManager::timePickerStyle() const
-{
-    return m_settings->value("ui/timePickerStyle", 0).toInt();
-}
-void ConfigManager::setTimePickerStyle(int style)
-{
-    m_settings->setValue("ui/timePickerStyle", qBound(0, style, 2));
     emit configChanged();
 }
 

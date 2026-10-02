@@ -26,13 +26,90 @@ ColumnLayout {
             width: parent.width
             spacing: 16
 
-            // ---- Appearance ----
+            // ================================================================
+            // APPEARANCE
+            // ================================================================
             Text { text: "Appearance"; color: configManager.themeTextSecondary; font.pixelSize: 13; font.bold: true; Layout.bottomMargin: -4 }
 
-             ColumnLayout {
+            // 1. Palette Presets
+            Text { text: "Palette Presets"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.bottomMargin: -6 }
+            Flow {
+                Layout.fillWidth: true
+                spacing: 8
+                Repeater {
+                    model: themeManager.presetNames()
+                    GlassButton {
+                        text: modelData
+                        pixelSize: 12; implicitHeight: 32; radius: 7; implicitWidth: Math.max(120, text.length * 8 + 24)
+                        property bool active: themeManager.current_preset === modelData
+                        baseColor: active ? Qt.rgba(0.3, 0.6, 1, 0.28) : Qt.rgba(1, 1, 1, 0.06)
+                        textColor: active ? Qt.rgba(0.6, 0.85, 1, 1) : configManager.themeTextSecondary
+                        borderColor: active ? Qt.rgba(0.4, 0.8, 1, 0.4) : Qt.rgba(1, 1, 1, 0.1)
+                        onClicked: themeManager.applyPreset(modelData)
+                    }
+                }
+            }
+
+            // 2. Background Style
+            Text { text: "Background Style"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.bottomMargin: -6 }
+            Flow {
+                Layout.fillWidth: true
+                spacing: 8
+                Repeater {
+                    model: ["Dark Glass", "Night Sky", "Soft Aurora", "Minimal Geometric", "Atmospheric Dark", "Subtle Gradient", "Abstract Light"]
+                    GlassButton {
+                        text: modelData
+                        pixelSize: 12; implicitHeight: 32; radius: 7; implicitWidth: Math.max(110, text.length * 7 + 24)
+                        property bool active: themeManager.background_preset === modelData
+                        baseColor: active ? Qt.rgba(0.3, 0.6, 1, 0.28) : Qt.rgba(1, 1, 1, 0.06)
+                        textColor: active ? Qt.rgba(0.6, 0.85, 1, 1) : configManager.themeTextSecondary
+                        borderColor: active ? Qt.rgba(0.4, 0.8, 1, 0.4) : Qt.rgba(1, 1, 1, 0.1)
+                        onClicked: themeManager.background_preset = modelData
+                    }
+                }
+            }
+
+            // 3. Compositor Blur
+            RowLayout {
+                Layout.fillWidth: true; spacing: 14
+                Text { text: "Compositor Blur"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.preferredWidth: 180 }
+                Item { Layout.fillWidth: true }
+                ToggleSwitch {
+                    checked: themeManager.blur_mode === "compositor"
+                    onToggled: function(checked) { themeManager.blur_mode = checked ? "compositor" : "app" }
+                }
+            }
+            Text {
+                text: themeManager.blur_mode === "compositor"
+                    ? "ON — compositor blurs the desktop behind the transparent panel. Requires Hyprland/Sway + a blur window rule."
+                    : "OFF — no compositor blur. Opacity still controls panel transparency."
+                color: configManager.themeTextSecondary; font.pixelSize: 12
+                wrapMode: Text.Wrap; Layout.fillWidth: true
+            }
+
+            // 4. Background Opacity
+            RowLayout {
+                Layout.fillWidth: true; spacing: 14
+                Text { text: "Background Opacity"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.preferredWidth: 180 }
+                Item { Layout.fillWidth: true }
+                Slider {
+                    id: opSlider
+                    from: 0.0; to: 1.0; stepSize: 0.01
+                    value: configManager.themeOpacity
+                    implicitWidth: 200
+                    onPressedChanged: {
+                        if (!pressed && value !== configManager.themeOpacity)
+                            configManager.themeOpacity = value
+                    }
+                }
+                Text { text: Math.round(opSlider.value * 100) + "%"; color: configManager.themeTextSecondary; font.pixelSize: 14; Layout.preferredWidth: 46; horizontalAlignment: Text.AlignRight }
+            }
+
+            // 5. Manual Colors
+            Text { text: "Manual Colors"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.bottomMargin: -6 }
+            ColumnLayout {
                 Layout.fillWidth: true
                 spacing: 12
-
                 SettingRow {
                     label: "Background"
                     control: ColorEdit { color: configManager.themeBg; onPicked: { if (root.__allowThemeWrite) configManager.themeBg = hex } }
@@ -49,89 +126,17 @@ ColumnLayout {
                     label: "Text Secondary"
                     control: ColorEdit { color: configManager.themeTextSecondary; onPicked: { if (root.__allowThemeWrite) configManager.themeTextSecondary = hex } }
                 }
-            }
-
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: 14
-                Text { text: "Background Opacity"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.preferredWidth: 180 }
-                Item { Layout.fillWidth: true }
-                Slider {
-                    id: opSlider
-                    from: 0.0; to: 1.0; stepSize: 0.01
-                    value: configManager.themeOpacity
-                    implicitWidth: 200
-                    onPressedChanged: {
-                        if (!pressed && value !== configManager.themeOpacity)
-                            configManager.themeOpacity = value
-                    }
+                SettingRow {
+                    label: "Border Color"
+                    control: ColorEdit { color: themeManager.border_color; onPicked: themeManager.border_color = hex }
                 }
-                Text { text: Math.round(opSlider.value * 100) + "%"; color: configManager.themeTextSecondary; font.pixelSize: 14; Layout.preferredWidth: 46; horizontalAlignment: Text.AlignRight }
-            }
-
-            Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: Qt.rgba(1,1,1,0.07) }
-
-            // ---- Theming / ricing ----
-            Text { text: "Theming"; color: configManager.themeTextSecondary; font.pixelSize: 13; font.bold: true; Layout.bottomMargin: -4 }
-
-            RowLayout {
-                Layout.fillWidth: true; spacing: 14
-                Text { text: "Compositor Blur"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.preferredWidth: 180 }
-                Item { Layout.fillWidth: true }
-                ToggleSwitch {
-                    checked: themeManager.blur_mode === "compositor"
-                    onToggled: function(v) { themeManager.blur_mode = v ? "compositor" : "app" }
-                }
-            }
-
-            Text {
-                text: themeManager.blur_mode === "compositor"
-                    ? "ON — compositor blurs the desktop behind the transparent panel. Requires Hyprland/Sway + a blur window rule."
-                    : "OFF — no compositor blur. Opacity still controls panel transparency."
-                color: configManager.themeTextSecondary; font.pixelSize: 12
-                wrapMode: Text.Wrap; Layout.fillWidth: true
-            }
-
-            Text { text: "Palette Presets"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.bottomMargin: -6 }
-            Flow {
-                Layout.fillWidth: true
-                spacing: 8
-                Repeater {
-                    model: themeManager.presetNames()
-                    GlassButton {
-                        text: modelData
-                        pixelSize: 12; implicitHeight: 32; radius: 7; implicitWidth: Math.max(120, text.length * 8 + 24)
-                        onClicked: themeManager.applyPreset(modelData)
-                    }
-                }
-            }
-
-            RowLayout {
-                Layout.fillWidth: true; spacing: 14
-                Text { text: "Border Color"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.preferredWidth: 180 }
-                Item { Layout.fillWidth: true }
-                ColorEdit { color: themeManager.border_color; onPicked: themeManager.border_color = hex }
             }
 
             RowLayout {
                 Layout.fillWidth: true; spacing: 14
                 Text { text: "Corner Radius"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.preferredWidth: 180 }
                 Item { Layout.fillWidth: true }
-                Spinny { from: 0; to: 40; value: themeManager.corner_radius; suffix: " px"; onChanged: themeManager.corner_radius = v }
-            }
-
-            RowLayout {
-                Layout.fillWidth: true; spacing: 14
-                Text { text: "Card Opacity"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.preferredWidth: 180 }
-                Item { Layout.fillWidth: true }
-                Slider {
-                    id: cardOpacitySlider
-                    from: 0.0; to: 1.0; stepSize: 0.01
-                    value: themeManager.card_opacity
-                    implicitWidth: 200
-                    onPressedChanged: { if (!pressed && value !== themeManager.card_opacity) themeManager.card_opacity = value }
-                }
-                Text { text: Math.round(cardOpacitySlider.value * 100) + "%"; color: configManager.themeTextSecondary; font.pixelSize: 14; Layout.preferredWidth: 46; horizontalAlignment: Text.AlignRight }
+                Spinny { from: 0; to: 40; value: themeManager.corner_radius; suffix: " px"; onChanged: function() { themeManager.corner_radius = current } }
             }
 
             RowLayout {
@@ -171,61 +176,55 @@ ColumnLayout {
 
             Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: Qt.rgba(1,1,1,0.07) }
 
-            // ---- Interface ----
-            Text { text: "Interface"; color: configManager.themeTextSecondary; font.pixelSize: 13; font.bold: true; Layout.bottomMargin: -4 }
+            // ================================================================
+            // DEFAULT (functional settings)
+            // ================================================================
+            Text { text: "Default"; color: configManager.themeTextSecondary; font.pixelSize: 13; font.bold: true; Layout.bottomMargin: -4 }
 
+            // Window Controls
+            Text { text: "Window Controls"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.bottomMargin: -6 }
             RowLayout {
                 Layout.fillWidth: true; spacing: 14
-                Text { text: "Time Picker Style"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.preferredWidth: 180 }
-                Item { Layout.fillWidth: true }
-                RowLayout {
-                    spacing: 6
-                    Repeater {
-                        id: styleRepeater
-                        model: [
-                            {t: "Wheels", v: 0},
-                            {t: "Dual Clocks", v: 1},
-                            {t: "Single Clock", v: 2}
-                        ]
-                        GlassButton {
-                            text: modelData.t
-                            pixelSize: 12
-                            implicitWidth: 92; implicitHeight: 30; radius: 7
-                            property bool active: configManager.timePickerStyle === modelData.v
-                            baseColor: active ? Qt.rgba(0.2, 0.6, 1, 0.28) : Qt.rgba(1, 1, 1, 0.06)
-                            textColor: active ? Qt.rgba(0.6, 0.85, 1, 1) : configManager.themeTextSecondary
-                            borderColor: active ? Qt.rgba(0.4, 0.8, 1, 0.4) : Qt.rgba(1, 1, 1, 0.1)
-                            onClicked: configManager.timePickerStyle = modelData.v
-                        }
-                    }
+                Text { text: "Show Minimize Button"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.fillWidth: true }
+                ToggleSwitch {
+                    checked: themeManager.show_minimize_button
+                    onToggled: function(checked) { themeManager.show_minimize_button = checked }
+                }
+            }
+            RowLayout {
+                Layout.fillWidth: true; spacing: 14
+                Text { text: "Show Maximize Button"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.fillWidth: true }
+                ToggleSwitch {
+                    checked: themeManager.show_maximize_button
+                    onToggled: function(checked) { themeManager.show_maximize_button = checked }
+                }
+            }
+            RowLayout {
+                Layout.fillWidth: true; spacing: 14
+                Text { text: "Show Close Button"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.fillWidth: true }
+                ToggleSwitch {
+                    checked: themeManager.show_close_button
+                    onToggled: function(checked) { themeManager.show_close_button = checked }
                 }
             }
 
-            Text {
-                text: "Note: the Dual Clocks and Single Clock pickers are rendered with Canvas-style drawing and may feel laggy or glitchy on some systems. Wheels is the smoothest option."
-                color: Qt.rgba(1, 0.7, 0.3, 0.85)
-                font.pixelSize: 12
-                wrapMode: Text.Wrap
-                Layout.fillWidth: true
+            // System Tray
+            Text { text: "System Tray"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.bottomMargin: -6 }
+            RowLayout {
+                Layout.fillWidth: true; spacing: 14
+                Text { text: "Show system tray icon"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.fillWidth: true }
+                ToggleSwitch {
+                    checked: themeManager.show_tray_icon
+                    onToggled: function(checked) { themeManager.show_tray_icon = checked }
+                }
             }
 
             Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: Qt.rgba(1,1,1,0.07) }
 
-            // ---- Alarm Defaults ----
-            Text { text: "Alarm Defaults"; color: configManager.themeTextSecondary; font.pixelSize: 13; font.bold: true; Layout.bottomMargin: -4 }
+            Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: Qt.rgba(1,1,1,0.07) }
 
-            RowLayout {
-                Layout.fillWidth: true; spacing: 14
-                Text { text: "Default Snooze"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.preferredWidth: 180 }
-                Item { Layout.fillWidth: true }
-                Spinny { from: 1; to: 60; value: configManager.defaultSnooze; suffix: " min"; onChanged: configManager.defaultSnooze = v }
-            }
-            RowLayout {
-                Layout.fillWidth: true; spacing: 14
-                Text { text: "Default Fade"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.preferredWidth: 180 }
-                Item { Layout.fillWidth: true }
-                Spinny { from: 5; to: 60; value: configManager.defaultFadeDuration; step: 5; suffix: " sec"; onChanged: configManager.defaultFadeDuration = v }
-            }
+            // Alarm Defaults
+            Text { text: "Alarm Defaults"; color: configManager.themeTextSecondary; font.pixelSize: 13; font.bold: true; Layout.bottomMargin: -4 }
             RowLayout {
                 Layout.fillWidth: true; spacing: 14
                 Text { text: "Default Wake Mode"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.preferredWidth: 180 }
@@ -241,15 +240,14 @@ ColumnLayout {
 
             Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: Qt.rgba(1,1,1,0.07) }
 
-            // ---- Behavior ----
+            // Behavior
             Text { text: "Behavior"; color: configManager.themeTextSecondary; font.pixelSize: 13; font.bold: true; Layout.bottomMargin: -4 }
-
             RowLayout {
                 Layout.fillWidth: true; spacing: 14
                 Text { text: "Show milliseconds in stopwatch"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.fillWidth: true }
                 ToggleSwitch {
                     checked: configManager.stopwatchShowMs
-                    onToggled: function(v) { configManager.stopwatchShowMs = v }
+                    onToggled: function(checked) { configManager.stopwatchShowMs = checked }
                 }
             }
 
@@ -272,11 +270,13 @@ ColumnLayout {
                         themeManager.border_color = "#3d7fff"
                         themeManager.blur_mode = "compositor"
                         themeManager.blur_radius = 20
-                        themeManager.card_opacity = 0.55
                         themeManager.font_family = ""
-                        themeManager.corner_radius = 18
-                        configManager.defaultSnooze = 1
-                        configManager.defaultFadeDuration = 15
+                        themeManager.corner_radius = 22
+                        themeManager.background_preset = "Dark Glass"
+                        themeManager.show_minimize_button = true
+                        themeManager.show_maximize_button = true
+                        themeManager.show_close_button = true
+                        themeManager.show_tray_icon = true
                         configManager.defaultWakeMode = "mem"
                         configManager.stopwatchShowMs = true
                     }
@@ -353,12 +353,12 @@ ColumnLayout {
                 ColumnLayout { spacing: 1; Layout.preferredWidth: 22
                     Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 14; radius: 4
                         color: upMa.containsMouse ? Qt.rgba(1,1,1,0.15) : "transparent"
-                        Text { text: "▲"; anchors.centerIn: parent; color: configManager.themeTextSecondary; font.pixelSize: 10 }
+                        Text { text: "\u25B2"; anchors.centerIn: parent; color: configManager.themeTextSecondary; font.pixelSize: 10 }
                         MouseArea { id: upMa; anchors.fill: parent; hoverEnabled: true
                             onClicked: sn.current = Math.min(sn.to, sn.current + sn.step) } }
                     Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 14; radius: 4
                         color: dnMa.containsMouse ? Qt.rgba(1,1,1,0.15) : "transparent"
-                        Text { text: "▼"; anchors.centerIn: parent; color: configManager.themeTextSecondary; font.pixelSize: 10 }
+                        Text { text: "\u25BC"; anchors.centerIn: parent; color: configManager.themeTextSecondary; font.pixelSize: 10 }
                         MouseArea { id: dnMa; anchors.fill: parent; hoverEnabled: true
                             onClicked: sn.current = Math.max(sn.from, sn.current - sn.step) } }
                 }

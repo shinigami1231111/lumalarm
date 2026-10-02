@@ -1,4 +1,4 @@
-#include <QGuiApplication>
+#include <QApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 #include <QQuickStyle>
@@ -13,6 +13,9 @@
 #include <QFont>
 #include <QFontDatabase>
 #include <QFontInfo>
+#include <QLockFile>
+#include <QSystemTrayIcon>
+#include <QMenu>
 
 #include "AlarmManager.h"
 #include "AudioPlayer.h"
@@ -31,9 +34,22 @@ int main(int argc, char *argv[])
     format.setAlphaBufferSize(8);
     QSurfaceFormat::setDefaultFormat(format);
 
-    QGuiApplication app(argc, argv);
+    QApplication app(argc, argv);
     app.setApplicationName("Lumalarm");
     app.setOrganizationName("Lumalarm");
+
+    // Single-instance protection: prevent a second Lumalarm process from
+    // running concurrently. Two instances would both poll alarms, both fire
+    // sounds, and both write to the same config files causing corruption.
+    QString lockPath = QStandardPaths::writableLocation(QStandardPaths::ConfigLocation)
+                       + "/lumalarm/lumalarm.lock";
+    QDir().mkpath(QFileInfo(lockPath).absolutePath());
+    QLockFile lockFile(lockPath);
+    lockFile.setStaleLockTime(0); // never auto-steal; stale locks require manual removal
+    if (!lockFile.tryLock(200)) {
+        // Another instance already holds the lock. Exit silently.
+        return 0;
+    }
 
     QQuickStyle::setStyle("Fusion");
 
@@ -46,8 +62,11 @@ int main(int argc, char *argv[])
     ConfigManager configManager;
     WakeManager wakeManager;
     BlurManager blurManager;
-    Scheduler scheduler(&alarmManager);
-    scheduler.restoreSnoozes();
+    Scheduler scheduler(&alarmManager, &wakeManager);
+
+    // Track which alarm is currently ringing so auto-stop timers from previous
+    // alarms don't accidentally stop a newer alarm's audio.
+    QString currentRingingAlarmId;
 
     // When an alarm triggers: play audio, run command, show overlay
     QObject::connect(&scheduler, &Scheduler::alarmTriggered, [&](int index) {
@@ -55,66 +74,43 @@ int main(int argc, char *argv[])
         if (index < 0 || index >= alarms.size()) return;
 
         const Alarm &a = alarms[index];
-        alarmManager.resetSnoozeCount(index);
 
-        // Execute custom command if enabled
-        if (a.enableCommand && !a.command.isEmpty()) {
-            QProcess::startDetached(a.command);
+        // Stop any previously playing alarm audio — only one alarm rings at a time.
+        if (audioPlayer.isPlaying()) {
+            audioPlayer.stop();
         }
 
-        // Escalating wake stage 1: brightness ramp via brightnessctl
-        if (a.escalatingWake) {
-            for (int i = 1; i <= 15; ++i) {
-                int pct = qMin(100, i * 100 / 15);
-                QTimer::singleShot(i * 1000, [pct]() {
-                    QProcess::startDetached("brightnessctl", {"s", QString::number(pct) + "%"});
-                });
+        currentRingingAlarmId = a.id;
+
+        // Execute custom command if enabled.
+        // NOTE: startDetached(string) invokes /bin/sh -c on Unix. This is
+        // intentional — the custom command feature is designed to support
+        // arbitrary shell commands (pipes, redirects, etc.).
+        if (a.enableCommand && !a.command.isEmpty()) {
+            if (!QProcess::startDetached(a.command)) {
+                qWarning() << "Lumalarm: failed to execute command:" << a.command;
             }
         }
 
         // Play alarm sound immediately
         if (a.enableSound) {
-            QString sf = a.soundFile;
-            int bv = a.baseVolume;
-            int fd = a.fadeDuration;
-            audioPlayer.setBaseVolume(bv);
-            audioPlayer.setFadeDuration(fd);
-            if (audioPlayer.isSoundscapePlaying()) {
-                audioPlayer.crossfadeToMain(bv, fd);
-            } else {
-                audioPlayer.play(sf);
-            }
+            audioPlayer.play(a.soundFile);
         }
 
-        // Auto-stop the alarm after the configured duration
-        QTimer::singleShot(a.autoStopDuration * 1000, [&audioPlayer]() {
-            if (audioPlayer.isPlaying()) {
+        // Auto-stop the alarm after the configured duration.
+        // Capture alarmId by value so the lambda can check if this is still
+        // the current alarm — prevents a stale timer from stopping a newer one.
+        QString alarmId = a.id;
+        QTimer::singleShot(a.autoStopDuration * 1000, [&audioPlayer, &currentRingingAlarmId, alarmId]() {
+            if (currentRingingAlarmId == alarmId && audioPlayer.isPlaying()) {
                 audioPlayer.stop();
             }
         });
     });
 
-    // Soundscape pre-alarm: play ambient track 90s before alarm
-    QObject::connect(&scheduler, &Scheduler::soundscapeStarting, [&](int index) {
-        const auto alarms = alarmManager.alarmList();
-        if (index < 0 || index >= alarms.size()) return;
-
-        const Alarm &a = alarms[index];
-        if (!a.soundscape.isEmpty()) {
-            audioPlayer.playSoundscape(a.soundscape, 5);
-        }
-    });
-
     // Reinitialize audio on system resume (fixes PipeWire/PulseAudio after suspend)
     QObject::connect(&scheduler, &Scheduler::systemResumed, [&audioPlayer]() {
         audioPlayer.reinitializeAudio();
-    });
-
-    // Log dismiss events with stage info (feeds future statistics)
-    QObject::connect(&alarmManager, &AlarmManager::alarmDismissed, [](int index, int stage) {
-        Q_UNUSED(index);
-        Q_UNUSED(stage);
-        // Future: persist to statistics log
     });
 
     QQmlApplicationEngine engine;
@@ -133,31 +129,68 @@ int main(int argc, char *argv[])
         []() { QCoreApplication::exit(-1); },
         Qt::QueuedConnection);
 
-    engine.load(QUrl("qrc:/GlassAlarm/qml/main.qml"));
+    // QML module resources live under :/qt/qml/<URI>/ (Qt policy QTP0001, NEW
+    // since Qt 6.5 — applied via qt_standard_project_setup(REQUIRES 6.5)).
+    engine.load(QUrl("qrc:/qt/qml/GlassAlarm/qml/main.qml"));
 
     // Set window icon after QML window is created
+    QQuickWindow *mainWin = nullptr;
     if (!engine.rootObjects().isEmpty()) {
-        QQuickWindow *win = qobject_cast<QQuickWindow*>(engine.rootObjects().first());
-        if (win) {
-            win->setIcon(QIcon(":/icon.svg"));
+        mainWin = qobject_cast<QQuickWindow*>(engine.rootObjects().first());
+        if (mainWin) {
+            mainWin->setIcon(QIcon(":/icon.svg"));
 
             // KWin blur-behind must be requested after the window exists.
             auto applyBlur = [&]() {
                 bool compositor = configManager.theme()->blur_mode() == "compositor";
-                blurManager.setBlurEnabled(win, compositor);
+                blurManager.setBlurEnabled(mainWin, compositor);
             };
             // Apply once shown, on every resize, and when blur mode changes.
-            QObject::connect(win, &QWindow::visibleChanged, [&](bool vis) {
+            QObject::connect(mainWin, &QWindow::visibleChanged, [&](bool vis) {
                 if (vis) applyBlur();
             });
-            QObject::connect(win, &QWindow::xChanged, applyBlur);
-            QObject::connect(win, &QWindow::yChanged, applyBlur);
-            QObject::connect(win, &QWindow::widthChanged, applyBlur);
-            QObject::connect(win, &QWindow::heightChanged, applyBlur);
+            QObject::connect(mainWin, &QWindow::xChanged, applyBlur);
+            QObject::connect(mainWin, &QWindow::yChanged, applyBlur);
+            QObject::connect(mainWin, &QWindow::widthChanged, applyBlur);
+            QObject::connect(mainWin, &QWindow::heightChanged, applyBlur);
             QObject::connect(configManager.theme(), &ThemeManager::themeChanged, applyBlur);
             applyBlur();
         }
     }
+
+    // System tray icon — created once, shown/hidden based on setting.
+    auto showWindowFromTray = [&]() {
+        if (mainWin) {
+            mainWin->setVisible(true);
+            mainWin->showNormal();
+            mainWin->raise();
+            mainWin->requestActivate();
+        }
+    };
+
+    QSystemTrayIcon trayIcon(QIcon(":/icon.svg"), &app);
+    QMenu trayMenu;
+    trayMenu.addAction("Show Lumalarm", showWindowFromTray);
+    trayMenu.addSeparator();
+    trayMenu.addAction("Exit", [&]() { app.quit(); });
+    trayIcon.setContextMenu(&trayMenu);
+    trayIcon.setToolTip("Lumalarm");
+
+    // Left-click on tray icon: show window directly.
+    QObject::connect(&trayIcon, &QSystemTrayIcon::activated, [&](QSystemTrayIcon::ActivationReason reason) {
+        if (reason == QSystemTrayIcon::Trigger || reason == QSystemTrayIcon::DoubleClick)
+            showWindowFromTray();
+    });
+
+    // Show or hide tray icon based on setting. Re-reads on every theme change.
+    auto updateTrayVisibility = [&]() {
+        if (configManager.theme()->show_tray_icon())
+            trayIcon.show();
+        else
+            trayIcon.hide();
+    };
+    updateTrayVisibility();
+    QObject::connect(configManager.theme(), &ThemeManager::themeChanged, updateTrayVisibility);
 
     // Apply the theme's font family if it resolves to an installed font.
     // Falls back silently to the system default when unavailable.

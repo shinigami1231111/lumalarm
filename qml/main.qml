@@ -18,21 +18,72 @@ Window {
     flags: Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
     color: "transparent"
 
+    // Clip the window content to the rounded rectangle shape.
+    // Without this, the square window surface shows behind the rounded bgLayer.
+    Component.onCompleted: {
+        var contentItem = root.contentItem
+        if (contentItem) {
+            contentItem.clip = true
+        }
+        checkNextAlarm()
+    }
     property int countdownValue: -1
+
+    // When tray is enabled, closing the window hides it instead of destroying it.
+    onClosing: function(close) {
+        if (themeManager.show_tray_icon) {
+            close.accepted = false
+            root.visible = false
+        }
+        // If tray is disabled, allow the close (accepted = true by default) → app exits.
+    }
 
     // True window-level transparency helpers.
     // In "compositor" blur mode the background is drawn with a REAL rgba alpha
     // (not QML opacity) so the Wayland/X11 compositor sees genuine per-pixel
     // transparency and can blur the desktop behind the window.
     // Blur and opacity are independent.
-    // Opacity (card_opacity) always controls the background alpha.
+    // Opacity controls the background alpha.
     // Blur mode toggles compositor blur on/off behind the transparent panel.
     property bool blurEnabled: themeManager.blur_mode === "compositor"
-    property real bgAlpha: themeManager.card_opacity
+    property real bgAlpha: configManager.themeOpacity
     property color bgBase: themeManager.background_color
     property color accentColor: themeManager.accent_color
     property color bgWithAlpha: Qt.alpha(bgBase, bgAlpha)
     property int cornerRadius: themeManager.corner_radius
+
+    // Background presets: each defines gradient stops for the glassmorphism effect
+    property var backgroundPresets: ({
+        "Dark Glass": {
+            h: [{pos:0, color:Qt.rgba(1,1,1,0.04)}, {pos:0.3, color:"transparent"}, {pos:0.7, color:"transparent"}, {pos:1, color:Qt.rgba(0,0,0,0.08)}],
+            v: [{pos:0, color:Qt.rgba(1,1,1,0.03)}, {pos:0.5, color:"transparent"}, {pos:1, color:Qt.rgba(0,0,0,0.06)}]
+        },
+        "Night Sky": {
+            h: [{pos:0, color:Qt.rgba(0.15,0.1,0.35,0.12)}, {pos:0.33, color:Qt.rgba(0.05,0.05,0.2,0.04)}, {pos:0.67, color:Qt.rgba(0.08,0.04,0.25,0.06)}, {pos:1, color:Qt.rgba(0.1,0.05,0.3,0.1)}],
+            v: [{pos:0, color:Qt.rgba(0.2,0.15,0.4,0.08)}, {pos:0.5, color:"transparent"}, {pos:1, color:Qt.rgba(0.05,0.02,0.15,0.12)}]
+        },
+        "Soft Aurora": {
+            h: [{pos:0, color:Qt.rgba(0.1,0.3,0.2,0.08)}, {pos:0.33, color:Qt.rgba(0.05,0.15,0.25,0.04)}, {pos:0.67, color:Qt.rgba(0.15,0.1,0.3,0.04)}, {pos:1, color:Qt.rgba(0.05,0.2,0.15,0.08)}],
+            v: [{pos:0, color:Qt.rgba(0.1,0.25,0.2,0.06)}, {pos:0.5, color:"transparent"}, {pos:1, color:Qt.rgba(0.08,0.15,0.25,0.1)}]
+        },
+        "Minimal Geometric": {
+            h: [{pos:0, color:Qt.rgba(1,1,1,0.02)}, {pos:0.25, color:Qt.rgba(1,1,1,0.04)}, {pos:0.5, color:Qt.rgba(1,1,1,0.02)}, {pos:1, color:Qt.rgba(1,1,1,0.03)}],
+            v: [{pos:0, color:Qt.rgba(1,1,1,0.02)}, {pos:0.5, color:Qt.rgba(1,1,1,0.03)}, {pos:1, color:Qt.rgba(1,1,1,0.02)}]
+        },
+        "Atmospheric Dark": {
+            h: [{pos:0, color:Qt.rgba(0.15,0.08,0.05,0.1)}, {pos:0.33, color:Qt.rgba(0.1,0.06,0.04,0.06)}, {pos:0.67, color:Qt.rgba(0.08,0.05,0.1,0.06)}, {pos:1, color:Qt.rgba(0.08,0.05,0.12,0.08)}],
+            v: [{pos:0, color:Qt.rgba(0.12,0.06,0.04,0.06)}, {pos:0.5, color:"transparent"}, {pos:1, color:Qt.rgba(0.06,0.04,0.1,0.1)}]
+        },
+        "Subtle Gradient": {
+            h: [{pos:0, color:Qt.rgba(0.1,0.1,0.2,0.06)}, {pos:0.33, color:Qt.rgba(0.12,0.1,0.22,0.04)}, {pos:0.67, color:Qt.rgba(0.14,0.1,0.24,0.04)}, {pos:1, color:Qt.rgba(0.15,0.1,0.25,0.06)}],
+            v: [{pos:0, color:Qt.rgba(0.12,0.08,0.2,0.05)}, {pos:0.5, color:"transparent"}, {pos:1, color:Qt.rgba(0.08,0.06,0.15,0.08)}]
+        },
+        "Abstract Light": {
+            h: [{pos:0, color:Qt.rgba(0.2,0.15,0.1,0.06)}, {pos:0.33, color:Qt.rgba(0.1,0.15,0.2,0.04)}, {pos:0.67, color:Qt.rgba(0.15,0.1,0.18,0.04)}, {pos:1, color:Qt.rgba(0.18,0.12,0.08,0.06)}],
+            v: [{pos:0, color:Qt.rgba(0.18,0.14,0.1,0.04)}, {pos:0.5, color:Qt.rgba(0.12,0.1,0.14,0.04)}, {pos:1, color:Qt.rgba(0.1,0.08,0.15,0.08)}]
+        }
+    })
+    property var currentBgPreset: backgroundPresets[themeManager.background_preset] || backgroundPresets["Dark Glass"]
 
 
     property string currentMode: "alarms"
@@ -42,21 +93,22 @@ Window {
         hasNextAlarm = scheduler.secondsUntilNextAlarm() > 0
     }
     onCountdownValueChanged: checkNextAlarm()
-    Connections { target: alarmManager; function onAlarmListChanged() { root.checkNextAlarm(); armBtn.armed = false } }
+    Connections { target: alarmManager; function onAlarmsChanged() { root.checkNextAlarm() } }
     Connections {
         target: configManager
         function onConfigChanged() {
             root.checkNextAlarm()
         }
     }
-    Component.onCompleted: checkNextAlarm()
+
+    property bool isMaximized: visibility === Window.Maximized
 
     Rectangle {
         id: windowRoot
         anchors.fill: parent
         radius: root.cornerRadius
-        color: "transparent"
-        clip: false
+        color: root.bgWithAlpha
+        clip: true
         border.color: Qt.alpha(root.accentColor, 0.45)
         border.width: 1.5
 
@@ -74,10 +126,10 @@ Window {
                 anchors.fill: parent
                 gradient: Gradient {
                     orientation: Gradient.Horizontal
-                    GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.04) }
-                    GradientStop { position: 0.3; color: "transparent" }
-                    GradientStop { position: 0.7; color: "transparent" }
-                    GradientStop { position: 1.0; color: Qt.rgba(0, 0, 0, 0.08) }
+                    GradientStop { position: currentBgPreset.h[0].pos; color: currentBgPreset.h[0].color }
+                    GradientStop { position: currentBgPreset.h[1].pos; color: currentBgPreset.h[1].color }
+                    GradientStop { position: currentBgPreset.h[2].pos; color: currentBgPreset.h[2].color }
+                    GradientStop { position: currentBgPreset.h[3].pos; color: currentBgPreset.h[3].color }
                 }
             }
 
@@ -85,9 +137,9 @@ Window {
                 anchors.fill: parent
                 gradient: Gradient {
                     orientation: Gradient.Vertical
-                    GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.03) }
-                    GradientStop { position: 0.5; color: "transparent" }
-                    GradientStop { position: 1.0; color: Qt.rgba(0, 0, 0, 0.06) }
+                    GradientStop { position: currentBgPreset.v[0].pos; color: currentBgPreset.v[0].color }
+                    GradientStop { position: currentBgPreset.v[1].pos; color: currentBgPreset.v[1].color }
+                    GradientStop { position: currentBgPreset.v[2].pos; color: currentBgPreset.v[2].color }
                 }
             }
 
@@ -132,23 +184,50 @@ Window {
                         Layout.alignment: Qt.AlignVCenter
                     }
                     GlassButton {
+                        id: minimizeBtn
+                        visible: themeManager.show_minimize_button
+                        text: "\u2014"; pixelSize: 16; implicitWidth: 40; implicitHeight: 40; buttonRadius: 20
+                        baseColor: Qt.rgba(1, 1, 1, 0.06); hoverColor: Qt.rgba(1, 1, 1, 0.14)
+                        Layout.alignment: Qt.AlignVCenter
+                        onClicked: root.showMinimized()
+                    }
+                    GlassButton {
+                        id: maximizeBtn
+                        visible: themeManager.show_maximize_button
+                        text: root.isMaximized ? "\u2752" : "\u25A1"; pixelSize: 16; implicitWidth: 40; implicitHeight: 40; buttonRadius: 20
+                        baseColor: Qt.rgba(1, 1, 1, 0.06); hoverColor: Qt.rgba(1, 1, 1, 0.14)
+                        Layout.alignment: Qt.AlignVCenter
+                        onClicked: {
+                            if (root.isMaximized) root.showNormal(); else root.showMaximized()
+                        }
+                    }
+                    GlassButton {
+                        id: closeBtn
+                        visible: themeManager.show_close_button
                         text: "\u2715"; pixelSize: 16; implicitWidth: 40; implicitHeight: 40; buttonRadius: 20
                         baseColor: Qt.rgba(1, 1, 1, 0.06); hoverColor: Qt.rgba(1, 0.2, 0.2, 0.25)
                         Layout.alignment: Qt.AlignVCenter
-                        onClicked: Qt.quit()
+                        onClicked: {
+                            if (themeManager.show_tray_icon)
+                                root.visible = false
+                            else
+                                Qt.quit()
+                        }
                     }
                 }
 
                 MouseArea {
                     anchors.top: parent.top; anchors.left: parent.left
-                    anchors.bottom: parent.bottom; anchors.right: closeBtnSpacer.left
+                    anchors.bottom: parent.bottom; anchors.right: parent.right
                     property real lx: 0; property real ly: 0
-                    onPressed: { lx = mouseX; ly = mouseY }
+                    onPressed: { lx = mouseX; ly = mouseY; if (root.isMaximized) root.showNormal() }
                     onMouseXChanged: root.x += mouseX - lx
                     onMouseYChanged: root.y += mouseY - ly
+                    onDoubleClicked: {
+                        if (root.isMaximized) root.showNormal(); else root.showMaximized()
+                    }
+                    z: -1
                 }
-
-                Item { id: closeBtnSpacer; width: 1; height: 1; visible: false }
             }
 
             Rectangle {
@@ -226,39 +305,83 @@ Window {
                             }
                         }
 
-                        RowLayout {
-                            Layout.fillWidth: true; Layout.bottomMargin: 10
-                            Text { text: "Wake:"; color: configManager.themeTextSecondary; font.pixelSize: 14; Layout.alignment: Qt.AlignVCenter }
-                            RoundedCombo { id: wakeModeCombo; model: ["mem", "disk", "none"]; Layout.preferredWidth: 90 }
-                            Item { Layout.fillWidth: true }
-                            GlassButton {
-                                id: armBtn
-                                property bool armed: false
-                                text: !root.hasNextAlarm ? "No alarm armed" : (armed ? "Armed ✓" : "Arm Wake")
-                                pixelSize: 12
-                                baseColor: !root.hasNextAlarm ? Qt.rgba(1, 1, 1, 0.05)
-                                            : (armed ? Qt.rgba(0.3, 0.85, 0.4, 0.18) : Qt.rgba(0.3, 0.75, 0.95, 0.12))
-                                hoverColor: !root.hasNextAlarm ? Qt.rgba(1, 1, 1, 0.1)
-                                            : (armed ? Qt.rgba(0.3, 0.85, 0.4, 0.28) : Qt.rgba(0.3, 0.75, 0.95, 0.22))
-                                borderColor: !root.hasNextAlarm ? Qt.rgba(1, 1, 1, 0.08)
-                                            : (armed ? Qt.rgba(0.3, 0.9, 0.4, 0.35) : Qt.rgba(0.4, 0.8, 1, 0.3))
-                                textColor: !root.hasNextAlarm ? configManager.themeTextSecondary
-                                            : (armed ? Qt.rgba(0.5, 0.95, 0.6, 1) : Qt.rgba(0.5, 0.85, 1, 1))
-                                enabled: root.hasNextAlarm
-                                opacity: root.hasNextAlarm ? 1.0 : 0.5
-                                onClicked: {
-                                    if (!root.hasNextAlarm) return
-                                    var s = scheduler.secondsUntilNextAlarm()
-                                    if (s <= 0) return
-                                    wakeManager.prepareWake(s, wakeModeCombo.currentText)
-                                    armed = true
-                                    armResetTimer.restart()
+                        ColumnLayout {
+                            Layout.fillWidth: true; Layout.bottomMargin: 10; spacing: 8
+
+                            RowLayout {
+                                Layout.fillWidth: true; spacing: 8
+                                Item { Layout.fillWidth: true }
+                                GlassButton {
+                                    id: armBtn
+                                    text: {
+                                        if (!root.hasNextAlarm) return "No alarm armed"
+                                        var ws = scheduler.wakeState
+                                        if (ws === "arming") return "Arming..."
+                                        if (ws === "armed") return "Armed ✓"
+                                        if (ws === "failed") return "Arm FAILED"
+                                        return "Arm Wake"
+                                    }
+                                    pixelSize: 12
+                                    baseColor: {
+                                        if (!root.hasNextAlarm) return Qt.rgba(1, 1, 1, 0.05)
+                                        var ws = scheduler.wakeState
+                                        if (ws === "armed") return Qt.rgba(0.3, 0.85, 0.4, 0.18)
+                                        if (ws === "failed") return Qt.rgba(1, 0.3, 0.2, 0.18)
+                                        return Qt.rgba(0.3, 0.75, 0.95, 0.12)
+                                    }
+                                    hoverColor: {
+                                        if (!root.hasNextAlarm) return Qt.rgba(1, 1, 1, 0.1)
+                                        var ws = scheduler.wakeState
+                                        if (ws === "armed") return Qt.rgba(0.3, 0.85, 0.4, 0.28)
+                                        if (ws === "failed") return Qt.rgba(1, 0.3, 0.2, 0.28)
+                                        return Qt.rgba(0.3, 0.75, 0.95, 0.22)
+                                    }
+                                    borderColor: {
+                                        if (!root.hasNextAlarm) return Qt.rgba(1, 1, 1, 0.08)
+                                        var ws = scheduler.wakeState
+                                        if (ws === "armed") return Qt.rgba(0.3, 0.9, 0.4, 0.35)
+                                        if (ws === "failed") return Qt.rgba(1, 0.3, 0.2, 0.35)
+                                        return Qt.rgba(0.4, 0.8, 1, 0.3)
+                                    }
+                                    textColor: {
+                                        if (!root.hasNextAlarm) return configManager.themeTextSecondary
+                                        var ws = scheduler.wakeState
+                                        if (ws === "armed") return Qt.rgba(0.5, 0.95, 0.6, 1)
+                                        if (ws === "failed") return Qt.rgba(1, 0.5, 0.4, 1)
+                                        return Qt.rgba(0.5, 0.85, 1, 1)
+                                    }
+                                    enabled: root.hasNextAlarm && (scheduler.wakeState === "idle" || scheduler.wakeState === "failed")
+                                    opacity: root.hasNextAlarm ? 1.0 : 0.5
+                                    onClicked: {
+                                        if (!root.hasNextAlarm) return
+                                        scheduler.armWake()
+                                    }
                                 }
-                                Timer {
-                                    id: armResetTimer
-                                    interval: 3000; repeat: false
-                                    onTriggered: armed = false
+                                GlassButton {
+                                    id: poweroffBtn
+                                    text: "Power Off & Wake"
+                                    visible: scheduler.wakeState === "armed"
+                                    enabled: scheduler.wakeState === "armed"
+                                    pixelSize: 12
+                                    baseColor: Qt.rgba(0.95, 0.35, 0.3, 0.2)
+                                    hoverColor: Qt.rgba(0.95, 0.35, 0.3, 0.32)
+                                    borderColor: Qt.rgba(1, 0.4, 0.35, 0.35)
+                                    textColor: Qt.rgba(1, 0.55, 0.5, 1)
+                                    onClicked: scheduler.powerOffMachine()
                                 }
+                            }
+
+                            Text {
+                                Layout.fillWidth: true; wrapMode: Text.Wrap
+                                visible: scheduler.wakeState === "armed"
+                                text: scheduler.pendingInfo + " — RTC alarm armed and verified; power off to wake the machine"
+                                color: configManager.themeTextSecondary; font.pixelSize: 11
+                            }
+                            Text {
+                                Layout.fillWidth: true; wrapMode: Text.Wrap
+                                visible: scheduler.lastError !== ""
+                                text: "Error: " + scheduler.lastError
+                                color: "#ff6b6b"; font.pixelSize: 11
                             }
                         }
                     }
@@ -275,7 +398,7 @@ Window {
     Rectangle {
         anchors.fill: parent
         color: "transparent"
-        visible: ringingOverlay.ringing || ringingOverlay.wakeUpActive
+        visible: ringingOverlay.ringing
         RingingOverlay {
             id: ringingOverlay
         }
@@ -284,26 +407,16 @@ Window {
     Connections {
         target: scheduler
         function onAlarmTriggered(index) {
-            ringingOverlay.cancelSnooze()
             var alarms = alarmManager.alarms
             if (index < 0 || index >= alarms.length) return
             var a = alarms[index]
             ringingOverlay.alarmIndex = index
-            ringingOverlay.alarmId = a.id || ""
             ringingOverlay.alarmHour = a.hour; ringingOverlay.alarmMinute = a.minute
             ringingOverlay.alarmMedia = a.soundFile
             ringingOverlay.alarmData = a
             ringingOverlay.ringing = true
         }
         function onCountdownUpdated(seconds) { root.countdownValue = seconds }
-        function onSoundscapeStarting(index) {
-            var alarms = alarmManager.alarms
-            if (index < 0 || index >= alarms.length) return
-            var a = alarms[index]
-            if (a.soundscape && a.soundscape !== "") {
-                audioPlayer.playSoundscape(a.soundscape, 5)
-            }
-        }
     }
 
     // Audio error surfacing — never fail silently.

@@ -31,7 +31,7 @@ ColumnLayout {
     }
 
     Text {
-        text: "Tones folder: " + configManager.tonesDirectory()
+        text: "Tones folder: " + configManager.tonesDirectory
         color: configManager.themeTextSecondary
         font.pixelSize: 13
         wrapMode: Text.WordWrap

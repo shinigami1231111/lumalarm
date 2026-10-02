@@ -13,6 +13,7 @@
 #include <QStandardPaths>
 #include <QHash>
 #include <QUuid>
+#include <QSaveFile>
 
 struct Alarm {
     QString id = QUuid::createUuid().toString(QUuid::WithoutBraces);
@@ -20,30 +21,13 @@ struct Alarm {
     int minute = 0;
     QVector<bool> days = {false, false, false, false, false, false, false};
     QString wakeMode = "mem";
-    int fadeDuration = 15;
-    int baseVolume = 20;
     int autoStopDuration = 120;
     bool enableSound = true;
     bool enableCommand = false;
     QString command;
     bool enabled = true;
     QString soundFile;
-    bool isSnooze = false;
-    bool enableChallenge = false;
-    QString challengeText;
-    bool wakeUpCheckEnabled = false;
-    int wakeUpCheckInterval = 3;
-
-    // Phase 1: Smarter Wake Experience
-    QString soundscape;
-    int maxSnoozes = -1;          // -1 = unlimited, 0 = no snooze
-    QString challengeMode = "none"; // "none", "typing", "math"
-    int mathDifficulty = 0;       // 0=easy (add/sub), 1=hard (mul)
-    bool escalatingWake = false;
-    int escalatingTimeout = 60;   // seconds before forced challenge
-    QString note;
-    int snoozeInterval = 0;  // 0 = use global default
-    QString name;           // optional display name
+    QString name;
 
     QJsonObject toJson() const;
     static Alarm fromJson(const QJsonObject &obj);
@@ -70,20 +54,14 @@ public:
     Q_INVOKABLE void loadFromFile();
     Q_INVOKABLE void saveToFile();
 
-    // Snooze tracking (in-memory only, resets each time alarm fires fresh)
-    Q_INVOKABLE int snoozeCount(int alarmIndex) const;
-    Q_INVOKABLE void resetSnoozeCount(int alarmIndex);
-    Q_INVOKABLE void incrementSnooze(int alarmIndex);
-
     QString alarmsFilePath() const;
 
 signals:
     void alarmsChanged();
-    void alarmDismissed(int alarmIndex, int stageReached);
+    void persistenceError(const QString &message);
 
 private:
     QVector<Alarm> m_alarms;
-    QHash<int, int> m_snoozeCounts;
     QString m_filePath;
 };
 

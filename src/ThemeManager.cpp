@@ -17,9 +17,14 @@ namespace {
     const QString KEY_BORDER = "border_color";
     const QString KEY_BLUR_R = "blur_radius";
     const QString KEY_BLUR_M = "blur_mode";
-    const QString KEY_CARD_OP = "card_opacity";
     const QString KEY_FONT = "font_family";
     const QString KEY_RADIUS = "corner_radius";
+    const QString KEY_BG_PRESET = "background_preset";
+    const QString KEY_BTN_MIN = "show_minimize_button";
+    const QString KEY_BTN_MAX = "show_maximize_button";
+    const QString KEY_BTN_CLOSE = "show_close_button";
+    const QString KEY_TRAY = "show_tray_icon";
+    const QString KEY_PRESET = "current_preset";
 
     QString defaultOf(const QString &key)
     {
@@ -31,9 +36,14 @@ namespace {
             {KEY_BORDER, "#3d7fff"},
             {KEY_BLUR_R, "20"},
             {KEY_BLUR_M, "compositor"},
-            {KEY_CARD_OP, "0.55"},
             {KEY_FONT, ""},
-            {KEY_RADIUS, "18"}
+            {KEY_RADIUS, "22"},
+            {KEY_BG_PRESET, "Dark Glass"},
+            {KEY_BTN_MIN, "true"},
+            {KEY_BTN_MAX, "true"},
+            {KEY_BTN_CLOSE, "true"},
+            {KEY_TRAY, "true"},
+            {KEY_PRESET, ""}
         };
         return d.value(key, "");
     }
@@ -79,7 +89,8 @@ void ThemeManager::ensureFile()
         // Seed with defaults.
         for (const QString &k : {KEY_BG, KEY_ACCENT, KEY_TEXT1, KEY_TEXT2,
                                   KEY_BORDER, KEY_BLUR_R, KEY_BLUR_M,
-                                  KEY_CARD_OP, KEY_FONT, KEY_RADIUS})
+                                  KEY_FONT, KEY_RADIUS, KEY_BG_PRESET,
+                                  KEY_BTN_MIN, KEY_BTN_MAX, KEY_BTN_CLOSE, KEY_TRAY, KEY_PRESET})
             m_theme[k] = defaultOf(k);
         writeToDisk();
     }
@@ -107,7 +118,8 @@ void ThemeManager::loadFromDisk()
     // Fill any missing keys with defaults.
     for (const QString &k : {KEY_BG, KEY_ACCENT, KEY_TEXT1, KEY_TEXT2,
                              KEY_BORDER, KEY_BLUR_R, KEY_BLUR_M,
-                             KEY_CARD_OP, KEY_FONT, KEY_RADIUS})
+                             KEY_FONT, KEY_RADIUS, KEY_BG_PRESET,
+                             KEY_BTN_MIN, KEY_BTN_MAX, KEY_BTN_CLOSE, KEY_TRAY, KEY_PRESET})
         if (!m_theme.contains(k) || m_theme[k].isEmpty())
             m_theme[k] = defaultOf(k);
 
@@ -132,9 +144,14 @@ void ThemeManager::writeToDisk()
     out << KEY_BORDER << "=" << m_theme.value(KEY_BORDER) << "\n";
     out << KEY_BLUR_R << "=" << m_theme.value(KEY_BLUR_R) << "\n";
     out << KEY_BLUR_M << "=" << m_theme.value(KEY_BLUR_M) << "\n";
-    out << KEY_CARD_OP << "=" << m_theme.value(KEY_CARD_OP) << "\n";
     out << KEY_FONT << "=" << m_theme.value(KEY_FONT) << "\n";
     out << KEY_RADIUS << "=" << m_theme.value(KEY_RADIUS) << "\n";
+    out << KEY_BG_PRESET << "=" << m_theme.value(KEY_BG_PRESET) << "\n";
+    out << KEY_BTN_MIN << "=" << m_theme.value(KEY_BTN_MIN) << "\n";
+    out << KEY_BTN_MAX << "=" << m_theme.value(KEY_BTN_MAX) << "\n";
+    out << KEY_BTN_CLOSE << "=" << m_theme.value(KEY_BTN_CLOSE) << "\n";
+    out << KEY_TRAY << "=" << m_theme.value(KEY_TRAY) << "\n";
+    out << KEY_PRESET << "=" << m_theme.value(KEY_PRESET) << "\n";
 }
 
 void ThemeManager::setValue(const QString &key, const QString &value)
@@ -181,9 +198,6 @@ void ThemeManager::set_blur_mode(const QString &v)
     setValue(KEY_BLUR_M, (v.toLower() == "app") ? "app" : "compositor");
 }
 
-double ThemeManager::card_opacity() const { return value(KEY_CARD_OP, defaultOf(KEY_CARD_OP)).toDouble(); }
-void ThemeManager::set_card_opacity(double v) { setValue(KEY_CARD_OP, QString::number(qBound(0.0, v, 1.0))); }
-
 QString ThemeManager::font_family() const { return value(KEY_FONT, defaultOf(KEY_FONT)); }
 void ThemeManager::set_font_family(const QString &v) { setValue(KEY_FONT, v); }
 
@@ -195,11 +209,8 @@ QColor ThemeManager::backgroundWithAlpha() const
     QColor c(background_color());
     if (!c.isValid())
         c = QColor(defaultOf(KEY_BG));
-    double alpha = card_opacity();
-    // In compositor blur mode we want the window surface to be genuinely
-    // transparent so the compositor's own blur shows the desktop through.
-    // We keep a little tint but rely on real per-pixel alpha, not QML opacity.
-    c.setAlphaF(qBound(0.0, alpha, 1.0));
+    // Use default opacity value
+    c.setAlphaF(qBound(0.0, 0.55, 1.0));
     return c;
 }
 
@@ -215,6 +226,7 @@ bool ThemeManager::applyPreset(const QString &name)
     set_text_primary(pal.text1);
     set_text_secondary(pal.text2);
     set_border_color(pal.border);
+    set_current_preset(name);
     emit themeChanged();
     return true;
 }
@@ -280,6 +292,7 @@ bool ThemeManager::importFromPywal()
     if (updates.isEmpty())
         return false;
 
+    set_current_preset("");
     for (auto it = updates.begin(); it != updates.end(); ++it)
         m_theme[it.key()] = it.value();
     writeToDisk();
@@ -291,3 +304,21 @@ void ThemeManager::reload()
 {
     loadFromDisk();
 }
+
+QString ThemeManager::background_preset() const { return value(KEY_BG_PRESET, defaultOf(KEY_BG_PRESET)); }
+void ThemeManager::set_background_preset(const QString &v) { setValue(KEY_BG_PRESET, v); }
+
+bool ThemeManager::show_minimize_button() const { return value(KEY_BTN_MIN, defaultOf(KEY_BTN_MIN)) == "true"; }
+void ThemeManager::set_show_minimize_button(bool v) { setValue(KEY_BTN_MIN, v ? "true" : "false"); }
+
+bool ThemeManager::show_maximize_button() const { return value(KEY_BTN_MAX, defaultOf(KEY_BTN_MAX)) == "true"; }
+void ThemeManager::set_show_maximize_button(bool v) { setValue(KEY_BTN_MAX, v ? "true" : "false"); }
+
+bool ThemeManager::show_close_button() const { return value(KEY_BTN_CLOSE, defaultOf(KEY_BTN_CLOSE)) == "true"; }
+void ThemeManager::set_show_close_button(bool v) { setValue(KEY_BTN_CLOSE, v ? "true" : "false"); }
+
+bool ThemeManager::show_tray_icon() const { return value(KEY_TRAY, defaultOf(KEY_TRAY)) == "true"; }
+void ThemeManager::set_show_tray_icon(bool v) { setValue(KEY_TRAY, v ? "true" : "false"); }
+
+QString ThemeManager::current_preset() const { return value(KEY_PRESET, defaultOf(KEY_PRESET)); }
+void ThemeManager::set_current_preset(const QString &v) { setValue(KEY_PRESET, v); }

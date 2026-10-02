@@ -1,12 +1,17 @@
-cmake_minimum_required(VERSION 3.16)
-project(Lumalarm VERSION 1.0.0 LANGUAGES CXX)
+cmake_minimum_required(VERSION 3.21)
+project(Lumalarm VERSION 1.0.1 LANGUAGES CXX)
 
+# C++17 (Qt 6's required language level) and AUTORCC are set explicitly on
+# purpose: qt_standard_project_setup() only defaults CMAKE_AUTOMOC/CMAKE_AUTOUIC
+# to TRUE (see Qt6CoreMacros.cmake). It does NOT set CMAKE_AUTORCC or the C++
+# standard, so these must stay to keep behavior unchanged.
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Multimedia Qml Quick QuickControls2)
+find_package(Qt6 6.5 REQUIRED COMPONENTS Core Multimedia Qml Quick QuickControls2 Widgets)
+
+qt_standard_project_setup(REQUIRES 6.5)
 
 # Optional KDE blur-behind support (KWin). Enabled automatically when
 # KWindowSystem is found; can be forced off with -DLUMALARM_ENABLE_KDE_BLUR=OFF.
@@ -31,6 +36,7 @@ set(SOURCES
     src/AlarmManager.cpp
     src/AudioPlayer.cpp
     src/Scheduler.cpp
+    src/SchedulerState.cpp
     src/WakeManager.cpp
     src/ConfigManager.cpp
     src/ThemeManager.cpp
@@ -41,6 +47,7 @@ set(HEADERS
     src/AlarmManager.h
     src/AudioPlayer.h
     src/Scheduler.h
+    src/SchedulerState.h
     src/WakeManager.h
     src/ConfigManager.h
     src/ThemeManager.h
@@ -64,8 +71,6 @@ set(QML_FILES
     qml/ToggleSwitch.qml
     qml/SegmentedControl.qml
     qml/WheelTimePicker.qml
-    qml/DualClockPicker.qml
-    qml/UnifiedClockPicker.qml
 )
 
 qt6_add_executable(lumalarm ${SOURCES} ${HEADERS})
@@ -75,6 +80,7 @@ qt6_add_qml_module(lumalarm
     VERSION 1.0
     QML_FILES ${QML_FILES}
     RESOURCES
+        resources/lumalarm.qrc
         resources/icons/alarms.svg
         resources/icons/timer.svg
         resources/icons/stopwatch.svg
@@ -88,10 +94,50 @@ target_link_libraries(lumalarm PRIVATE
     Qt6::Qml
     Qt6::Quick
     Qt6::QuickControls2
+    Qt6::Widgets
 )
 
 if(LUMALARM_ENABLE_KDE_BLUR)
     target_link_libraries(lumalarm PRIVATE KF6::WindowSystem)
+endif()
+
+# ── Tests ─────────────────────────────────────────────────────────────────────
+include(CTest)
+if(BUILD_TESTING)
+    find_package(Qt6 REQUIRED COMPONENTS Test)
+    qt6_add_executable(tst_schedulerlogic
+        tests/tst_schedulerlogic.cpp
+        src/AlarmManager.cpp
+        src/Scheduler.cpp
+        src/SchedulerState.cpp
+        src/WakeManager.cpp
+    )
+    target_include_directories(tst_schedulerlogic PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+    target_link_libraries(tst_schedulerlogic PRIVATE Qt6::Core Qt6::Test)
+    add_test(NAME tst_schedulerlogic COMMAND tst_schedulerlogic)
+
+    # ── Smoke test: v1.0.1 resource layout (QTP0001) + Qt version checks ──────
+    # Embed the module's QML/icon resources into the test binary using the app
+    # target's REAL QT_QML_MODULE_RESOURCE_PREFIX. This keeps the test in sync
+    # with the shipped binary: if the app's resource prefix ever regresses, the
+    # expected qrc:/qt/qml/GlassAlarm/... paths disappear and the test fails.
+    get_target_property(LUMALARM_QML_RESOURCE_PREFIX lumalarm QT_QML_MODULE_RESOURCE_PREFIX)
+    qt6_add_executable(tst_qmlresources
+        tests/tst_qmlresources.cpp
+    )
+    qt6_add_resources(tst_qmlresources tst_qmlresources_res
+        PREFIX "${LUMALARM_QML_RESOURCE_PREFIX}"
+        BASE "${CMAKE_CURRENT_SOURCE_DIR}"
+        FILES
+            ${QML_FILES}
+            resources/icons/alarms.svg
+            resources/icons/timer.svg
+            resources/icons/stopwatch.svg
+            resources/icons/sounds.svg
+            resources/icons/settings.svg
+    )
+    target_link_libraries(tst_qmlresources PRIVATE Qt6::Core Qt6::Test)
+    add_test(NAME tst_qmlresources COMMAND tst_qmlresources)
 endif()
 
 install(TARGETS lumalarm RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

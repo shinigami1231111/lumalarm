@@ -5,68 +5,76 @@
 #include <QTimer>
 #include <QTime>
 #include <QDateTime>
-#include <QSet>
 #include <QHash>
 #include <QString>
 #include "AlarmManager.h"
+#include "SchedulerState.h"
+#include "WakeManager.h"
 
 class Scheduler : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(int nextAlarmSeconds READ nextAlarmSeconds NOTIFY nextAlarmChanged)
+    Q_PROPERTY(QString wakeState READ wakeState NOTIFY wakeStateChanged)
+    Q_PROPERTY(QString lastError READ lastError NOTIFY wakeStateChanged)
+    Q_PROPERTY(QString pendingInfo READ pendingInfo NOTIFY wakeStateChanged)
 
 public:
-    explicit Scheduler(AlarmManager *manager, QObject *parent = nullptr);
+    explicit Scheduler(AlarmManager *manager, WakeManager *wake,
+                       const QString &stateFilePath = QString(), QObject *parent = nullptr);
 
     int nextAlarmSeconds() const;
+    // UI state: "idle" | "arming" | "armed" | "failed"
+    QString wakeState() const;
+    QString lastError() const;
+    QString pendingInfo() const;
 
-    // Returns seconds until the next enabled alarm, or -1 if none
     Q_INVOKABLE int secondsUntilNextAlarm() const;
+    Q_INVOKABLE bool hasPendingWake() const;
 
-    // Starts a precise snooze timer for the alarm identified by alarmId.
-    // The timer fires after snoozeMinutes and re-triggers the alarm (if still
-    // present and enabled). Snoozes are persisted so they survive restarts.
-    Q_INVOKABLE void startSnoozeTimer(const QString &alarmId, int snoozeMinutes);
+    // Program the RTC wake alarm for the next enabled alarm occurrence and
+    // enter the verified "armed" state. Persists the occurrence BEFORE any
+    // RTC programming so a crash/power loss never loses the scheduled wake.
+    // This never powers the machine off.
+    Q_INVOKABLE void armWake();
 
-    // Cancels any pending snooze for the given alarm id.
-    Q_INVOKABLE void cancelSnooze(const QString &alarmId);
+    // Power the machine off — allowed ONLY in the "armed" (armed+verified)
+    // state. Refuses otherwise: RTC failure and persistence failure both
+    // leave the scheduler in "failed", so this is a hard safety gate.
+    Q_INVOKABLE void powerOffMachine();
 
-    // Re-arm snooze timers from disk (call once after construction).
-    void restoreSnoozes();
+    // At construction the scheduler recovers any persisted pending wake:
+    // compares current time to the scheduled absolute timestamp, classifies
+    // the wake (OnTime/Late/VeryLate/Missed), triggers exactly once, and
+    // marks the occurrence consumed (idempotent).
 
 signals:
     void alarmTriggered(int alarmIndex);
     void nextAlarmChanged();
     void countdownUpdated(int seconds);
-    // Emitted ~90s before alarm for soundscape start
-    void soundscapeStarting(int alarmIndex);
-    // Emitted when system resumes from suspend (detected via time gap)
     void systemResumed();
+    void wakeStateChanged();
 
 private slots:
     void onCheckTimer();
+    void onAlarmsChanged();
 
 private:
-    struct SnoozeEntry {
-        QString alarmId;
-        QDateTime fireAt;
-        QTimer *timer = nullptr;
-    };
-
-    void armSnooze(const QString &alarmId, const QDateTime &fireAt, bool persist);
-    void fireSnooze(const QString &alarmId);
-    void loadSnoozes();
-    void saveSnoozes();
-    QString snoozeFilePath() const;
+    QDateTime computeNextOccurrence(const Alarm &a, const QDateTime &from) const;
+    bool persistPending();
+    void consumePending(const QString &reason);
+    void recoverAfterBoot();
+    void setWakeState(const QString &state, const QString &error = QString());
 
     AlarmManager *m_manager;
+    WakeManager *m_wake;
     QTimer *m_checkTimer;
-    int m_lastTriggeredMin = -1;
-    QDateTime m_lastCheckTime = QDateTime::currentDateTime();
-    // Track which alarms have had their soundscape triggered
-    QSet<int> m_soundscapeFired;
-    // Active snooze timers, keyed by alarm id
-    QHash<QString, SnoozeEntry> m_snoozes;
+    QDateTime m_lastCheckTime;
+    QHash<QString, QDateTime> m_lastTriggeredTime;
+    SchedulerStateStore m_store;
+    PendingWake m_pending;
+    QString m_wakeState;   // "idle", "arming", "armed", "failed"
+    QString m_lastError;
 };
 
 #endif // SCHEDULER_H

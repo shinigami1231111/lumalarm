@@ -18,9 +18,14 @@ class ThemeManager : public QObject
     Q_PROPERTY(QString border_color READ border_color WRITE set_border_color NOTIFY themeChanged)
     Q_PROPERTY(int blur_radius READ blur_radius WRITE set_blur_radius NOTIFY themeChanged)
     Q_PROPERTY(QString blur_mode READ blur_mode WRITE set_blur_mode NOTIFY themeChanged)
-    Q_PROPERTY(double card_opacity READ card_opacity WRITE set_card_opacity NOTIFY themeChanged)
     Q_PROPERTY(QString font_family READ font_family WRITE set_font_family NOTIFY themeChanged)
     Q_PROPERTY(int corner_radius READ corner_radius WRITE set_corner_radius NOTIFY themeChanged)
+    Q_PROPERTY(QString background_preset READ background_preset WRITE set_background_preset NOTIFY themeChanged)
+    Q_PROPERTY(bool show_minimize_button READ show_minimize_button WRITE set_show_minimize_button NOTIFY themeChanged)
+    Q_PROPERTY(bool show_maximize_button READ show_maximize_button WRITE set_show_maximize_button NOTIFY themeChanged)
+    Q_PROPERTY(bool show_close_button READ show_close_button WRITE set_show_close_button NOTIFY themeChanged)
+    Q_PROPERTY(bool show_tray_icon READ show_tray_icon WRITE set_show_tray_icon NOTIFY themeChanged)
+    Q_PROPERTY(QString current_preset READ current_preset WRITE set_current_preset NOTIFY themeChanged)
 
 public:
     explicit ThemeManager(QObject *parent = nullptr);
@@ -47,14 +52,29 @@ public:
     QString blur_mode() const;
     void set_blur_mode(const QString &v);
 
-    double card_opacity() const;
-    void set_card_opacity(double v);
-
     QString font_family() const;
     void set_font_family(const QString &v);
 
     int corner_radius() const;
     void set_corner_radius(int v);
+
+    QString background_preset() const;
+    void set_background_preset(const QString &v);
+
+    bool show_minimize_button() const;
+    void set_show_minimize_button(bool v);
+
+    bool show_maximize_button() const;
+    void set_show_maximize_button(bool v);
+
+    bool show_close_button() const;
+    void set_show_close_button(bool v);
+
+    bool show_tray_icon() const;
+    void set_show_tray_icon(bool v);
+
+    QString current_preset() const;
+    void set_current_preset(const QString &v);
 
     Q_INVOKABLE QString configPath() const;
 

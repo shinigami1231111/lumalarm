@@ -25,7 +25,7 @@ Row {
             Row {
                 id: segRow; anchors.centerIn: parent; spacing: 7
                 Image {
-                    source: "qrc:/GlassAlarm/resources/icons/" + modelData.icon + ".svg"
+                    source: "qrc:/qt/qml/GlassAlarm/resources/icons/" + modelData.icon + ".svg"
                     width: 18; height: 18
                     sourceSize.width: 18; sourceSize.height: 18
                     opacity: seg.isActive ? 1.0 : 0.55
