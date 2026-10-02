@@ -154,6 +154,46 @@ if(BUILD_TESTING)
     target_link_libraries(tst_selectionbehavior PRIVATE Qt6::Core Qt6::Test)
     add_test(NAME tst_selectionbehavior COMMAND tst_selectionbehavior)
 
+    # ── Per-module unit tests (STG-3.5 / Phase D) ──────────────────────────
+    # Construction + one observable behavior per previously untested module.
+    # ConfigManager/ThemeManager tests enable QStandardPaths test mode so they
+    # never touch the real ~/.config/lumalarm.
+    qt6_add_executable(tst_audioplayer
+        tests/tst_audioplayer.cpp
+        src/audio/AudioPlayer.cpp
+    )
+    target_include_directories(tst_audioplayer PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+    target_link_libraries(tst_audioplayer PRIVATE Qt6::Core Qt6::Test Qt6::Multimedia)
+    add_test(NAME tst_audioplayer COMMAND tst_audioplayer)
+
+    qt6_add_executable(tst_configmanager
+        tests/tst_configmanager.cpp
+        src/managers/ConfigManager.cpp
+        src/managers/ThemeManager.cpp   # ConfigManager owns a ThemeManager
+    )
+    target_include_directories(tst_configmanager PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+    target_link_libraries(tst_configmanager PRIVATE Qt6::Core Qt6::Test Qt6::Gui)
+    add_test(NAME tst_configmanager COMMAND tst_configmanager)
+
+    qt6_add_executable(tst_thememanager
+        tests/tst_thememanager.cpp
+        src/managers/ThemeManager.cpp
+    )
+    target_include_directories(tst_thememanager PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+    target_link_libraries(tst_thememanager PRIVATE Qt6::Core Qt6::Test Qt6::Gui)
+    add_test(NAME tst_thememanager COMMAND tst_thememanager)
+
+    qt6_add_executable(tst_blurmanager
+        tests/tst_blurmanager.cpp
+        src/ui/BlurManager.cpp
+    )
+    target_include_directories(tst_blurmanager PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+    target_link_libraries(tst_blurmanager PRIVATE Qt6::Core Qt6::Test Qt6::Quick)
+    if(LUMALARM_ENABLE_KDE_BLUR)
+        target_link_libraries(tst_blurmanager PRIVATE KF6::WindowSystem)   # same guard as the app
+    endif()
+    add_test(NAME tst_blurmanager COMMAND tst_blurmanager)
+
     # ── Smoke test: v1.0.1 resource layout (QTP0001) + Qt version checks ──────
     # Embed the module's QML/icon resources into the test binary using the app
     # target's REAL QT_QML_MODULE_RESOURCE_PREFIX. This keeps the test in sync
