@@ -66,6 +66,56 @@ ctest --test-dir build --output-on-failure
 
 Any PR must keep all tests green. New behavior should come with a new test.
 
+## Continuous Integration
+
+CI runs on every push and pull request to `main` via GitHub Actions.
+
+| Workflow | What it does |
+|---|---|
+| `.github/workflows/ci.yml` | Release build + `ctest` on three Linux environments |
+| `.github/workflows/lint.yml` | advisory `clang-tidy` over `src/` (`continue-on-error: true`) |
+
+The build matrix covers **Ubuntu 24.04** (host runner), **Fedora 40** and **Arch Linux**
+(containers). KDE blur-behind is disabled (`-DLUMALARM_ENABLE_KDE_BLUR=OFF`) in every
+leg so the build stays portable across all three.
+
+### Running CI locally
+
+`bash scripts/ci-local.sh` runs the same configure + build + `ctest` flow on your host —
+Release build, blur OFF, then the full test suite, then an advisory lint pass. It needs
+no Docker, no containers and no network.
+
+| Command | What it does |
+|---|---|
+| `make ci` | full run: `bash scripts/ci-local.sh` |
+| `bash scripts/ci-local.sh --no-lint` | skip the clang-tidy step |
+| `make ci-fast` | same as `--no-lint` |
+| `make clean-ci` | `rm -rf build-local-ci` |
+
+Add `--keep-build` to reuse the previous build directory for a fast incremental run
+(`bash scripts/ci-local.sh --keep-build`). `bash scripts/ci-local.sh --help` lists
+everything.
+
+### Optional pre-push hook
+
+```sh
+bash scripts/install-hooks.sh              # install
+bash scripts/install-hooks.sh --uninstall  # remove
+```
+
+The hook runs `ci-local.sh --no-lint` before every push and aborts the push when it
+fails. It is entirely opt-in, lives in `.git/hooks/pre-push` and is therefore never
+committed. A foreign `pre-push` hook is backed up to `pre-push.bak` instead of being
+deleted, and `--uninstall` refuses to remove a hook that Lumalarm did not install.
+
+### Formatting and lint configs
+
+`.clang-format` and `.clang-tidy` are at the repository root. The existing code is not
+yet fully reformatted, so treat them as a **target, not a gate** — use them to keep new
+code consistent, and do not reformat untouched files in a pull request. Lint findings
+are advisory everywhere today (`ci-local.sh` reports them, `lint.yml` is
+`continue-on-error: true`).
+
 ## Project structure
 
 ```

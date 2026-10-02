@@ -10,7 +10,27 @@ Suspend-to-RAM wake scheduling · anti-oversleep challenges · timer · stopwatc
 [![Qt](https://img.shields.io/badge/Qt-6-41CD52?logo=qt)](https://www.qt.io/)
 [![Platform](https://img.shields.io/badge/platform-Linux-informational)]()
 
+<!-- Badges activate after the first push to main; see RELEASE_DEFERRED.md -->
+[![CI](https://github.com/shinigami1231111/lumalarm/actions/workflows/ci.yml/badge.svg)](https://github.com/shinigami1231111/lumalarm/actions/workflows/ci.yml)
+[![Lint](https://github.com/shinigami1231111/lumalarm/actions/workflows/lint.yml/badge.svg)](https://github.com/shinigami1231111/lumalarm/actions/workflows/lint.yml)
+
 </div>
+
+---
+
+## Building & Testing
+
+```sh
+cmake -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build -j$(nproc)
+ctest --test-dir build --output-on-failure
+```
+
+The local mirror of CI is `bash scripts/ci-local.sh` (or `make ci`): same Release build
+with KDE blur disabled, then ctest, then an advisory clang-tidy pass.
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for prerequisites, the CI matrix, the optional
+pre-push hook, and everything else.
 
 ---
 
