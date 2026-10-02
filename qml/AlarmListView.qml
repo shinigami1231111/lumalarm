@@ -9,6 +9,11 @@ ColumnLayout {
     // Selection follows the alarm itself (its id), not the row position:
     // toggling re-sorts the model, and the highlight must stay on the same
     // alarm — matching the old storage-index behavior of selectedIndex.
+    // OQ #2 (resolved 1.0.2): deleting a NON-selected row leaves selectedId
+    // untouched (the highlight stays on the same alarm). Deleting the SELECTED
+    // row also leaves selectedId holding the removed id — main.qml's
+    // onDeleteAlarm only calls removeAlarm, so no row matches and nothing is
+    // highlighted until the next row click. Ref: "luma.md, Open Question #2".
     property string selectedId: ""
     signal editAlarm(int index)
     signal deleteAlarm(int index)

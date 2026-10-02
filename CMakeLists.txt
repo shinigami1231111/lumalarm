@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(Lumalarm VERSION 1.0.1 LANGUAGES CXX)
+project(Lumalarm VERSION 1.0.2 LANGUAGES CXX)
 
 # C++17 (Qt 6's required language level) and AUTORCC are set explicitly on
 # purpose: qt_standard_project_setup() only defaults CMAKE_AUTOMOC/CMAKE_AUTOUIC
@@ -130,6 +130,17 @@ if(BUILD_TESTING)
     target_include_directories(tst_alarmmodel PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
     target_link_libraries(tst_alarmmodel PRIVATE Qt6::Core Qt6::Test)
     add_test(NAME tst_alarmmodel COMMAND tst_alarmmodel)
+
+    # selectedId selection-behavior regression tests (luma.md Open Question #2,
+    # resolved 1.0.2 — QML selection rules mirrored in a minimal C++ harness).
+    qt6_add_executable(tst_selectionbehavior
+        tests/tst_selectionbehavior.cpp
+        src/AlarmModel.cpp
+        src/AlarmManager.cpp   # provides Alarm::toVariantMap()/fromVariantMap()
+    )
+    target_include_directories(tst_selectionbehavior PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+    target_link_libraries(tst_selectionbehavior PRIVATE Qt6::Core Qt6::Test)
+    add_test(NAME tst_selectionbehavior COMMAND tst_selectionbehavior)
 
     # ── Smoke test: v1.0.1 resource layout (QTP0001) + Qt version checks ──────
     # Embed the module's QML/icon resources into the test binary using the app
