@@ -29,6 +29,9 @@ class ConfigManager : public QObject
     Q_PROPERTY(int testWakeDuration READ testWakeDuration WRITE setTestWakeDuration NOTIFY configChanged)
     // Desktop notifications (freedesktop protocol). On by default.
     Q_PROPERTY(bool notificationsEnabled READ notificationsEnabled WRITE setNotificationsEnabled NOTIFY configChanged)
+    // System tray icon visibility. Defaults to the pre-existing theme.conf
+    // setting (show_tray_icon) so upgrading users keep their choice.
+    Q_PROPERTY(bool trayIconEnabled READ trayIconEnabled WRITE setTrayIconEnabled NOTIFY configChanged)
 
 public:
     explicit ConfigManager(QObject *parent = nullptr);
@@ -78,6 +81,9 @@ public:
 
     bool notificationsEnabled() const;
     void setNotificationsEnabled(bool enabled);
+
+    bool trayIconEnabled() const;
+    void setTrayIconEnabled(bool enabled);
 
 signals:
     void configChanged();

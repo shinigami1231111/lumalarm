@@ -14,8 +14,6 @@
 #include <QFontDatabase>
 #include <QFontInfo>
 #include <QLockFile>
-#include <QSystemTrayIcon>
-#include <QMenu>
 
 #include "managers/AlarmManager.h"
 #include "audio/AudioPlayer.h"
@@ -25,6 +23,7 @@
 #include "managers/ThemeManager.h"
 #include "ui/BlurManager.h"
 #include "ui/Notifier.h"
+#include "ui/TrayIcon.h"
 
 int main(int argc, char *argv[])
 {
@@ -186,29 +185,17 @@ int main(int argc, char *argv[])
         }
     };
 
-    QSystemTrayIcon trayIcon(QIcon(":/icon.svg"), &app);
-    QMenu trayMenu;
-    trayMenu.addAction("Show Lumalarm", showWindowFromTray);
-    trayMenu.addSeparator();
-    trayMenu.addAction("Exit", [&]() { app.quit(); });
-    trayIcon.setContextMenu(&trayMenu);
-    trayIcon.setToolTip("Lumalarm");
+    // Tray icon (STG-5.4): tooltip names the next alarm; menu raises the window
+    // or quits. Visibility follows configManager.trayIconEnabled().
+    TrayIcon tray(alarmManager.model(), &scheduler);
+    QObject::connect(&tray, &TrayIcon::showWindowRequested, &app, showWindowFromTray);
+    QObject::connect(&tray, &TrayIcon::quitRequested, &app, &QCoreApplication::quit);
 
-    // Left-click on tray icon: show window directly.
-    QObject::connect(&trayIcon, &QSystemTrayIcon::activated, [&](QSystemTrayIcon::ActivationReason reason) {
-        if (reason == QSystemTrayIcon::Trigger || reason == QSystemTrayIcon::DoubleClick)
-            showWindowFromTray();
-    });
-
-    // Show or hide tray icon based on setting. Re-reads on every theme change.
     auto updateTrayVisibility = [&]() {
-        if (configManager.theme()->show_tray_icon())
-            trayIcon.show();
-        else
-            trayIcon.hide();
+        tray.setVisible(configManager.trayIconEnabled());
     };
     updateTrayVisibility();
-    QObject::connect(configManager.theme(), &ThemeManager::themeChanged, updateTrayVisibility);
+    QObject::connect(&configManager, &ConfigManager::configChanged, &app, updateTrayVisibility);
 
     // Apply the theme's font family if it resolves to an installed font.
     // Falls back silently to the system default when unavailable.

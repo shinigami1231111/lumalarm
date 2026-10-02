@@ -192,6 +192,18 @@ void ConfigManager::setNotificationsEnabled(bool enabled)
     emit configChanged();
 }
 
+bool ConfigManager::trayIconEnabled() const
+{
+    return m_settings->value(QStringLiteral("trayIconEnabled"),
+                             m_theme->show_tray_icon()).toBool();
+}
+
+void ConfigManager::setTrayIconEnabled(bool enabled)
+{
+    m_settings->setValue(QStringLiteral("trayIconEnabled"), enabled);
+    emit configChanged();
+}
+
 QString ConfigManager::configFilePath() const
 {
     return m_settings->fileName();

@@ -43,6 +43,7 @@ set(SOURCES
     src/managers/ThemeManager.cpp
     src/ui/BlurManager.cpp
     src/ui/Notifier.cpp
+    src/ui/TrayIcon.cpp
 )
 
 set(HEADERS
@@ -57,6 +58,7 @@ set(HEADERS
     src/managers/ThemeManager.h
     src/ui/BlurManager.h
     src/ui/Notifier.h
+    src/ui/TrayIcon.h
 )
 
 set(QML_FILES
@@ -154,6 +156,21 @@ if(BUILD_TESTING)
     target_include_directories(tst_notifier PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
     target_link_libraries(tst_notifier PRIVATE Qt6::Core Qt6::Test Qt6::DBus)
     add_test(NAME tst_notifier COMMAND tst_notifier)
+
+    # TrayIcon (src/ui/): construction and tooltip text on a headless box
+    # (offscreen platform, no system tray -> icon disabled, no crash).
+    qt6_add_executable(tst_trayicon
+        tests/tst_trayicon.cpp
+        src/ui/TrayIcon.cpp
+        src/wake/Scheduler.cpp
+        src/wake/SchedulerState.cpp
+        src/wake/WakeManager.cpp
+        src/managers/AlarmManager.cpp
+        src/models/AlarmModel.cpp   # AlarmManager delegates storage to the model
+    )
+    target_include_directories(tst_trayicon PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+    target_link_libraries(tst_trayicon PRIVATE Qt6::Core Qt6::Test Qt6::DBus Qt6::Widgets)
+    add_test(NAME tst_trayicon COMMAND tst_trayicon)
 
     # AlarmModel unit tests (QAbstractListModel refactor of the old
     # QVariantList alarm exposure).

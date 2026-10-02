@@ -214,8 +214,8 @@ ColumnLayout {
                 Layout.fillWidth: true; spacing: 14
                 Text { text: "Show system tray icon"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.fillWidth: true }
                 ToggleSwitch {
-                    checked: themeManager.show_tray_icon
-                    onToggled: function(checked) { themeManager.show_tray_icon = checked }
+                    checked: configManager.trayIconEnabled
+                    onToggled: function(checked) { configManager.trayIconEnabled = checked }
                 }
             }
 
@@ -424,6 +424,8 @@ ColumnLayout {
                         themeManager.show_tray_icon = true
                         configManager.defaultWakeMode = "mem"
                         configManager.stopwatchShowMs = true
+                        configManager.trayIconEnabled = true
+                        configManager.notificationsEnabled = true
                     }
                 }
             }
