@@ -204,6 +204,44 @@ void ConfigManager::setTrayIconEnabled(bool enabled)
     emit configChanged();
 }
 
+bool ConfigManager::nightModeEnabled() const
+{
+    return m_settings->value(QStringLiteral("nightMode/enabled"), false).toBool();
+}
+
+void ConfigManager::setNightModeEnabled(bool enabled)
+{
+    m_settings->setValue(QStringLiteral("nightMode/enabled"), enabled);
+    emit configChanged();
+}
+
+int ConfigManager::nightModeMinutesBefore() const
+{
+    // Valid range 1..180; anything else in the file falls back to 30.
+    const int minutes = m_settings->value(QStringLiteral("nightMode/minutesBefore"), 30).toInt();
+    return (minutes >= 1 && minutes <= 180) ? minutes : 30;
+}
+
+void ConfigManager::setNightModeMinutesBefore(int minutes)
+{
+    m_settings->setValue(QStringLiteral("nightMode/minutesBefore"),
+                         qBound(1, minutes, 180));
+    emit configChanged();
+}
+
+double ConfigManager::nightModeOpacity() const
+{
+    // Valid range 0.0..1.0; anything else in the file falls back to 0.4.
+    const double opacity = m_settings->value(QStringLiteral("nightMode/dimOpacity"), 0.4).toDouble();
+    return (opacity >= 0.0 && opacity <= 1.0) ? opacity : 0.4;
+}
+
+void ConfigManager::setNightModeOpacity(double opacity)
+{
+    m_settings->setValue(QStringLiteral("nightMode/dimOpacity"), qBound(0.0, opacity, 1.0));
+    emit configChanged();
+}
+
 QString ConfigManager::configFilePath() const
 {
     return m_settings->fileName();

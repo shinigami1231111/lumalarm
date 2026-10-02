@@ -44,6 +44,7 @@ set(SOURCES
     src/ui/BlurManager.cpp
     src/ui/Notifier.cpp
     src/ui/TrayIcon.cpp
+    src/ui/NightMode.cpp
 )
 
 set(HEADERS
@@ -59,10 +60,12 @@ set(HEADERS
     src/ui/BlurManager.h
     src/ui/Notifier.h
     src/ui/TrayIcon.h
+    src/ui/NightMode.h
 )
 
 set(QML_FILES
     qml/main.qml
+    qml/NightDim.qml
     qml/components/GlassButton.qml
     qml/components/GlassCard.qml
     qml/pages/AlarmListView.qml
@@ -171,6 +174,23 @@ if(BUILD_TESTING)
     target_include_directories(tst_trayicon PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
     target_link_libraries(tst_trayicon PRIVATE Qt6::Core Qt6::Test Qt6::DBus Qt6::Widgets)
     add_test(NAME tst_trayicon COMMAND tst_trayicon)
+
+    # NightMode (src/ui/): edge-trigger semantics, settings round-trip and
+    # clamping. Runs headless (GUILESS) — no QML involved.
+    qt6_add_executable(tst_nightmode
+        tests/tst_nightmode.cpp
+        src/ui/NightMode.cpp
+        src/managers/ConfigManager.cpp
+        src/managers/ThemeManager.cpp   # ConfigManager owns a ThemeManager
+        src/wake/Scheduler.cpp
+        src/wake/SchedulerState.cpp
+        src/wake/WakeManager.cpp
+        src/managers/AlarmManager.cpp
+        src/models/AlarmModel.cpp
+    )
+    target_include_directories(tst_nightmode PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+    target_link_libraries(tst_nightmode PRIVATE Qt6::Core Qt6::Test Qt6::DBus Qt6::Gui)
+    add_test(NAME tst_nightmode COMMAND tst_nightmode)
 
     # AlarmModel unit tests (QAbstractListModel refactor of the old
     # QVariantList alarm exposure).

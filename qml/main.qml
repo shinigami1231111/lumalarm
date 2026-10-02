@@ -395,10 +395,18 @@ Window {
         }
     }
 
+    // Night mode veil (STG-5.6): above all pages, below the ringing overlay, so
+    // the alarm UI is never dimmed by its own pre-alarm dimming.
+    NightDim {
+        anchors.fill: parent
+        z: 900
+    }
+
     Rectangle {
         anchors.fill: parent
         color: "transparent"
         visible: ringingOverlay.ringing
+        z: 950
         RingingOverlay {
             id: ringingOverlay
         }

@@ -106,6 +106,7 @@ static QString readSourceFile(const QString &absPath)
 // ----------------------------------------------------------------------------
 static const QStringList kQmlFilesFromCmake = {
     QStringLiteral("qml/main.qml"),
+    QStringLiteral("qml/NightDim.qml"),
     QStringLiteral("qml/components/GlassButton.qml"),
     QStringLiteral("qml/components/GlassCard.qml"),
     QStringLiteral("qml/pages/AlarmListView.qml"),

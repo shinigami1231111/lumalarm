@@ -24,6 +24,7 @@
 #include "ui/BlurManager.h"
 #include "ui/Notifier.h"
 #include "ui/TrayIcon.h"
+#include "ui/NightMode.h"
 
 int main(int argc, char *argv[])
 {
@@ -67,6 +68,14 @@ int main(int argc, char *argv[])
     // Desktop notifications (STG-5.3). Seeded from the persisted setting;
     // kept in sync below whenever the setting changes.
     Notifier notifier(configManager.notificationsEnabled());
+
+    // Night mode (STG-5.6): dims the window before the next alarm. Settings come
+    // from configManager, the countdown from scheduler — both outlive this object.
+    NightMode nightMode(&configManager, &scheduler);
+    // Re-evaluated once per scheduler tick; edge-triggered inside NightMode, so
+    // this 1 Hz call cannot produce repeated signals.
+    QObject::connect(&scheduler, &Scheduler::nextAlarmChanged, &nightMode, &NightMode::evaluate);
+    nightMode.evaluate();
 
     // Track which alarm is currently ringing so auto-stop timers from previous
     // alarms don't accidentally stop a newer alarm's audio.
@@ -138,6 +147,7 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("wakeManager", &wakeManager);
     engine.rootContext()->setContextProperty("scheduler", &scheduler);
     engine.rootContext()->setContextProperty("blurManager", &blurManager);
+    engine.rootContext()->setContextProperty("nightMode", &nightMode);
 
     QObject::connect(
         &engine,

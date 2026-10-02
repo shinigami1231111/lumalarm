@@ -396,6 +396,91 @@ ColumnLayout {
                 }
             }
 
+            // ================================================================
+            // NIGHT MODE
+            // ================================================================
+            Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: Qt.rgba(1,1,1,0.07) }
+
+            Text { text: "Night Mode"; color: configManager.themeTextSecondary; font.pixelSize: 13; font.bold: true; Layout.bottomMargin: -4 }
+            Text {
+                text: "Dim the window before an alarm so it does not light up a dark room."
+                color: configManager.themeTextSecondary; font.pixelSize: 12
+                wrapMode: Text.WordWrap; Layout.fillWidth: true; Layout.bottomMargin: 4
+            }
+
+            RowLayout {
+                Layout.fillWidth: true; spacing: 14
+                Text { text: "Enable night mode"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.fillWidth: true }
+                ToggleSwitch {
+                    checked: nightMode.enabled
+                    onToggled: function(checked) { nightMode.enabled = checked }
+                }
+            }
+
+            RowLayout {
+                Layout.fillWidth: true; spacing: 14
+                enabled: nightMode.enabled
+                opacity: nightMode.enabled ? 1.0 : 0.5
+                Text { text: "Dim before alarm"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.preferredWidth: 180 }
+                Item { Layout.fillWidth: true }
+                Slider {
+                    id: nightMinutesSlider
+                    from: 1; to: 180; stepSize: 1
+                    value: nightMode.minutesBefore
+                    implicitWidth: 200
+                    onPressedChanged: {
+                        if (!pressed && value !== nightMode.minutesBefore)
+                            nightMode.minutesBefore = Math.round(value)
+                    }
+                }
+                Text {
+                    text: nightMode.minutesBefore + " min"
+                    color: configManager.themeTextSecondary; font.pixelSize: 14
+                    Layout.preferredWidth: 62; horizontalAlignment: Text.AlignRight
+                }
+            }
+
+            RowLayout {
+                Layout.fillWidth: true; spacing: 14
+                enabled: nightMode.enabled
+                opacity: nightMode.enabled ? 1.0 : 0.5
+                Text { text: "Dim strength"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.preferredWidth: 180 }
+                Item { Layout.fillWidth: true }
+                Slider {
+                    id: nightOpacitySlider
+                    from: 0.0; to: 1.0; stepSize: 0.05
+                    value: nightMode.dimOpacity
+                    implicitWidth: 200
+                    onPressedChanged: {
+                        if (!pressed && value !== nightMode.dimOpacity)
+                            nightMode.dimOpacity = value
+                    }
+                }
+                Text {
+                    text: Math.round(nightMode.dimOpacity * 100) + "%"
+                    color: configManager.themeTextSecondary; font.pixelSize: 14
+                    Layout.preferredWidth: 46; horizontalAlignment: Text.AlignRight
+                }
+            }
+
+            RowLayout {
+                Layout.fillWidth: true; spacing: 10
+                GlassButton {
+                    text: "Preview"
+                    pixelSize: 13
+                    enabled: !nightMode.active
+                    // NightMode.activate() holds the veil for two seconds and
+                    // then switches it off by itself — see kPreviewMillis.
+                    onClicked: nightMode.activate()
+                }
+                Item { Layout.fillWidth: true }
+                Text {
+                    visible: nightMode.active
+                    text: nightMode.active ? "Dimming" : ""
+                    color: configManager.themeTextSecondary; font.pixelSize: 12
+                }
+            }
+
             Item { Layout.fillHeight: true }
 
             RowLayout {

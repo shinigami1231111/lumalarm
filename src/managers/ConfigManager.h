@@ -32,6 +32,10 @@ class ConfigManager : public QObject
     // System tray icon visibility. Defaults to the pre-existing theme.conf
     // setting (show_tray_icon) so upgrading users keep their choice.
     Q_PROPERTY(bool trayIconEnabled READ trayIconEnabled WRITE setTrayIconEnabled NOTIFY configChanged)
+    // Night mode: dim the window before an alarm. Defaults are 0 / 30 min / 0.4.
+    Q_PROPERTY(bool nightModeEnabled READ nightModeEnabled WRITE setNightModeEnabled NOTIFY configChanged)
+    Q_PROPERTY(int nightModeMinutesBefore READ nightModeMinutesBefore WRITE setNightModeMinutesBefore NOTIFY configChanged)
+    Q_PROPERTY(double nightModeOpacity READ nightModeOpacity WRITE setNightModeOpacity NOTIFY configChanged)
 
 public:
     explicit ConfigManager(QObject *parent = nullptr);
@@ -84,6 +88,13 @@ public:
 
     bool trayIconEnabled() const;
     void setTrayIconEnabled(bool enabled);
+
+    bool nightModeEnabled() const;
+    void setNightModeEnabled(bool enabled);
+    int nightModeMinutesBefore() const;
+    void setNightModeMinutesBefore(int minutes);
+    double nightModeOpacity() const;
+    void setNightModeOpacity(double opacity);
 
 signals:
     void configChanged();
