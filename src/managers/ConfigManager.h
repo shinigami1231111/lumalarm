@@ -27,6 +27,8 @@ class ConfigManager : public QObject
     // Duration (seconds) offered by the Settings page "Test alarm" card and
     // passed to WakeManager::armTestWake(). Clamped to [60, 3600].
     Q_PROPERTY(int testWakeDuration READ testWakeDuration WRITE setTestWakeDuration NOTIFY configChanged)
+    // Desktop notifications (freedesktop protocol). On by default.
+    Q_PROPERTY(bool notificationsEnabled READ notificationsEnabled WRITE setNotificationsEnabled NOTIFY configChanged)
 
 public:
     explicit ConfigManager(QObject *parent = nullptr);
@@ -73,6 +75,9 @@ public:
     // [60, 3600]; invalid or out-of-range stored values read back as 60.
     int testWakeDuration() const;
     void setTestWakeDuration(int seconds);
+
+    bool notificationsEnabled() const;
+    void setNotificationsEnabled(bool enabled);
 
 signals:
     void configChanged();

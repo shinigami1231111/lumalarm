@@ -276,13 +276,13 @@ ColumnLayout {
                         id: testWakeCombo
                         model: ["60 s", "2 min", "5 min", "10 min", "30 min", "60 min", "Custom…"]
                         // Initial selection comes from the persisted duration.
-                        currentIndex: presetIndexFor(configManager.testWakeDuration())
+                        currentIndex: presetIndexFor(configManager.testWakeDuration)
                         visible: !customField.visible
                         Layout.preferredWidth: 130
                         onActivated: {
                             if (currentIndex === 6) {
                                 customField.visible = true
-                                customField.text = configManager.testWakeDuration()
+                                customField.text = configManager.testWakeDuration
                                 customField.forceActiveFocus()
                                 customField.selectAll()
                             } else {
@@ -352,12 +352,12 @@ ColumnLayout {
                 // Duration currently offered, whichever input produced it.
                 function selectedSeconds() {
                     if (testWakeCombo.currentIndex === 6)
-                        return configManager.testWakeDuration()
+                        return configManager.testWakeDuration
                     return testWakeCombo.presetSeconds(testWakeCombo.currentIndex)
                 }
                 // Persist on every change so the choice survives a restart.
                 function persistTestWake(seconds) {
-                    configManager.setTestWakeDuration(seconds)
+                    configManager.testWakeDuration = seconds
                 }
 
                 Connections {
@@ -385,6 +385,14 @@ ColumnLayout {
                 ToggleSwitch {
                     checked: configManager.stopwatchShowMs
                     onToggled: function(checked) { configManager.stopwatchShowMs = checked }
+                }
+            }
+            RowLayout {
+                Layout.fillWidth: true; spacing: 14
+                Text { text: "Desktop notifications"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.fillWidth: true }
+                ToggleSwitch {
+                    checked: configManager.notificationsEnabled
+                    onToggled: function(checked) { configManager.notificationsEnabled = checked }
                 }
             }
 

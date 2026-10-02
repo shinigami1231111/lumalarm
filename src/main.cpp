@@ -24,6 +24,7 @@
 #include "managers/ConfigManager.h"
 #include "managers/ThemeManager.h"
 #include "ui/BlurManager.h"
+#include "ui/Notifier.h"
 
 int main(int argc, char *argv[])
 {
@@ -63,6 +64,10 @@ int main(int argc, char *argv[])
     WakeManager wakeManager;
     BlurManager blurManager;
     Scheduler scheduler(&alarmManager, &wakeManager);
+
+    // Desktop notifications (STG-5.3). Seeded from the persisted setting;
+    // kept in sync below whenever the setting changes.
+    Notifier notifier(configManager.notificationsEnabled());
 
     // Track which alarm is currently ringing so auto-stop timers from previous
     // alarms don't accidentally stop a newer alarm's audio.
@@ -111,6 +116,19 @@ int main(int argc, char *argv[])
     // Reinitialize audio on system resume (fixes PipeWire/PulseAudio after suspend)
     QObject::connect(&scheduler, &Scheduler::systemResumed, [&audioPlayer]() {
         audioPlayer.reinitializeAudio();
+    });
+
+    // Notifications: upcoming-alarm threshold, alarm fired, test wake armed.
+    QObject::connect(&scheduler, &Scheduler::alarmApproaching,
+                     &notifier, &Notifier::notifyAlarmUpcoming);
+    QObject::connect(&scheduler, &Scheduler::alarmTriggered,
+                     &notifier, &Notifier::notifyWakeFired);
+    QObject::connect(&wakeManager, &WakeManager::testWakeArmed,
+                     &notifier, &Notifier::notifyTestWakeArmed);
+    // configChanged is the NOTIFY for notificationsEnabled, so re-read it there.
+    QObject::connect(&configManager, &ConfigManager::configChanged,
+                     &notifier, [&notifier, &configManager]() {
+        notifier.setEnabled(configManager.notificationsEnabled());
     });
 
     QQmlApplicationEngine engine;

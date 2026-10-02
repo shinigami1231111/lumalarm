@@ -396,6 +396,30 @@ void Scheduler::onAlarmsChanged()
     }
 }
 
+QString Scheduler::nextAlarmLabel() const
+{
+    const QDateTime now = QDateTime::currentDateTime();
+    QDateTime best;
+    QString name;
+    const QVector<Alarm> alarms = m_manager->alarmList();
+    for (const Alarm &a : alarms) {
+        if (!a.enabled)
+            continue;
+        const QDateTime when = computeNextOccurrence(a, now);
+        if (!when.isValid())
+            continue;
+        if (!best.isValid() || when < best) {
+            best = when;
+            name = a.name;
+        }
+    }
+    if (!best.isValid())
+        return QStringLiteral("Alarm");
+    return name.isEmpty()
+               ? QStringLiteral("Alarm %1").arg(best.toString(QStringLiteral("HH:mm")))
+               : name;
+}
+
 void Scheduler::onCheckTimer()
 {
     QDateTime now = QDateTime::currentDateTime();
@@ -412,6 +436,20 @@ void Scheduler::onCheckTimer()
 
     int secs = secondsUntilNextAlarm();
     emit countdownUpdated(secs);
+
+    // --- Upcoming-alarm notification threshold (STG-5.3) ---
+    // Fires once, on the EDGE of the countdown crossing into the 10-minute
+    // window. An unknown previous value (first tick after construction, or no
+    // alarm scheduled at all -> -1) counts as "outside the window", so an
+    // alarm that is already inside it when ticking starts still notifies
+    // exactly once instead of being swallowed.
+    const int prevCountdown = (m_lastCountdownSecs > 0) ? m_lastCountdownSecs
+                                                        : kUpcomingThresholdSeconds + 1;
+    if (secs > 0 && secs <= kUpcomingThresholdSeconds
+        && prevCountdown > kUpcomingThresholdSeconds) {
+        emit alarmApproaching(nextAlarmLabel(), secs / 60);
+    }
+    m_lastCountdownSecs = secs;
 
     const QVector<Alarm> alarms = m_manager->alarmList();
     for (int i = 0; i < alarms.size(); ++i) {

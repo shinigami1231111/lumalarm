@@ -181,6 +181,17 @@ void ConfigManager::setTestWakeDuration(int seconds)
     emit configChanged();
 }
 
+bool ConfigManager::notificationsEnabled() const
+{
+    return m_settings->value(QStringLiteral("notificationsEnabled"), true).toBool();
+}
+
+void ConfigManager::setNotificationsEnabled(bool enabled)
+{
+    m_settings->setValue(QStringLiteral("notificationsEnabled"), enabled);
+    emit configChanged();
+}
+
 QString ConfigManager::configFilePath() const
 {
     return m_settings->fileName();

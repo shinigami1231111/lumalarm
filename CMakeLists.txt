@@ -42,6 +42,7 @@ set(SOURCES
     src/managers/ConfigManager.cpp
     src/managers/ThemeManager.cpp
     src/ui/BlurManager.cpp
+    src/ui/Notifier.cpp
 )
 
 set(HEADERS
@@ -55,6 +56,7 @@ set(HEADERS
     src/managers/ConfigManager.h
     src/managers/ThemeManager.h
     src/ui/BlurManager.h
+    src/ui/Notifier.h
 )
 
 set(QML_FILES
@@ -142,6 +144,16 @@ if(BUILD_TESTING)
     target_include_directories(tst_wakemanager PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
     target_link_libraries(tst_wakemanager PRIVATE Qt6::Core Qt6::Test Qt6::DBus)
     add_test(NAME tst_wakemanager COMMAND tst_wakemanager)
+
+    # Notifier (src/ui/): construction and the disabled / no-bus paths. The
+    # live-daemon path is verified manually with busctl --user monitor.
+    qt6_add_executable(tst_notifier
+        tests/tst_notifier.cpp
+        src/ui/Notifier.cpp
+    )
+    target_include_directories(tst_notifier PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+    target_link_libraries(tst_notifier PRIVATE Qt6::Core Qt6::Test Qt6::DBus)
+    add_test(NAME tst_notifier COMMAND tst_notifier)
 
     # AlarmModel unit tests (QAbstractListModel refactor of the old
     # QVariantList alarm exposure).

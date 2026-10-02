@@ -54,13 +54,23 @@ signals:
     void countdownUpdated(int seconds);
     void systemResumed();
     void wakeStateChanged();
+    // Emitted once per alarm when the next occurrence crosses into the
+    // 10-minute window (STG-5.3). `label` is the alarm name, or "Alarm HH:mm"
+    // for an unnamed alarm; `minutesUntil` is 0..10.
+    void alarmApproaching(const QString &label, int minutesUntil);
 
 private slots:
     void onCheckTimer();
     void onAlarmsChanged();
 
 private:
+    // Window in which alarmApproaching() fires, in seconds.
+    static constexpr int kUpcomingThresholdSeconds = 600;
+
     QDateTime computeNextOccurrence(const Alarm &a, const QDateTime &from) const;
+    // Label of the earliest enabled upcoming occurrence: Alarm::name when set,
+    // otherwise "Alarm HH:mm" in local time.
+    QString nextAlarmLabel() const;
     bool persistPending();
     void consumePending(const QString &reason);
     void recoverAfterBoot();
@@ -73,6 +83,7 @@ private:
     QHash<QString, QDateTime> m_lastTriggeredTime;
     SchedulerStateStore m_store;
     PendingWake m_pending;
+    int m_lastCountdownSecs = -1;   // previous tick's countdown; -1 = unknown
     QString m_wakeState;   // "idle", "arming", "armed", "failed"
     QString m_lastError;
 };
