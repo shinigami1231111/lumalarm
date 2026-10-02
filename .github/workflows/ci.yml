@@ -1,0 +1,116 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Only ever read the repository; no token scopes beyond that.
+permissions:
+  contents: read
+
+# Superseded runs for the same ref are pointless — cancel them.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  linux:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    container: ${{ matrix.container }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # ── Host runner: Ubuntu 24.04 ───────────────────────────────────
+          # qt6-tools-dev is REQUIRED: qt_add_executable() calls
+          # Qt6::WrapCpp (from Qt6CoreTools) for the QML module.
+          - name: Ubuntu 24.04
+            os: ubuntu-24.04
+            container: null
+            packages: >-
+              cmake ninja-build g++
+              qt6-base-dev qt6-base-dev-tools qt6-declarative-dev
+              qt6-multimedia-dev qt6-tools-dev
+            kde_blur: "OFF"
+
+          # ── Container: Fedora 40 ────────────────────────────────────────
+          # KDE blur stays OFF: KF6WindowSystem lives in a different
+          # Fedora module set and is not needed for CI.
+          - name: Fedora 40
+            os: ubuntu-24.04
+            container: fedora:40
+            packages: >-
+              cmake ninja-build gcc-c++
+              qt6-qtbase-devel qt6-qtdeclarative-devel
+              qt6-qtmultimedia-devel qt6-qttools-devel
+            kde_blur: "OFF"
+
+          # ── Container: Arch Linux ───────────────────────────────────────
+          # Rolling release; the newest available Qt 6 is exercised here.
+          # KDE blur stays OFF: KF6WindowSystem is not available in a
+          # base archlinux container.
+          - name: Arch Linux
+            os: ubuntu-24.04
+            container: archlinux:latest
+            packages: base-devel cmake ninja qt6-base qt6-declarative qt6-multimedia qt6-tools
+            kde_blur: "OFF"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Container jobs start as root with no package manager primed; the
+      # host runner already has sudo. Run everything through bash so the
+      # command lines are identical for all three environments.
+      - name: Install dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          SUDO=""
+          if [ "$(id -u)" -ne 0 ]; then
+            SUDO="sudo"
+          fi
+
+          if [ -n "${{ matrix.container }}" ]; then
+            if command -v dnf >/dev/null 2>&1; then
+              dnf install -y dnf-plugins-core
+              $SUDO dnf install -y ${{ matrix.packages }}
+            elif command -v pacman >/dev/null 2>&1; then
+              # Keep in sync with PKGBUILD: update the base system first, then
+              # install the toolchain and Qt 6 packages.
+              $SUDO pacman -Syu --needed --noconfirm
+              $SUDO pacman -S --needed --noconfirm ${{ matrix.packages }}
+            else
+              echo "No supported package manager in container ${{ matrix.container }}" >&2
+              exit 1
+            fi
+          else
+            $SUDO apt-get update
+            $SUDO apt-get install -y --no-install-recommends ${{ matrix.packages }}
+          fi
+
+      - name: Configure
+        shell: bash
+        run: |
+          cmake -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DLUMALARM_ENABLE_KDE_BLUR=${{ matrix.kde_blur }}
+
+      - name: Build
+        shell: bash
+        run: cmake --build build -j$(nproc)
+
+      - name: Test
+        shell: bash
+        run: ctest --test-dir build --output-on-failure
+
+      - name: Upload ctest log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ctest-log-${{ matrix.name }}
+          path: build/Testing/Temporary/LastTest.log
+          if-no-files-found: ignore

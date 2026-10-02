@@ -1,0 +1,54 @@
+name: Lint
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lint-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  clang-tidy:
+    name: clang-tidy
+    runs-on: ubuntu-24.04
+    continue-on-error: true   # advisory: .clang-tidy lands in a later phase
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install clang-tidy and the compile database
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            clang-tidy \
+            cmake ninja-build g++ \
+            qt6-base-dev qt6-base-dev-tools qt6-declarative-dev \
+            qt6-multimedia-dev qt6-tools-dev
+
+      - name: Configure (emit compile_commands.json)
+        shell: bash
+        run: |
+          cmake -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+            -DLUMALARM_ENABLE_KDE_BLUR=OFF
+
+      - name: clang-tidy
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ ! -f .clang-tidy ]; then
+            echo "No .clang-tidy config in the repository yet — nothing to enforce."
+            exit 0
+          fi
+          find src -name '*.cpp' -print0 \
+            | xargs -0 -r clang-tidy -p build --quiet
