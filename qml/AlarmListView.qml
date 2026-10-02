@@ -140,9 +140,7 @@ ColumnLayout {
                     ToggleSwitch {
                         Layout.alignment: Qt.AlignVCenter
                         checked: alarmEnabled
-                        onToggled: function(v) {
-                            alarmManager.updateAlarm(index, {"hour": hour, "minute": minute, "days": days, "wakeMode": wakeMode, "autoStopDuration": autoStopDuration, "enableSound": enableSound, "enableCommand": enableCommand, "command": command, "enabled": v, "soundFile": soundFile, "name": name})
-                        }
+                        onToggled: alarmManager.setAlarmEnabled(alarmId, checked)
                     }
 
                     ColumnLayout {

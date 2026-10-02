@@ -45,6 +45,11 @@ public:
     Q_INVOKABLE void removeAlarm(int index);
     Q_INVOKABLE int indexOfId(const QString &id) const;
     Q_INVOKABLE void updateAlarm(int index, const QVariantMap &alarm);
+    // Id-based enable/disable for the list toggle: resolves the row by alarm
+    // id (immune to the enabled-first re-sort) and flips the flag in place,
+    // so the alarm's id — and therefore the QML selection and Scheduler's
+    // PendingWake.alarmId reference — survives the toggle.
+    Q_INVOKABLE void setAlarmEnabled(const QString &id, bool enabled);
     Q_INVOKABLE void loadFromFile();
     Q_INVOKABLE void saveToFile();
 

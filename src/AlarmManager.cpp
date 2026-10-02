@@ -191,6 +191,20 @@ void AlarmManager::updateAlarm(int index, const QVariantMap &alarm)
     m_model->updateAlarm(index, Alarm::fromVariantMap(alarm));
 }
 
+void AlarmManager::setAlarmEnabled(const QString &id, bool enabled)
+{
+    // Resolve by id, not by index: AlarmModel::setEnabled re-sorts
+    // (enabled-first), so an index captured before the toggle could already
+    // be stale for the next operation. Mutating in place (via setEnabled)
+    // preserves the id — updateAlarm() with a map lacking "id" would mint a
+    // fresh UUID, breaking root.selectedId in AlarmListView and Scheduler's
+    // PendingWake.alarmId.
+    const int row = m_model->indexOfId(id);
+    if (row < 0)
+        return;   // unknown id — no-op, same guard style as removeAlarm()
+    m_model->setEnabled(row, enabled);
+}
+
 void AlarmManager::loadFromFile()
 {
     const SuppressPersist guard(m_suppressPersist);
