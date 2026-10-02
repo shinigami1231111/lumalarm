@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(Lumalarm VERSION 1.0.2 LANGUAGES CXX)
+project(Lumalarm VERSION 1.0.3 LANGUAGES CXX)
 
 # C++17 (Qt 6's required language level) and AUTORCC are set explicitly on
 # purpose: qt_standard_project_setup() only defaults CMAKE_AUTOMOC/CMAKE_AUTOUIC

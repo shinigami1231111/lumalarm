@@ -31,6 +31,13 @@ GlassCard {
         }
     }
 
+    // Push edit values into the spin-mode controls. The wheel stays aligned
+    // through its live hour:/minute: bindings instead; SpinBox cannot use a
+    // value: binding because user interaction writes value imperatively.
+    // Writing the same value is a no-op, so this never loops.
+    onEditHourChanged: hourCtrl.value = editHour
+    onEditMinuteChanged: minuteCtrl.value = editMinute
+
     function loadAlarm(index) {
         // alarmManager.alarms (QVariantList) was replaced by the alarm model;
         // get() returns the same QVariantMap shape per row, undefined if the
@@ -146,9 +153,44 @@ GlassCard {
                 WheelTimePicker {
                     id: wheelPicker
                     Layout.alignment: Qt.AlignHCenter
+                    visible: configManager.timePickerMode === "wheel"
                     hour: editHour
                     minute: editMinute
                     onTimeChanged: function(h, m) { editHour = h; editMinute = m }
+                }
+
+                // Secondary time-picker mode (Settings -> "Time picker style",
+                // settings.ini key alarm/timePickerMode: "wheel" | "spin").
+                // Sibling of the wheel — only one is visible at a time, and
+                // both drive the same editHour/editMinute properties. Reuses
+                // the built-in ValueCtrl (same control as "Auto Stop"), so it
+                // follows the app theming from Settings like every other row.
+                // ValueCtrl's `value` is a plain property that clicks write
+                // imperatively (which would break a `value:` binding), so the
+                // controls are pushed to from the outside (onEditHourChanged /
+                // Component.onCompleted) and report back via onValueChanged —
+                // the round trip is idempotent, so no feedback loop.
+                ColumnLayout {
+                    visible: configManager.timePickerMode === "spin"
+                    Layout.alignment: Qt.AlignHCenter
+                    Layout.preferredWidth: 250
+                    spacing: 10
+
+                    ValueCtrl {
+                        id: hourCtrl
+                        label: "Hour"; suffix: ""
+                        minVal: 0; maxVal: 23; step: 1
+                        onValueChanged: editHour = value
+                        Component.onCompleted: value = editHour
+                    }
+
+                    ValueCtrl {
+                        id: minuteCtrl
+                        label: "Minute"; suffix: ""
+                        minVal: 0; maxVal: 59; step: 1
+                        onValueChanged: editMinute = value
+                        Component.onCompleted: value = editMinute
+                    }
                 }
             }
         }

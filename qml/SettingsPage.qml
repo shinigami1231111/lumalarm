@@ -238,6 +238,19 @@ ColumnLayout {
                 }
             }
 
+            RowLayout {
+                Layout.fillWidth: true; spacing: 14
+                Text { text: "Time picker style"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.preferredWidth: 180 }
+                Item { Layout.fillWidth: true }
+                RoundedCombo {
+                    id: timePickerCombo
+                    model: ["Wheel", "Spin"]
+                    currentIndex: configManager.timePickerMode === "spin" ? 1 : 0
+                    Layout.preferredWidth: 140
+                    onActivated: configManager.timePickerMode = currentIndex === 1 ? "spin" : "wheel"
+                }
+            }
+
             Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: Qt.rgba(1,1,1,0.07) }
 
             // Behavior

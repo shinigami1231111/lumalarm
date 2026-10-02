@@ -42,6 +42,21 @@ void ConfigManager::setDefaultWakeMode(const QString &mode)
     emit configChanged();
 }
 
+QString ConfigManager::timePickerMode() const
+{
+    // Normalized on read so a stale/garbage value in settings.ini can never
+    // hide both picker controls (the editor only ever shows wheel or spin).
+    const QString mode = m_settings->value("alarm/timePickerMode", "wheel").toString();
+    return mode == "spin" ? QStringLiteral("spin") : QStringLiteral("wheel");
+}
+
+void ConfigManager::setTimePickerMode(const QString &mode)
+{
+    m_settings->setValue("alarm/timePickerMode",
+                         mode == "spin" ? QStringLiteral("spin") : QStringLiteral("wheel"));
+    emit configChanged();
+}
+
 QString ConfigManager::tonesDirectory() const
 {
     return m_tonesDir;

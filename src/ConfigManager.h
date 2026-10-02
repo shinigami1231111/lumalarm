@@ -15,6 +15,7 @@ class ConfigManager : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QString defaultWakeMode READ defaultWakeMode WRITE setDefaultWakeMode NOTIFY configChanged)
+    Q_PROPERTY(QString timePickerMode READ timePickerMode WRITE setTimePickerMode NOTIFY configChanged)
     Q_PROPERTY(QString tonesDirectory READ tonesDirectory NOTIFY configChanged)
     // Theme properties
     Q_PROPERTY(QString themeBg READ themeBg WRITE setThemeBg NOTIFY configChanged)
@@ -29,6 +30,10 @@ public:
 
     QString defaultWakeMode() const;
     void setDefaultWakeMode(const QString &mode);
+
+    // Alarm-editor time picker style: "wheel" (default) | "spin".
+    QString timePickerMode() const;
+    void setTimePickerMode(const QString &mode);
 
     QString tonesDirectory() const;
 
