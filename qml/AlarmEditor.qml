@@ -32,10 +32,12 @@ GlassCard {
     }
 
     function loadAlarm(index) {
-        var alarms = alarmManager.alarms
-        if (index < 0 || index >= alarms.length) return
+        // alarmManager.alarms (QVariantList) was replaced by the alarm model;
+        // get() returns the same QVariantMap shape per row, undefined if the
+        // row does not exist (replaces the old alarms.length bounds check).
+        var a = alarmManager.model.get(index)
+        if (!a) return
 
-        var a = alarms[index]
         editIndex = index
         editHour = a.hour
         editMinute = a.minute

@@ -6,42 +6,21 @@ import GlassAlarm
 ColumnLayout {
     id: root
 
-    property int selectedIndex: -1
+    // Selection follows the alarm itself (its id), not the row position:
+    // toggling re-sorts the model, and the highlight must stay on the same
+    // alarm — matching the old storage-index behavior of selectedIndex.
+    property string selectedId: ""
     signal editAlarm(int index)
     signal deleteAlarm(int index)
     signal addAlarm()
 
     spacing: 10
 
-    // Function-based refresh: explicitly recompute the sorted alarm list
-    // instead of relying on property binding re-evaluation.
-    // The previous property binding approach failed because QML's dependency
-    // tracking didn't reliably detect alarmManager.alarms changes (the C++
-    // method returns a fresh QVariantList each call, confusing the binding engine).
-    property var sortedAlarms: []
-
-    function refreshSortedAlarms() {
-        var list = []
-        var src = alarmManager.alarms
-        for (var i = 0; i < src.length; i++)
-            list.push({ data: src[i], idx: i })
-        list.sort(function(a, b) {
-            if (a.data.enabled !== b.data.enabled) return a.data.enabled ? -1 : 1
-            var ta = a.data.hour * 60 + a.data.minute
-            var tb = b.data.hour * 60 + b.data.minute
-            return ta - tb
-        })
-        sortedAlarms = list
-        alarmListView.model = null
-        alarmListView.model = sortedAlarms
-    }
-
-    Connections {
-        target: alarmManager
-        function onAlarmsChanged() { refreshSortedAlarms() }
-    }
-
-    Component.onCompleted: refreshSortedAlarms()
+    // The alarm list is bound directly to alarmManager.model (an
+    // AlarmModel / QAbstractListModel). Sorting — enabled first, then
+    // time-of-day — lives in the model now; this view receives fine-grained
+    // rowsInserted / rowsRemoved / dataChanged signals instead of the old
+    // refreshSortedAlarms() full-array rebuild.
 
     RowLayout {
         Layout.fillWidth: true
@@ -63,33 +42,48 @@ ColumnLayout {
         Layout.fillHeight: true
         spacing: 8
         clip: true
-        model: root.sortedAlarms
+        model: alarmManager.model
 
         delegate: Item {
             id: delegateRoot
             width: ListView.view.width
             height: 78
 
-            property var alarmData: modelData.data
-            property int realIndex: modelData.idx
+            // Roles of AlarmModel (required-property delegate — replaces the
+            // old modelData wrapper objects). Note: the enabled flag is
+            // exposed as `alarmEnabled` because `enabled` would collide with
+            // Item.enabled and disable the whole row.
+            required property int index
+            required property string alarmId
+            required property int hour
+            required property int minute
+            required property bool alarmEnabled
+            required property string name
+            required property var days
+            required property string wakeMode
+            required property int autoStopDuration
+            required property bool enableSound
+            required property bool enableCommand
+            required property string command
+            required property string soundFile
 
             GlassCard {
                 id: cardDelegate
                 anchors.fill: parent
-                property bool isOff: !alarmData.enabled
+                property bool isOff: !alarmEnabled
                 cardColor: {
-                    if (root.selectedIndex === realIndex) return Qt.rgba(configManager.themeAccent.r, configManager.themeAccent.g, configManager.themeAccent.b, 0.22)
+                    if (root.selectedId === alarmId) return Qt.rgba(configManager.themeAccent.r, configManager.themeAccent.g, configManager.themeAccent.b, 0.22)
                     if (isOff) return Qt.rgba(0.4, 0.4, 0.5, 0.06)
                     return Qt.rgba(1,1,1,0.06)
                 }
                 borderColor: {
-                    if (root.selectedIndex === realIndex) return configManager.themeAccent
+                    if (root.selectedId === alarmId) return configManager.themeAccent
                     if (isOff) return Qt.rgba(1,1,1,0.04)
                     return Qt.rgba(1,1,1,0.1)
                 }
                 opacity: isOff ? 0.5 : 1.0
 
-                MouseArea { anchors.fill: parent; onClicked: root.selectedIndex = realIndex }
+                MouseArea { anchors.fill: parent; onClicked: root.selectedId = alarmId }
 
                 RowLayout {
                     anchors.fill: parent
@@ -104,29 +98,29 @@ ColumnLayout {
                         Layout.maximumWidth: 120
 
                         Text {
-                            text: alarmData.name && alarmData.name !== "" ? alarmData.name : ("00"+alarmData.hour).slice(-2) + ":" + ("00"+alarmData.minute).slice(-2)
-                            color: alarmData.enabled ? configManager.themeTextPrimary : configManager.themeTextSecondary
-                            font.pixelSize: alarmData.name ? 19 : 24
+                            text: name && name !== "" ? name : ("00"+hour).slice(-2) + ":" + ("00"+minute).slice(-2)
+                            color: alarmEnabled ? configManager.themeTextPrimary : configManager.themeTextSecondary
+                            font.pixelSize: name ? 19 : 24
                             font.bold: true
-                            opacity: alarmData.enabled ? 1.0 : 0.5
+                            opacity: alarmEnabled ? 1.0 : 0.5
                         }
 
                         Text {
-                            visible: alarmData.name && alarmData.name !== ""
-                            text: ("00"+alarmData.hour).slice(-2) + ":" + ("00"+alarmData.minute).slice(-2)
+                            visible: name && name !== ""
+                            text: ("00"+hour).slice(-2) + ":" + ("00"+minute).slice(-2)
                             color: configManager.themeTextSecondary
                             font.pixelSize: 13
-                            opacity: alarmData.enabled ? 0.8 : 0.4
+                            opacity: alarmEnabled ? 0.8 : 0.4
                         }
 
                         Row {
                             spacing: 2
                             Repeater {
                                 model: [
-                                    {l:"M",a:alarmData.days[0]},{l:"T",a:alarmData.days[1]},
-                                    {l:"W",a:alarmData.days[2]},{l:"T",a:alarmData.days[3]},
-                                    {l:"F",a:alarmData.days[4]},{l:"S",a:alarmData.days[5]},
-                                    {l:"S",a:alarmData.days[6]}
+                                    {l:"M",a:days[0]},{l:"T",a:days[1]},
+                                    {l:"W",a:days[2]},{l:"T",a:days[3]},
+                                    {l:"F",a:days[4]},{l:"S",a:days[5]},
+                                    {l:"S",a:days[6]}
                                 ]
                                 Rectangle {
                                     width: 15; height: 15; radius: 4
@@ -140,17 +134,17 @@ ColumnLayout {
 
                     ToggleSwitch {
                         Layout.alignment: Qt.AlignVCenter
-                        checked: alarmData.enabled
+                        checked: alarmEnabled
                         onToggled: function(v) {
-                            alarmManager.updateAlarm(realIndex, {"hour": alarmData.hour, "minute": alarmData.minute, "days": alarmData.days, "wakeMode": alarmData.wakeMode, "autoStopDuration": alarmData.autoStopDuration, "enableSound": alarmData.enableSound, "enableCommand": alarmData.enableCommand, "command": alarmData.command, "enabled": v, "soundFile": alarmData.soundFile, "name": alarmData.name})
+                            alarmManager.updateAlarm(index, {"hour": hour, "minute": minute, "days": days, "wakeMode": wakeMode, "autoStopDuration": autoStopDuration, "enableSound": enableSound, "enableCommand": enableCommand, "command": command, "enabled": v, "soundFile": soundFile, "name": name})
                         }
                     }
 
                     ColumnLayout {
                         Layout.alignment: Qt.AlignVCenter
                         spacing: 4
-                        GlassButton { text:"Edit"; pixelSize:10; implicitWidth:46; implicitHeight:24; radius:6; onClicked: root.editAlarm(realIndex) }
-                        GlassButton { text:"Del"; pixelSize:10; implicitWidth:46; implicitHeight:24; radius:6; baseColor: Qt.rgba(1,0.2,0.2,0.15); hoverColor: Qt.rgba(1,0.2,0.2,0.28); onClicked: root.deleteAlarm(realIndex) }
+                        GlassButton { text:"Edit"; pixelSize:10; implicitWidth:46; implicitHeight:24; radius:6; onClicked: root.editAlarm(index) }
+                        GlassButton { text:"Del"; pixelSize:10; implicitWidth:46; implicitHeight:24; radius:6; baseColor: Qt.rgba(1,0.2,0.2,0.15); hoverColor: Qt.rgba(1,0.2,0.2,0.28); onClicked: root.deleteAlarm(index) }
                     }
                 }
             }

@@ -1,5 +1,8 @@
 #include "AlarmManager.h"
 
+// ── struct Alarm — serialization kept byte-for-byte from the pre-refactor
+// ── version; this is the on-disk schema users upgrading from 1.0.1 rely on.
+
 QJsonObject Alarm::toJson() const
 {
     QJsonObject obj;
@@ -104,75 +107,97 @@ Alarm Alarm::fromVariantMap(const QVariantMap &map)
     return a;
 }
 
+// ── AlarmManager ─────────────────────────────────────────────────────────────
+
+namespace {
+// RAII flag: model resets performed while loading must not trigger the
+// changed() handler's automatic saveToFile() (the old load never wrote back,
+// except when the file was missing entirely).
+class SuppressPersist
+{
+public:
+    explicit SuppressPersist(bool &flag) : m_flag(flag) { m_flag = true; }
+    ~SuppressPersist() { m_flag = false; }
+    SuppressPersist(const SuppressPersist &) = delete;
+    SuppressPersist &operator=(const SuppressPersist &) = delete;
+
+private:
+    bool &m_flag;
+};
+} // namespace
+
 AlarmManager::AlarmManager(QObject *parent)
     : QObject(parent)
+    , m_model(new AlarmModel(this))
 {
     QString configDir = QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + "/lumalarm";
     QDir().mkpath(configDir);
     m_filePath = configDir + "/alarms.json";
+
+    // Every model mutation persists the file and notifies via the historical
+    // alarmsChanged() signal (Scheduler.cpp and main.qml listen to it).
+    connect(m_model, &AlarmModel::changed, this, [this] {
+        if (m_suppressPersist)
+            return;
+        saveToFile();
+        emit alarmsChanged();
+    });
+
     loadFromFile();
 }
 
-QVariantList AlarmManager::alarms() const
+AlarmModel *AlarmManager::model() const
 {
-    QVariantList list;
-    for (const Alarm &a : m_alarms) {
-        list.append(a.toVariantMap());
-    }
-    return list;
+    return m_model;
 }
 
 QVector<Alarm> AlarmManager::alarmList() const
 {
-    return m_alarms;
+    return m_model->alarms();
 }
 
 void AlarmManager::setAlarms(const QVector<Alarm> &alarms)
 {
-    m_alarms = alarms;
+    {
+        const SuppressPersist guard(m_suppressPersist);
+        m_model->resetFromList(alarms);
+    }
     saveToFile();
     emit alarmsChanged();
 }
 
 void AlarmManager::addAlarm(const QVariantMap &alarm)
 {
-    m_alarms.append(Alarm::fromVariantMap(alarm));
-    saveToFile();
-    emit alarmsChanged();
+    // changed() -> save + alarmsChanged(), exactly like the old
+    // append + saveToFile() + emit alarmsChanged().
+    m_model->addAlarm(Alarm::fromVariantMap(alarm));
 }
 
 int AlarmManager::indexOfId(const QString &id) const
 {
-    for (int i = 0; i < m_alarms.size(); ++i) {
-        if (m_alarms[i].id == id)
-            return i;
-    }
-    return -1;
+    return m_model->indexOfId(id);
 }
 
 void AlarmManager::removeAlarm(int index)
 {
-    if (index >= 0 && index < m_alarms.size()) {
-        m_alarms.removeAt(index);
-        saveToFile();
-        emit alarmsChanged();
-    }
+    // Invalid index is a no-op, same as before.
+    m_model->removeAlarm(index);
 }
 
 void AlarmManager::updateAlarm(int index, const QVariantMap &alarm)
 {
-    if (index >= 0 && index < m_alarms.size()) {
-        m_alarms[index] = Alarm::fromVariantMap(alarm);
-        saveToFile();
-        emit alarmsChanged();
-    }
+    // Alarm::fromVariantMap keeps the old semantics — a map without "id"
+    // (the editor and the list toggle always sent one) gets a fresh id.
+    m_model->updateAlarm(index, Alarm::fromVariantMap(alarm));
 }
 
 void AlarmManager::loadFromFile()
 {
+    const SuppressPersist guard(m_suppressPersist);
+
     QFile file(m_filePath);
     if (!file.exists()) {
-        m_alarms.clear();
+        m_model->resetFromList({});
         saveToFile();
         return;
     }
@@ -196,7 +221,7 @@ void AlarmManager::loadFromFile()
             }
         }
         if (data.trimmed().isEmpty()) {
-            m_alarms.clear();
+            m_model->resetFromList({});
             return;
         }
     }
@@ -219,17 +244,21 @@ void AlarmManager::loadFromFile()
         }
     }
 
-    m_alarms.clear();
-    QJsonArray arr = doc.array();
+    QVector<Alarm> alarms;
+    const QJsonArray arr = doc.array();
+    alarms.reserve(arr.size());
     for (const QJsonValue &val : arr) {
-        m_alarms.append(Alarm::fromJson(val.toObject()));
+        alarms.append(Alarm::fromJson(val.toObject()));
     }
+    m_model->resetFromList(alarms);
 }
 
 void AlarmManager::saveToFile()
 {
+    const QVector<Alarm> alarms = m_model->alarms();
+
     QJsonArray arr;
-    for (const Alarm &a : m_alarms) {
+    for (const Alarm &a : alarms) {
         arr.append(a.toJson());
     }
 

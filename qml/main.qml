@@ -407,9 +407,8 @@ Window {
     Connections {
         target: scheduler
         function onAlarmTriggered(index) {
-            var alarms = alarmManager.alarms
-            if (index < 0 || index >= alarms.length) return
-            var a = alarms[index]
+            var a = alarmManager.model.get(index)
+            if (!a) return
             ringingOverlay.alarmIndex = index
             ringingOverlay.alarmHour = a.hour; ringingOverlay.alarmMinute = a.minute
             ringingOverlay.alarmMedia = a.soundFile

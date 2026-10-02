@@ -34,6 +34,7 @@ endif()
 set(SOURCES
     src/main.cpp
     src/AlarmManager.cpp
+    src/AlarmModel.cpp
     src/AudioPlayer.cpp
     src/Scheduler.cpp
     src/SchedulerState.cpp
@@ -44,7 +45,9 @@ set(SOURCES
 )
 
 set(HEADERS
+    src/Alarm.h
     src/AlarmManager.h
+    src/AlarmModel.h
     src/AudioPlayer.h
     src/Scheduler.h
     src/SchedulerState.h
@@ -108,6 +111,7 @@ if(BUILD_TESTING)
     qt6_add_executable(tst_schedulerlogic
         tests/tst_schedulerlogic.cpp
         src/AlarmManager.cpp
+        src/AlarmModel.cpp
         src/Scheduler.cpp
         src/SchedulerState.cpp
         src/WakeManager.cpp
@@ -115,6 +119,17 @@ if(BUILD_TESTING)
     target_include_directories(tst_schedulerlogic PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
     target_link_libraries(tst_schedulerlogic PRIVATE Qt6::Core Qt6::Test)
     add_test(NAME tst_schedulerlogic COMMAND tst_schedulerlogic)
+
+    # AlarmModel unit tests (QAbstractListModel refactor of the old
+    # QVariantList alarm exposure).
+    qt6_add_executable(tst_alarmmodel
+        tests/tst_alarmmodel.cpp
+        src/AlarmModel.cpp
+        src/AlarmManager.cpp   # provides Alarm::toVariantMap()/fromVariantMap()
+    )
+    target_include_directories(tst_alarmmodel PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+    target_link_libraries(tst_alarmmodel PRIVATE Qt6::Core Qt6::Test)
+    add_test(NAME tst_alarmmodel COMMAND tst_alarmmodel)
 
     # ── Smoke test: v1.0.1 resource layout (QTP0001) + Qt version checks ──────
     # Embed the module's QML/icon resources into the test binary using the app
