@@ -1,0 +1,37 @@
+# Lumalarm C++ style — matches the existing hand-written code.
+#
+#   4-space indent, no tabs, 100-column limit, attached braces,
+#   Qt naming (PascalCase classes / camelCase methods / m_ members),
+#   include blocks and their order are left exactly as written.
+#
+# Check a file without touching it:
+#   clang-format --dry-run --Werror path/to/file.cpp
+#
+# Based on LLVM, overridden where Lumalarm differs.
+BasedOnStyle: LLVM
+
+Language: Cpp
+Standard: c++17
+
+# ── layout ────────────────────────────────────────────────────────────────────
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+ColumnLimit: 100
+BreakBeforeBraces: Attach
+AlignAfterOpenBracket: Align
+AccessModifierOffset: -4
+NamespaceIndentation: None
+
+# ── spacing / braces ─────────────────────────────────────────────────────────
+SpaceAfterCStyleCast: false
+Cpp11BracedListStyle: true
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+PointerAlignment: Left
+
+# ── includes ──────────────────────────────────────────────────────────────────
+# Project headers are grouped by hand (Qt first, then ours); never reorder.
+IncludeBlocks: Preserve
+SortIncludes: CaseSensitive

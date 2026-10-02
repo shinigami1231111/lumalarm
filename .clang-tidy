@@ -1,0 +1,54 @@
+# Lumalarm clang-tidy configuration.
+#
+# Advisory in this phase: WarningsAsErrors is empty, and both
+# scripts/ci-local.sh and .github/workflows/lint.yml treat findings as
+# non-fatal (lint.yml uses continue-on-error: true). Turn findings into
+# errors by adding the check names below to WarningsAsErrors.
+#
+# Kept deliberately small and Qt-friendly: bugprone-* and performance-* find
+# real defects, the modernize-* picks are the mechanical ones, and the
+# readability entries encode this project's naming conventions
+# (PascalCase classes, camelCase methods, m_ members, UPPER_CASE globals).
+
+Checks: >-
+  -*,
+  bugprone-*,
+  performance-*,
+  modernize-use-nullptr,
+  modernize-use-override,
+  modernize-use-using,
+  modernize-use-auto,
+  readability-braces-around-statements,
+  readability-identifier-naming,
+  readability-container-size-empty
+
+WarningsAsErrors: ''
+
+# Only report diagnostics coming from our own sources and headers.
+HeaderFilterRegex: '^(src|tests|helper)/.*'
+
+FormatStyle: file
+
+CheckOptions:
+  - key: readability-identifier-naming.ClassCase
+    value: CamelCase
+  - key: readability-identifier-naming.MethodCase
+    value: camelBack
+  - key: readability-identifier-naming.FunctionCase
+    value: camelBack
+  - key: readability-identifier-naming.PrivateMemberPrefix
+    value: m_
+  - key: readability-identifier-naming.ProtectedMemberPrefix
+    value: m_
+  - key: readability-identifier-naming.PublicMemberCase
+    value: lower_case
+  - key: readability-identifier-naming.EnumConstantCase
+    value: CamelCase
+  - key: readability-identifier-naming.ConstexprVariableCase
+    value: CamelCase
+  - key: readability-identifier-naming.GlobalConstantCase
+    value: UPPER_CASE
+  - key: readability-identifier-naming.LocalConstantCase
+    value: CamelCase
+  - key: readability-identifier-naming.LocalVariableCase
+    value: camelBack
