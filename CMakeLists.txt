@@ -45,6 +45,7 @@ set(SOURCES
     src/ui/Notifier.cpp
     src/ui/TrayIcon.cpp
     src/ui/NightMode.cpp
+    src/ui/WizardController.cpp
 )
 
 set(HEADERS
@@ -61,11 +62,19 @@ set(HEADERS
     src/ui/Notifier.h
     src/ui/TrayIcon.h
     src/ui/NightMode.h
+    src/ui/WizardController.h
 )
 
 set(QML_FILES
     qml/main.qml
     qml/NightDim.qml
+    qml/wizard/WizardOverlay.qml
+    qml/wizard/WizardPage.qml
+    qml/wizard/pages/WelcomePage.qml
+    qml/wizard/pages/WakeMethodPage.qml
+    qml/wizard/pages/NotificationPage.qml
+    qml/wizard/pages/SoundPage.qml
+    qml/wizard/pages/DonePage.qml
     qml/components/GlassButton.qml
     qml/components/GlassCard.qml
     qml/pages/AlarmListView.qml
@@ -191,6 +200,22 @@ if(BUILD_TESTING)
     target_include_directories(tst_nightmode PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
     target_link_libraries(tst_nightmode PRIVATE Qt6::Core Qt6::Test Qt6::DBus Qt6::Gui)
     add_test(NAME tst_nightmode COMMAND tst_nightmode)
+
+    # WizardController (src/ui/): step machine, guards, persisted flag and the
+    # probe helpers. WakeManager is real; the privileged arming half of
+    # testWake() is substituted through the armProbeWake() seam, and the
+    # notification probe is compared against an independent bus check.
+    qt6_add_executable(tst_wizard
+        tests/tst_wizard.cpp
+        src/ui/WizardController.cpp
+        src/managers/ConfigManager.cpp
+        src/managers/ThemeManager.cpp   # ConfigManager owns a ThemeManager
+        src/wake/WakeManager.cpp
+        src/audio/AudioPlayer.cpp
+    )
+    target_include_directories(tst_wizard PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+    target_link_libraries(tst_wizard PRIVATE Qt6::Core Qt6::Test Qt6::DBus Qt6::Gui Qt6::Multimedia)
+    add_test(NAME tst_wizard COMMAND tst_wizard)
 
     # AlarmModel unit tests (QAbstractListModel refactor of the old
     # QVariantList alarm exposure).

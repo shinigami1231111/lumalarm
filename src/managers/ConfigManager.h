@@ -36,6 +36,8 @@ class ConfigManager : public QObject
     Q_PROPERTY(bool nightModeEnabled READ nightModeEnabled WRITE setNightModeEnabled NOTIFY configChanged)
     Q_PROPERTY(int nightModeMinutesBefore READ nightModeMinutesBefore WRITE setNightModeMinutesBefore NOTIFY configChanged)
     Q_PROPERTY(double nightModeOpacity READ nightModeOpacity WRITE setNightModeOpacity NOTIFY configChanged)
+    // First-run wizard (STG-5.5): true once the user finished or skipped it.
+    Q_PROPERTY(bool wizardCompleted READ wizardCompleted WRITE setWizardCompleted NOTIFY configChanged)
 
 public:
     explicit ConfigManager(QObject *parent = nullptr);
@@ -95,6 +97,11 @@ public:
     void setNightModeMinutesBefore(int minutes);
     double nightModeOpacity() const;
     void setNightModeOpacity(double opacity);
+
+    // First-run wizard (STG-5.5). Absent key == "this installation has never
+    // completed the guided setup", so a fresh profile opens the wizard.
+    bool wizardCompleted() const;
+    void setWizardCompleted(bool completed);
 
 signals:
     void configChanged();

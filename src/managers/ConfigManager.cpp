@@ -242,6 +242,18 @@ void ConfigManager::setNightModeOpacity(double opacity)
     emit configChanged();
 }
 
+bool ConfigManager::wizardCompleted() const
+{
+    // Missing key = never completed, so a brand-new profile shows the wizard.
+    return m_settings->value(QStringLiteral("wizard/completed"), false).toBool();
+}
+
+void ConfigManager::setWizardCompleted(bool completed)
+{
+    m_settings->setValue(QStringLiteral("wizard/completed"), completed);
+    emit configChanged();
+}
+
 QString ConfigManager::configFilePath() const
 {
     return m_settings->fileName();

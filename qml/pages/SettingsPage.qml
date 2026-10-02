@@ -395,6 +395,16 @@ ColumnLayout {
                     onToggled: function(checked) { configManager.notificationsEnabled = checked }
                 }
             }
+            RowLayout {
+                Layout.fillWidth: true; spacing: 14
+                Text { text: "Setup wizard"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.fillWidth: true }
+                GlassButton {
+                    text: "Run again"
+                    pixelSize: 13
+                    // Clears wizard/completed and brings the overlay straight back.
+                    onClicked: wizard.reset()
+                }
+            }
 
             // ================================================================
             // NIGHT MODE

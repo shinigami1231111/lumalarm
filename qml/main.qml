@@ -412,6 +412,14 @@ Window {
         }
     }
 
+    // First-run wizard (STG-5.5): topmost layer of all, so the guided setup
+    // covers the whole UI while it is open. It hides itself as soon as
+    // wizard.wizardCompleted turns true.
+    WizardOverlay {
+        anchors.fill: parent
+        z: 1000
+    }
+
     Connections {
         target: scheduler
         function onAlarmTriggered(index) {

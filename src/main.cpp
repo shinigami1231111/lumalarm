@@ -25,6 +25,7 @@
 #include "ui/Notifier.h"
 #include "ui/TrayIcon.h"
 #include "ui/NightMode.h"
+#include "ui/WizardController.h"
 
 int main(int argc, char *argv[])
 {
@@ -76,6 +77,14 @@ int main(int argc, char *argv[])
     // this 1 Hz call cannot produce repeated signals.
     QObject::connect(&scheduler, &Scheduler::nextAlarmChanged, &nightMode, &NightMode::evaluate);
     nightMode.evaluate();
+
+    // First-run wizard (STG-5.5). Parsed before the QML engine loads so the
+    // overlay's initial visibility is already correct on the first frame.
+    // --show-wizard only overrides what is *reported* for this run; it never
+    // rewrites wizard/completed. No other CLI flag is accepted.
+    const bool forceWizard = app.arguments().contains(QStringLiteral("--show-wizard"));
+    WizardController wizard(&configManager, &wakeManager, &audioPlayer);
+    wizard.setForceShow(forceWizard);
 
     // Track which alarm is currently ringing so auto-stop timers from previous
     // alarms don't accidentally stop a newer alarm's audio.
@@ -148,6 +157,7 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("scheduler", &scheduler);
     engine.rootContext()->setContextProperty("blurManager", &blurManager);
     engine.rootContext()->setContextProperty("nightMode", &nightMode);
+    engine.rootContext()->setContextProperty("wizard", &wizard);
 
     QObject::connect(
         &engine,
