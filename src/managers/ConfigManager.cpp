@@ -167,6 +167,20 @@ void ConfigManager::setStopwatchShowMs(bool show)
     emit configChanged();
 }
 
+int ConfigManager::testWakeDuration() const
+{
+    // Missing, unparsable or out-of-range values fall back to the 60 s default
+    // so the Settings card can always arm a valid test wake.
+    const int stored = m_settings->value(QStringLiteral("testWakeDurationSeconds"), 60).toInt();
+    return (stored >= 60 && stored <= 3600) ? stored : 60;
+}
+
+void ConfigManager::setTestWakeDuration(int seconds)
+{
+    m_settings->setValue(QStringLiteral("testWakeDurationSeconds"), qBound(60, seconds, 3600));
+    emit configChanged();
+}
+
 QString ConfigManager::configFilePath() const
 {
     return m_settings->fileName();

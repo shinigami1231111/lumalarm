@@ -24,6 +24,9 @@ class ConfigManager : public QObject
     Q_PROPERTY(QString themeTextPrimary READ themeTextPrimary WRITE setThemeTextPrimary NOTIFY configChanged)
     Q_PROPERTY(QString themeTextSecondary READ themeTextSecondary WRITE setThemeTextSecondary NOTIFY configChanged)
     Q_PROPERTY(bool stopwatchShowMs READ stopwatchShowMs WRITE setStopwatchShowMs NOTIFY configChanged)
+    // Duration (seconds) offered by the Settings page "Test alarm" card and
+    // passed to WakeManager::armTestWake(). Clamped to [60, 3600].
+    Q_PROPERTY(int testWakeDuration READ testWakeDuration WRITE setTestWakeDuration NOTIFY configChanged)
 
 public:
     explicit ConfigManager(QObject *parent = nullptr);
@@ -65,6 +68,11 @@ public:
 
     bool stopwatchShowMs() const;
     void setStopwatchShowMs(bool show);
+
+    // Stored test-alarm duration in seconds. Defaults to 60 and is clamped to
+    // [60, 3600]; invalid or out-of-range stored values read back as 60.
+    int testWakeDuration() const;
+    void setTestWakeDuration(int seconds);
 
 signals:
     void configChanged();

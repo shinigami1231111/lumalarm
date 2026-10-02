@@ -477,3 +477,47 @@ bool WakeManager::requestPowerOff(QString *error)
                << (error ? *error : QString());
     return false;
 }
+bool WakeManager::armTestWake(int seconds)
+{
+    if (seconds < kTestWakeMinSeconds || seconds > kTestWakeMaxSeconds) {
+        qWarning() << "[WakeManager] armTestWake refused: out of range" << seconds;
+        emit testWakeFailed(QStringLiteral("out of range"));
+        return false;
+    }
+
+    QString msg;
+    if (m_helperOwnedWake) {
+        // Never stack test wakes: drop the previous one first. Best effort — a
+        // failed cancel is logged but does not block the new request.
+        QString cancelMsg;
+        if (!cancelViaHelper(&cancelMsg))
+            qWarning() << "[WakeManager] pre-arm cancel failed:" << cancelMsg;
+    }
+
+    const HelperResult r = scheduleViaHelper(static_cast<uint>(seconds), &msg);
+    if (r != HelperResult::Scheduled) {
+        qWarning() << "[WakeManager] Test wake arm failed:" << msg;
+        emit testWakeFailed(msg);
+        return false;
+    }
+
+    m_helperOwnedWake = true;
+    m_state = QStringLiteral("armed");
+    qInfo() << "[WakeManager] Test wake armed in" << seconds << "s";
+    emit testWakeArmed(seconds);
+    emit wakeStateChanged();
+    return true;
+}
+
+void WakeManager::cancelTestWake()
+{
+    QString msg;
+    if (cancelViaHelper(&msg)) {
+        m_helperOwnedWake = false;
+        m_state = QStringLiteral("idle");
+        qInfo() << "[WakeManager] Test wake cancelled";
+        emit wakeStateChanged();
+    } else {
+        qWarning() << "[WakeManager] Test wake cancel failed:" << msg;
+    }
+}

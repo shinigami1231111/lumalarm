@@ -66,15 +66,38 @@ public:
     // actual outcome; never claims success without exit code 0.
     bool requestPowerOff(QString *error = nullptr);
 
+    // ── Test alarm (diagnostic; never touches the alarm list) ───────────────
+    // Arm a real wake `seconds` from now through the same D-Bus helper path a
+    // normal alarm uses, without creating or modifying any alarm, and without
+    // writing alarms.json or scheduler.json. `seconds` must be within
+    // [kTestWakeMinSeconds, kTestWakeMaxSeconds]; an out-of-range request is
+    // refused (testWakeFailed) rather than silently clamped. A wake armed
+    // earlier is cancelled first, so arming twice leaves exactly one pending
+    // wake. Returns true only when the helper confirmed the scheduling.
+    Q_INVOKABLE bool armTestWake(int seconds);
+
+    // Cancel a wake armed by armTestWake(). Best effort: a failure is logged
+    // and leaves the current state untouched.
+    Q_INVOKABLE void cancelTestWake();
+
 signals:
     void wakePrepared();
     void wakeError(const QString &message);
     void wakeStateChanged();
 
+    // Test alarm: armed with the requested duration in seconds, or the reason
+    // it could not be armed (range rejection, helper unavailable, declined).
+    void testWakeArmed(int seconds);
+    void testWakeFailed(const QString &reason);
+
 private slots:
     void onProcessFinished(int exitCode, QProcess::ExitStatus status);
 
 private:
+    // Accepted range for armTestWake(), in seconds.
+    static constexpr int kTestWakeMinSeconds = 60;
+    static constexpr int kTestWakeMaxSeconds = 3600;
+
     static bool runSynchronous(const QString &program, const QStringList &args,
                                int timeoutMs, QString *error, QString *output = nullptr);
 

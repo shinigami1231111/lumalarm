@@ -132,6 +132,17 @@ if(BUILD_TESTING)
     target_link_libraries(tst_schedulerlogic PRIVATE Qt6::Core Qt6::Test Qt6::DBus)
     add_test(NAME tst_schedulerlogic COMMAND tst_schedulerlogic)
 
+    # Test-alarm surface of WakeManager (armTestWake/cancelTestWake). Range
+    # validation always runs; the arming cases skip when the privileged D-Bus
+    # helper is not present on the test machine.
+    qt6_add_executable(tst_wakemanager
+        tests/tst_wakemanager.cpp
+        src/wake/WakeManager.cpp
+    )
+    target_include_directories(tst_wakemanager PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+    target_link_libraries(tst_wakemanager PRIVATE Qt6::Core Qt6::Test Qt6::DBus)
+    add_test(NAME tst_wakemanager COMMAND tst_wakemanager)
+
     # AlarmModel unit tests (QAbstractListModel refactor of the old
     # QVariantList alarm exposure).
     qt6_add_executable(tst_alarmmodel

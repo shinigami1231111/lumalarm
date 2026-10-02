@@ -27,6 +27,7 @@ private slots:
     void defaultWakeModeRoundTripsThroughSettings();
     void timePickerModeIsNormalizedOnRead();
     void availableTonesReflectsTonesDirectory();
+    void testWakeDurationDefaultsAndClamps();
 
 private:
     void cleanupTones();
@@ -112,6 +113,30 @@ void TestConfigManager::availableTonesReflectsTonesDirectory()
     QVERIFY(cm.availableTones().contains(QStringLiteral("dummy-tone.wav")));
 
     cleanupTones();
+}
+
+void TestConfigManager::testWakeDurationDefaultsAndClamps()
+{
+    ConfigManager cm;
+
+    // Fresh settings file: the documented default.
+    QCOMPARE(cm.testWakeDuration(), 60);
+
+    // Below the range clamps up to the minimum.
+    cm.setTestWakeDuration(45);
+    QCOMPARE(cm.testWakeDuration(), 60);
+
+    // In-range value round-trips.
+    cm.setTestWakeDuration(180);
+    QCOMPARE(cm.testWakeDuration(), 180);
+
+    // Above the range clamps down to the maximum.
+    cm.setTestWakeDuration(99999);
+    QCOMPARE(cm.testWakeDuration(), 3600);
+
+    // The clamped value is what a fresh instance reads back from disk.
+    ConfigManager reloaded;
+    QCOMPARE(reloaded.testWakeDuration(), 3600);
 }
 
 void TestConfigManager::cleanupTones()

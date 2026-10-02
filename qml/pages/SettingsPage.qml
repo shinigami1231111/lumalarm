@@ -251,6 +251,130 @@ ColumnLayout {
                 }
             }
 
+            // ================================================================
+            // TEST ALARM
+            // ================================================================
+            Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: Qt.rgba(1,1,1,0.07) }
+
+            Text { text: "Test alarm"; color: configManager.themeTextSecondary; font.pixelSize: 13; font.bold: true; Layout.bottomMargin: -4 }
+            Text {
+                text: "Arm a real wake without creating an alarm, to check that this machine actually wakes."
+                color: configManager.themeTextSecondary; font.pixelSize: 12
+                wrapMode: Text.WordWrap; Layout.fillWidth: true; Layout.bottomMargin: 4
+            }
+
+            ColumnLayout {
+                id: testAlarmCard
+                Layout.fillWidth: true; spacing: 10
+
+                // Presets (60 s .. 60 min) plus a custom numeric field.
+                RowLayout {
+                    Layout.fillWidth: true; spacing: 14
+                    Text { text: "Wake in"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.preferredWidth: 80 }
+                    Item { Layout.fillWidth: true }
+                    RoundedCombo {
+                        id: testWakeCombo
+                        model: ["60 s", "2 min", "5 min", "10 min", "30 min", "60 min", "Custom…"]
+                        // Initial selection comes from the persisted duration.
+                        currentIndex: presetIndexFor(configManager.testWakeDuration())
+                        visible: !customField.visible
+                        Layout.preferredWidth: 130
+                        onActivated: {
+                            if (currentIndex === 6) {
+                                customField.visible = true
+                                customField.text = configManager.testWakeDuration()
+                                customField.forceActiveFocus()
+                                customField.selectAll()
+                            } else {
+                                persistTestWake(presetSeconds(currentIndex))
+                            }
+                        }
+                        function presetSeconds(i) { return [60, 120, 300, 600, 1800, 3600][i] }
+                        function presetIndexFor(seconds) {
+                            const idx = [60, 120, 300, 600, 1800, 3600].indexOf(seconds)
+                            return idx >= 0 ? idx : 6
+                        }
+                    }
+                }
+
+                TextField {
+                    id: customField
+                    visible: false
+                    Layout.fillWidth: true
+                    height: 32
+                    color: configManager.themeTextPrimary
+                    font.pixelSize: 14
+                    leftPadding: 10
+                    placeholderText: "Custom seconds (60-3600)"
+                    validator: IntValidator { bottom: 60; top: 3600 }
+                    background: Rectangle {
+                        radius: 7
+                        color: Qt.rgba(1,1,1,0.08)
+                        border.color: Qt.rgba(1,1,1,0.12); border.width: 1
+                    }
+                    onEditingFinished: {
+                        const v = parseInt(text)
+                        if (!isNaN(v))
+                            persistTestWake(v)
+                    }
+                }
+
+                RowLayout {
+                    Layout.fillWidth: true; spacing: 10
+                    GlassButton {
+                        text: "Arm test alarm"
+                        pixelSize: 13
+                        enabled: wakeManager.wakeState !== "armed"
+                        onClicked: wakeManager.armTestWake(testAlarmCard.selectedSeconds())
+                    }
+                    GlassButton {
+                        text: "Cancel test alarm"
+                        pixelSize: 13
+                        enabled: wakeManager.wakeState === "armed"
+                        onClicked: wakeManager.cancelTestWake()
+                    }
+                    Item { Layout.fillWidth: true }
+                    Text {
+                        text: wakeManager.wakeState
+                        color: configManager.themeTextSecondary; font.pixelSize: 12
+                    }
+                }
+
+                Text {
+                    id: testAlarmStatus
+                    Layout.fillWidth: true
+                    visible: text.length > 0
+                    wrapMode: Text.WordWrap
+                    font.pixelSize: 13
+                    color: configManager.themeTextPrimary
+                }
+
+                // Duration currently offered, whichever input produced it.
+                function selectedSeconds() {
+                    if (testWakeCombo.currentIndex === 6)
+                        return configManager.testWakeDuration()
+                    return testWakeCombo.presetSeconds(testWakeCombo.currentIndex)
+                }
+                // Persist on every change so the choice survives a restart.
+                function persistTestWake(seconds) {
+                    configManager.setTestWakeDuration(seconds)
+                }
+
+                Connections {
+                    target: wakeManager
+                    function onTestWakeArmed(seconds) {
+                        testAlarmStatus.text = "Test alarm armed in " + seconds + " s"
+                    }
+                    function onTestWakeFailed(reason) {
+                        testAlarmStatus.text = "Test alarm failed: " + reason
+                    }
+                    function onWakeStateChanged() {
+                        if (wakeManager.wakeState === "idle")
+                            testAlarmStatus.text = ""
+                    }
+                }
+            }
+
             Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: Qt.rgba(1,1,1,0.07) }
 
             // Behavior
