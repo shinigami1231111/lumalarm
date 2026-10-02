@@ -10,21 +10,21 @@
 #include <QFont>
 
 namespace {
-    const QString KEY_BG = "background_color";
-    const QString KEY_ACCENT = "accent_color";
-    const QString KEY_TEXT1 = "text_primary";
-    const QString KEY_TEXT2 = "text_secondary";
-    const QString KEY_BORDER = "border_color";
-    const QString KEY_BLUR_R = "blur_radius";
-    const QString KEY_BLUR_M = "blur_mode";
-    const QString KEY_FONT = "font_family";
-    const QString KEY_RADIUS = "corner_radius";
-    const QString KEY_BG_PRESET = "background_preset";
-    const QString KEY_BTN_MIN = "show_minimize_button";
-    const QString KEY_BTN_MAX = "show_maximize_button";
-    const QString KEY_BTN_CLOSE = "show_close_button";
-    const QString KEY_TRAY = "show_tray_icon";
-    const QString KEY_PRESET = "current_preset";
+    const char *const KEY_BG = "background_color";
+    const char *const KEY_ACCENT = "accent_color";
+    const char *const KEY_TEXT1 = "text_primary";
+    const char *const KEY_TEXT2 = "text_secondary";
+    const char *const KEY_BORDER = "border_color";
+    const char *const KEY_BLUR_R = "blur_radius";
+    const char *const KEY_BLUR_M = "blur_mode";
+    const char *const KEY_FONT = "font_family";
+    const char *const KEY_RADIUS = "corner_radius";
+    const char *const KEY_BG_PRESET = "background_preset";
+    const char *const KEY_BTN_MIN = "show_minimize_button";
+    const char *const KEY_BTN_MAX = "show_maximize_button";
+    const char *const KEY_BTN_CLOSE = "show_close_button";
+    const char *const KEY_TRAY = "show_tray_icon";
+    const char *const KEY_PRESET = "current_preset";
 
     QString defaultOf(const QString &key)
     {
@@ -106,7 +106,7 @@ void ThemeManager::loadFromDisk()
             QString line = in.readLine().trimmed();
             if (line.isEmpty() || line.startsWith('#') || line.startsWith('['))
                 continue;
-            int eq = line.indexOf('=');
+            const qsizetype eq = line.indexOf('=');
             if (eq <= 0)
                 continue;
             QString key = line.left(eq).trimmed();

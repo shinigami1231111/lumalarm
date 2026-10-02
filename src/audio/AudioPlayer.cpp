@@ -40,7 +40,7 @@ void AudioPlayer::setVolume(int percent)
     if (m_volume != percent) {
         m_volume = qBound(0, percent, 100);
         if (!m_fadeTimer->isActive()) {
-            m_audioOutput->setVolume(m_volume / 100.0);
+            m_audioOutput->setVolume(static_cast<float>(m_volume / 100.0));
         }
         emit volumeChanged();
     }
@@ -82,7 +82,8 @@ void AudioPlayer::reinitializeAudio()
     auto *oldOut = m_audioOutput;
     m_audioOutput = new QAudioOutput(this);
     m_player->setAudioOutput(m_audioOutput);
-    m_audioOutput->setVolume(oldOut ? oldOut->volume() : (m_volume / 100.0));
+    m_audioOutput->setVolume(
+        static_cast<float>(oldOut ? oldOut->volume() : (m_volume / 100.0)));
     if (oldOut) {
         oldOut->deleteLater();
     }
@@ -118,7 +119,7 @@ void AudioPlayer::preview(const QString &filePath)
     }
 
     m_player->setSource(QUrl::fromLocalFile(resolved));
-    m_audioOutput->setVolume(m_volume / 100.0);
+    m_audioOutput->setVolume(static_cast<float>(m_volume / 100.0));
     m_player->play();
     emit isPlayingChanged();
 }
@@ -128,20 +129,21 @@ void AudioPlayer::stop()
     m_looping = false;
     m_fadeTimer->stop();
     m_player->stop();
-    m_audioOutput->setVolume(m_volume / 100.0);
+    m_audioOutput->setVolume(static_cast<float>(m_volume / 100.0));
     emit isPlayingChanged();
 }
 
 void AudioPlayer::onFadeTick()
 {
-    m_currentFadeVolume += (100 - m_baseVolume) / (m_fadeDuration * 10.0);
+    m_currentFadeVolume =
+        static_cast<int>(m_currentFadeVolume + (100 - m_baseVolume) / (m_fadeDuration * 10.0));
     if (m_currentFadeVolume >= 100) {
         m_currentFadeVolume = 100;
         m_fadeTimer->stop();
     }
 
     double effectiveVolume = (m_volume / 100.0) * (m_currentFadeVolume / 100.0);
-    m_audioOutput->setVolume(effectiveVolume);
+    m_audioOutput->setVolume(static_cast<float>(effectiveVolume));
 }
 
 void AudioPlayer::onMediaError(QMediaPlayer::Error error)
@@ -160,7 +162,7 @@ void AudioPlayer::onMediaStatusChanged(QMediaPlayer::MediaStatus status)
         } else {
             if (m_fadeTimer->isActive()) {
                 m_fadeTimer->stop();
-                m_audioOutput->setVolume(m_volume / 100.0);
+                m_audioOutput->setVolume(static_cast<float>(m_volume / 100.0));
             }
             emit isPlayingChanged();
         }
@@ -171,7 +173,7 @@ void AudioPlayer::startFade()
 {
     m_currentFadeVolume = m_baseVolume;
     double startVolume = (m_volume / 100.0) * (m_baseVolume / 100.0);
-    m_audioOutput->setVolume(startVolume);
+    m_audioOutput->setVolume(static_cast<float>(startVolume));
 
     m_fadeTimer->start(100);
 }

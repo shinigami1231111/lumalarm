@@ -11,7 +11,7 @@ int AlarmModel::rowCount(const QModelIndex &parent) const
 {
     if (parent.isValid())
         return 0;
-    return m_entries.size();
+    return static_cast<int>(m_entries.size());
 }
 
 QVariant AlarmModel::data(const QModelIndex &idx, int role) const
@@ -62,7 +62,7 @@ QHash<int, QByteArray> AlarmModel::roleNames() const
 
 int AlarmModel::count() const
 {
-    return m_entries.size();
+    return static_cast<int>(m_entries.size());
 }
 
 bool AlarmModel::validRow(int row) const
@@ -125,7 +125,7 @@ void AlarmModel::setEnabled(int row, bool enabled)
 
 void AlarmModel::resetFromList(const QVector<Alarm> &alarms)
 {
-    const int oldCount = m_entries.size();
+    const int oldCount = static_cast<int>(m_entries.size());
 
     beginResetModel();
     m_entries.clear();
