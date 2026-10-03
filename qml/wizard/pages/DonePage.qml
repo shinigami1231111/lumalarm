@@ -7,9 +7,9 @@ import GlassAlarm
 // again on the next launch.
 WizardPage {
     id: root
-    title: "You are set up"
-    subtitle: "Here is what this machine reported. Nothing else needs configuring for the first alarm to work."
-    primaryLabel: "Finish"
+    title: qsTr("You are set up")
+    subtitle: qsTr("Here is what this machine reported. Nothing else needs configuring for the first alarm to work.")
+    primaryLabel: qsTr("Finish")
     primaryEnabled: true
     onPrimaryClicked: wizard.finish()
 
@@ -30,7 +30,7 @@ WizardPage {
             RowLayout {
                 Layout.fillWidth: true
                 spacing: 12
-                Text { text: "Wake method"; color: configManager.themeTextSecondary; font.pixelSize: 13; Layout.preferredWidth: 140 }
+                Text { text: qsTr("Wake method"); color: configManager.themeTextSecondary; font.pixelSize: 13; Layout.preferredWidth: 140 }
                 Text {
                     Layout.fillWidth: true
                     text: wizard.detectWakeMethod()
@@ -43,10 +43,10 @@ WizardPage {
             RowLayout {
                 Layout.fillWidth: true
                 spacing: 12
-                Text { text: "Notifications"; color: configManager.themeTextSecondary; font.pixelSize: 13; Layout.preferredWidth: 140 }
+                Text { text: qsTr("Notifications"); color: configManager.themeTextSecondary; font.pixelSize: 13; Layout.preferredWidth: 140 }
                 Text {
                     Layout.fillWidth: true
-                    text: wizard.notificationsAvailable ? "Available" : "Not available"
+                    text: wizard.notificationsAvailable ? qsTr("Available") : qsTr("Not available")
                     color: configManager.themeTextPrimary
                     font.pixelSize: 13
                     horizontalAlignment: Text.AlignRight
@@ -56,7 +56,7 @@ WizardPage {
             RowLayout {
                 Layout.fillWidth: true
                 spacing: 12
-                Text { text: "Default sound"; color: configManager.themeTextSecondary; font.pixelSize: 13; Layout.preferredWidth: 140 }
+                Text { text: qsTr("Default sound"); color: configManager.themeTextSecondary; font.pixelSize: 13; Layout.preferredWidth: 140 }
                 Text {
                     Layout.fillWidth: true
                     text: wizard.defaultSound.length > 0 ? wizard.defaultSound : "Silent"
@@ -71,14 +71,14 @@ WizardPage {
 
     Text {
         Layout.fillWidth: true
-        text: "Run this setup again any time from Settings."
+        text: qsTr("Run this setup again any time from Settings.")
         color: configManager.themeTextSecondary
         font.pixelSize: 13
         wrapMode: Text.WordWrap
     }
 
     Text {
-        text: "Run again next time"
+        text: qsTr("Run again next time")
         color: configManager.themeTextSecondary
         font.pixelSize: 13
         font.underline: true

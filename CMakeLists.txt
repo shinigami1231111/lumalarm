@@ -125,6 +125,31 @@ if(LUMALARM_ENABLE_KDE_BLUR)
     target_link_libraries(lumalarm PRIVATE KF6::WindowSystem)
 endif()
 
+# ── Translations (STG-5.2) ───────────────────────────────────────────────────
+# Qt Linguist is a BUILD-time tool only: lrelease compiles translations/*.ts to
+# .qm and qt_add_translations embeds them in the binary under /i18n. It is
+# deliberately not REQUIRED — a machine (or a CI image) without lupdate/lrelease
+# still configures, builds and runs, simply falling back to the English source
+# strings, which is exactly what QTranslator does when no catalog matches.
+find_package(Qt6 QUIET COMPONENTS LinguistTools)
+if(Qt6LinguistTools_FOUND)
+    message(STATUS "Lumalarm: Qt Linguist found — translations enabled")
+    # SOURCE_TARGETS limits lupdate to the application, so the test binaries do
+    # not leak strings into the catalogs. The .ts files are committed and only
+    # refreshed by the update_translations target, never by a normal build, so
+    # a build cannot dirty the working tree.
+    qt_add_translations(lumalarm
+        TS_FILES
+            ${CMAKE_CURRENT_SOURCE_DIR}/translations/lumalarm_en.ts
+            ${CMAKE_CURRENT_SOURCE_DIR}/translations/lumalarm_ar.ts
+        SOURCE_TARGETS lumalarm
+        RESOURCE_PREFIX "/i18n"
+    )
+else()
+    message(WARNING "Lumalarm: Qt6 LinguistTools not found — building WITHOUT "
+                    "compiled translations; the UI stays in English.")
+endif()
+
 # ── Wake helper: privileged D-Bus system service (STG-1.1) ───────────────────
 # Replaces the sudoers NOPASSWD rtcwake rule; see helper/lumalarm-wake-helper.cpp
 qt_add_executable(lumalarm-wake-helper
@@ -302,6 +327,36 @@ if(BUILD_TESTING)
     )
     target_link_libraries(tst_qmlresources PRIVATE Qt6::Core Qt6::Test)
     add_test(NAME tst_qmlresources COMMAND tst_qmlresources)
+
+    # ── i18n (STG-5.2) ──────────────────────────────────────────────────────
+    # Embeds the same generated .qm files the app ships, so the resource path
+    # main.cpp loads (":/i18n/<name>.qm") is asserted against the real
+    # artifact instead of a copy. Guarded exactly like the app: without Qt
+    # Linguist there is no catalog to embed and the dependent cases report a
+    # skip rather than a false failure.
+    qt6_add_executable(tst_i18n
+        tests/tst_i18n.cpp
+        src/managers/ConfigManager.cpp
+        src/managers/ThemeManager.cpp   # ConfigManager owns a ThemeManager
+    )
+    target_include_directories(tst_i18n PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+    target_compile_definitions(tst_i18n
+        PRIVATE "LUMALARM_SOURCE_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}\"")
+    if(Qt6LinguistTools_FOUND)
+        set_source_files_properties(
+            ${CMAKE_CURRENT_BINARY_DIR}/lumalarm_ar.qm
+            ${CMAKE_CURRENT_BINARY_DIR}/lumalarm_en.qm
+            PROPERTIES GENERATED TRUE)
+        qt6_add_resources(tst_i18n tst_i18n_res
+            PREFIX "/i18n"
+            BASE "${CMAKE_CURRENT_BINARY_DIR}"
+            FILES
+                ${CMAKE_CURRENT_BINARY_DIR}/lumalarm_ar.qm
+                ${CMAKE_CURRENT_BINARY_DIR}/lumalarm_en.qm
+        )
+    endif()
+    target_link_libraries(tst_i18n PRIVATE Qt6::Core Qt6::Test Qt6::Qml Qt6::Gui)
+    add_test(NAME tst_i18n COMMAND tst_i18n)
 endif()
 
 install(TARGETS lumalarm RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

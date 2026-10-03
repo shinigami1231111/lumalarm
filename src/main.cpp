@@ -14,6 +14,8 @@
 #include <QFontDatabase>
 #include <QFontInfo>
 #include <QLockFile>
+#include <QLocale>
+#include <QTranslator>
 
 #include "managers/AlarmManager.h"
 #include "audio/AudioPlayer.h"
@@ -85,6 +87,37 @@ int main(int argc, char *argv[])
     const bool forceWizard = app.arguments().contains(QStringLiteral("--show-wizard"));
     WizardController wizard(&configManager, &wakeManager, &audioPlayer);
     wizard.setForceShow(forceWizard);
+
+    // ── i18n (STG-5.2) ───────────────────────────────────────────────────────
+    // The catalogs are compiled from translations/*.ts and embedded in the
+    // binary under /i18n by qt_add_translations. An empty (or missing) language
+    // setting means "follow the system locale"; if no catalog matches, the app
+    // falls back to the English source strings.
+    //
+    // Installing / removing a QTranslator makes Qt re-deliver
+    // QEvent::LanguageChange to the widgets, but QML needs an explicit
+    // engine.retranslate() — that is wired up right after the engine exists.
+    QTranslator translator;
+    auto applyLanguage = [&app, &translator](const QString &lang) {
+        QString effective = lang;
+        if (effective.isEmpty())
+            effective = QLocale::system().name();
+
+        app.removeTranslator(&translator);
+        const bool loaded = !effective.isEmpty()
+            && translator.load(QLocale(effective), QStringLiteral("lumalarm"),
+                               QStringLiteral("_"), QStringLiteral(":/i18n"));
+        if (loaded)
+            app.installTranslator(&translator);
+
+        // RTL follows the *loaded* catalog, never the raw setting: a system
+        // locale without a catalog must stay left-to-right.
+        const Qt::LayoutDirection want =
+            (loaded && QLocale(effective).textDirection() == Qt::RightToLeft)
+                ? Qt::RightToLeft : Qt::LeftToRight;
+        app.setLayoutDirection(want);
+    };
+    applyLanguage(configManager.language());
 
     // Track which alarm is currently ringing so auto-stop timers from previous
     // alarms don't accidentally stop a newer alarm's audio.
@@ -158,6 +191,13 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("blurManager", &blurManager);
     engine.rootContext()->setContextProperty("nightMode", &nightMode);
     engine.rootContext()->setContextProperty("wizard", &wizard);
+
+    // Language selector (Settings > Language): swap the catalog and let the
+    // engine re-evaluate every qsTr()/tr() binding that is currently on screen.
+    QObject::connect(&configManager, &ConfigManager::languageChanged, &engine, [&]() {
+        applyLanguage(configManager.language());
+        engine.retranslate();
+    });
 
     QObject::connect(
         &engine,

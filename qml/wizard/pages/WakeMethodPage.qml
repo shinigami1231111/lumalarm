@@ -7,9 +7,9 @@ import GlassAlarm
 // unlocks Next after the probe succeeded or the step was explicitly skipped.
 WizardPage {
     id: root
-    title: "Wake method"
-    subtitle: "For an alarm to bring the machine back from sleep, Lumalarm needs a wake source. Here is what this machine offers."
-    primaryLabel: "Next"
+    title: qsTr("Wake method")
+    subtitle: qsTr("For an alarm to bring the machine back from sleep, Lumalarm needs a wake source. Here is what this machine offers.")
+    primaryLabel: qsTr("Next")
     primaryEnabled: wizard.canGoNext
     onPrimaryClicked: wizard.next()
 
@@ -28,7 +28,7 @@ WizardPage {
             spacing: 6
 
             Text {
-                text: "Detected"
+                text: qsTr("Detected")
                 color: configManager.themeTextSecondary
                 font.pixelSize: 12
             }
@@ -43,7 +43,7 @@ WizardPage {
             Text {
                 // WakeManager accepts 60–3600 s for a probe, so 60 s is the
                 // shortest non-destructive test on offer.
-                text: "The test arms a wake 60 seconds ahead and cancels it as soon as the result is in. Nothing else is changed."
+                text: qsTr("The test arms a wake 60 seconds ahead and cancels it as soon as the result is in. Nothing else is changed.")
                 color: configManager.themeTextSecondary
                 font.pixelSize: 12
                 Layout.fillWidth: true
@@ -58,13 +58,13 @@ WizardPage {
 
         GlassButton {
             id: testButton
-            text: "Test wake"
+            text: qsTr("Test wake")
             pixelSize: 13
             enabled: wakeManager.wakeState !== "arming" && wakeManager.wakeState !== "armed"
             onClicked: wizard.testWake()
         }
         GlassButton {
-            text: "Skip this step"
+            text: qsTr("Skip this step")
             pixelSize: 13
             onClicked: wizard.skipWakeStep()
         }

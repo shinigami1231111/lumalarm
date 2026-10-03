@@ -88,16 +88,16 @@ void Notifier::notify(const QString &title, const QString &body, int timeoutMs)
 
 void Notifier::notifyAlarmUpcoming(const QString &label, int minutesUntil)
 {
-    deliver(QStringLiteral("Alarm in %1 min").arg(minutesUntil), label, 8000);
+    deliver(tr("Alarm in %1 min").arg(minutesUntil), label, 8000);
 }
 
 void Notifier::notifyWakeFired()
 {
-    deliver(QStringLiteral("Alarm"), QStringLiteral("Time to wake up"), 10000);
+    deliver(tr("Alarm"), tr("Time to wake up"), 10000);
 }
 
 void Notifier::notifyTestWakeArmed(int seconds)
 {
-    deliver(QStringLiteral("Test alarm armed"),
-            QStringLiteral("This machine will try to wake in %1 s").arg(seconds), 6000);
+    deliver(tr("Test alarm armed"),
+            tr("This machine will try to wake in %1 s").arg(seconds), 6000);
 }

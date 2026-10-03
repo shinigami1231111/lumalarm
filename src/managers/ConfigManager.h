@@ -38,6 +38,11 @@ class ConfigManager : public QObject
     Q_PROPERTY(double nightModeOpacity READ nightModeOpacity WRITE setNightModeOpacity NOTIFY configChanged)
     // First-run wizard (STG-5.5): true once the user finished or skipped it.
     Q_PROPERTY(bool wizardCompleted READ wizardCompleted WRITE setWizardCompleted NOTIFY configChanged)
+    // UI language (STG-5.2). Empty = follow the system locale; otherwise a Qt
+    // locale name ("en", "ar") that matches translations/lumalarm_<lang>.ts.
+    // NOTIFY stays configChanged like every other property here; languageChanged
+    // is an additional signal main.cpp uses to swap the active QTranslator.
+    Q_PROPERTY(QString language READ language WRITE setLanguage NOTIFY configChanged)
 
 public:
     explicit ConfigManager(QObject *parent = nullptr);
@@ -103,8 +108,17 @@ public:
     bool wizardCompleted() const;
     void setWizardCompleted(bool completed);
 
+    // UI language: "" (default) = follow the system locale, otherwise a Qt
+    // locale name such as "en" or "ar". Never a display string — the combo box
+    // in Settings maps its labels onto these values.
+    QString language() const;
+    void setLanguage(const QString &lang);
+
 signals:
     void configChanged();
+    // Emitted only by setLanguage(); lets main.cpp reload the catalog without
+    // re-running for every unrelated configChanged().
+    void languageChanged();
 
 private:
     QSettings *m_settings;

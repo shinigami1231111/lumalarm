@@ -113,7 +113,7 @@ Item {
         Tumbler {
             id: periodTumbler
             width: 60; height: 240
-            model: ["AM", "PM"]
+            model: [qsTr("AM"), qsTr("PM")]
             delegate: Text {
                 text: modelData
                 font.pixelSize: Tumbler.displacement === 0 ? 20 : 17

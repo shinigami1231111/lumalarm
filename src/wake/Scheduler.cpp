@@ -77,9 +77,10 @@ QString Scheduler::pendingInfo() const
 {
     if (!m_pending.valid)
         return QString();
-    return "RTC wake " + QDateTime::fromSecsSinceEpoch(m_pending.scheduledUtc)
-                            .toLocalTime()
-                            .toString("ddd d MMM HH:mm");
+    return tr("RTC wake %1")
+        .arg(QDateTime::fromSecsSinceEpoch(m_pending.scheduledUtc)
+                 .toLocalTime()
+                 .toString("ddd d MMM HH:mm"));
 }
 
 int Scheduler::secondsUntilNextAlarm() const
@@ -171,7 +172,7 @@ bool Scheduler::hasPendingWake() const
 void Scheduler::armWake()
 {
     if (m_wakeState == "arming" || m_wakeState == "armed") {
-        m_lastError = "A wake alarm is already armed for this instance";
+        m_lastError = tr("A wake alarm is already armed for this instance");
         emit wakeStateChanged();
         qWarning() << "[Scheduler] armWake refused: already"
                    << (m_wakeState == "armed" ? "armed" : "arming");
@@ -193,7 +194,7 @@ void Scheduler::armWake()
     }
 
     if (bestIndex < 0) {
-        m_lastError = "No future alarm to arm";
+        m_lastError = tr("No future alarm to arm");
         emit wakeStateChanged();
         qWarning() << "[Scheduler] armWake refused: no future alarm";
         return;
@@ -274,7 +275,7 @@ void Scheduler::powerOffMachine()
     // power the machine off. Any earlier failure leaves the state "failed"
     // and this refuses.
     if (!m_pending.valid || m_pending.state != "verified" || m_wakeState != "armed") {
-        m_lastError = "Cannot power off: RTC wake alarm is not armed and verified";
+        m_lastError = tr("Cannot power off: RTC wake alarm is not armed and verified");
         emit wakeStateChanged();
         qWarning() << "[Scheduler] ERROR: poweroff refused — RTC wake not armed/verified";
         return;

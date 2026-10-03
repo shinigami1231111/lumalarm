@@ -24,14 +24,14 @@ ColumnLayout {
     function refresh() { root.toneList = configManager.availableTones() }
 
     Text {
-        text: "Sounds"
+        text: qsTr("Sounds")
         color: configManager.themeTextPrimary
         font.pixelSize: 24
         font.bold: true
     }
 
     Text {
-        text: "Tones folder: " + configManager.tonesDirectory
+        text: qsTr("Tones folder: ") + configManager.tonesDirectory
         color: configManager.themeTextSecondary
         font.pixelSize: 13
         wrapMode: Text.WordWrap
@@ -67,7 +67,7 @@ ColumnLayout {
                 }
 
                 GlassButton {
-                    text: previewingFile === modelData ? "■ Stop" : "▶ Play"
+                    text: previewingFile === modelData ? qsTr("■ Stop") : qsTr("▶ Play")
                     pixelSize: 11
                     implicitWidth: 70
                     implicitHeight: 28
@@ -79,7 +79,7 @@ ColumnLayout {
                 }
 
                 GlassButton {
-                    text: "Delete"
+                    text: qsTr("Delete")
                     pixelSize: 11
                     implicitWidth: 64
                     implicitHeight: 28
@@ -96,15 +96,15 @@ ColumnLayout {
 
     RowLayout {
         Layout.fillWidth: true
-        GlassButton { text: "Import Sound"; pixelSize: 13; onClicked: importDialog.open() }
+        GlassButton { text: qsTr("Import Sound"); pixelSize: 13; onClicked: importDialog.open() }
         Item { Layout.fillWidth: true }
-        GlassButton { text: "Refresh"; pixelSize: 13; onClicked: refresh() }
+        GlassButton { text: qsTr("Refresh"); pixelSize: 13; onClicked: refresh() }
     }
 
     FileDialog {
         id: importDialog
-        title: "Import alarm sound"
-        nameFilters: ["Audio files (*.wav *.mp3 *.ogg *.flac *.aac)"]
+        title: qsTr("Import alarm sound")
+        nameFilters: [qsTr("Audio files (*.wav *.mp3 *.ogg *.flac *.aac)")]
         currentFolder: "file:///home"
         onAccepted: {
             var path = selectedFile.toString()

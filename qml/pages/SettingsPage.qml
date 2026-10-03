@@ -9,7 +9,7 @@ ColumnLayout {
     property bool __allowThemeWrite: false
 
     Text {
-        text: "Settings"
+        text: qsTr("Settings")
         color: configManager.themeTextPrimary
         font.pixelSize: 24
         font.bold: true
@@ -29,10 +29,10 @@ ColumnLayout {
             // ================================================================
             // APPEARANCE
             // ================================================================
-            Text { text: "Appearance"; color: configManager.themeTextSecondary; font.pixelSize: 13; font.bold: true; Layout.bottomMargin: -4 }
+            Text { text: qsTr("Appearance"); color: configManager.themeTextSecondary; font.pixelSize: 13; font.bold: true; Layout.bottomMargin: -4 }
 
             // 1. Palette Presets
-            Text { text: "Palette Presets"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.bottomMargin: -6 }
+            Text { text: qsTr("Palette Presets"); color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.bottomMargin: -6 }
             Flow {
                 Layout.fillWidth: true
                 spacing: 8
@@ -51,7 +51,7 @@ ColumnLayout {
             }
 
             // 2. Background Style
-            Text { text: "Background Style"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.bottomMargin: -6 }
+            Text { text: qsTr("Background Style"); color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.bottomMargin: -6 }
             Flow {
                 Layout.fillWidth: true
                 spacing: 8
@@ -72,7 +72,7 @@ ColumnLayout {
             // 3. Compositor Blur
             RowLayout {
                 Layout.fillWidth: true; spacing: 14
-                Text { text: "Compositor Blur"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.preferredWidth: 180 }
+                Text { text: qsTr("Compositor Blur"); color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.preferredWidth: 180 }
                 Item { Layout.fillWidth: true }
                 ToggleSwitch {
                     checked: themeManager.blur_mode === "compositor"
@@ -81,8 +81,8 @@ ColumnLayout {
             }
             Text {
                 text: themeManager.blur_mode === "compositor"
-                    ? "ON — compositor blurs the desktop behind the transparent panel. Requires Hyprland/Sway + a blur window rule."
-                    : "OFF — no compositor blur. Opacity still controls panel transparency."
+                    ? qsTr("ON — compositor blurs the desktop behind the transparent panel. Requires Hyprland/Sway + a blur window rule.")
+                    : qsTr("OFF — no compositor blur. Opacity still controls panel transparency.")
                 color: configManager.themeTextSecondary; font.pixelSize: 12
                 wrapMode: Text.Wrap; Layout.fillWidth: true
             }
@@ -90,7 +90,7 @@ ColumnLayout {
             // 4. Background Opacity
             RowLayout {
                 Layout.fillWidth: true; spacing: 14
-                Text { text: "Background Opacity"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.preferredWidth: 180 }
+                Text { text: qsTr("Background Opacity"); color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.preferredWidth: 180 }
                 Item { Layout.fillWidth: true }
                 Slider {
                     id: opSlider
@@ -106,48 +106,48 @@ ColumnLayout {
             }
 
             // 5. Manual Colors
-            Text { text: "Manual Colors"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.bottomMargin: -6 }
+            Text { text: qsTr("Manual Colors"); color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.bottomMargin: -6 }
             ColumnLayout {
                 Layout.fillWidth: true
                 spacing: 12
                 SettingRow {
-                    label: "Background"
+                    label: qsTr("Background")
                     control: ColorEdit { color: configManager.themeBg; onPicked: { if (root.__allowThemeWrite) configManager.themeBg = hex } }
                 }
                 SettingRow {
-                    label: "Accent"
+                    label: qsTr("Accent")
                     control: ColorEdit { color: configManager.themeAccent; onPicked: { if (root.__allowThemeWrite) configManager.themeAccent = hex } }
                 }
                 SettingRow {
-                    label: "Text Primary"
+                    label: qsTr("Text Primary")
                     control: ColorEdit { color: configManager.themeTextPrimary; onPicked: { if (root.__allowThemeWrite) configManager.themeTextPrimary = hex } }
                 }
                 SettingRow {
-                    label: "Text Secondary"
+                    label: qsTr("Text Secondary")
                     control: ColorEdit { color: configManager.themeTextSecondary; onPicked: { if (root.__allowThemeWrite) configManager.themeTextSecondary = hex } }
                 }
                 SettingRow {
-                    label: "Border Color"
+                    label: qsTr("Border Color")
                     control: ColorEdit { color: themeManager.border_color; onPicked: themeManager.border_color = hex }
                 }
             }
 
             RowLayout {
                 Layout.fillWidth: true; spacing: 14
-                Text { text: "Corner Radius"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.preferredWidth: 180 }
+                Text { text: qsTr("Corner Radius"); color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.preferredWidth: 180 }
                 Item { Layout.fillWidth: true }
                 Spinny { from: 0; to: 40; value: themeManager.corner_radius; suffix: " px"; onChanged: function() { themeManager.corner_radius = current } }
             }
 
             RowLayout {
                 Layout.fillWidth: true; spacing: 14
-                Text { text: "Font Family"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.preferredWidth: 180 }
+                Text { text: qsTr("Font Family"); color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.preferredWidth: 180 }
                 Item { Layout.fillWidth: true }
                 TextField {
                     Layout.preferredWidth: 220; implicitHeight: 34
                     text: themeManager.font_family
                     color: configManager.themeTextPrimary; font.pixelSize: 13
-                    placeholderText: "system default"
+                    placeholderText: qsTr("system default")
                     background: Rectangle { radius: 7; color: Qt.rgba(1,1,1,0.06); border.color: Qt.rgba(1,1,1,0.1); border.width: 1 }
                     onEditingFinished: themeManager.font_family = text.trim()
                 }
@@ -156,7 +156,7 @@ ColumnLayout {
             RowLayout {
                 Layout.fillWidth: true; spacing: 8
                 GlassButton {
-                    text: themeManager.pywalAvailable() ? "Import from pywal" : "pywal not found"
+                    text: themeManager.pywalAvailable() ? qsTr("Import from pywal") : qsTr("pywal not found")
                     pixelSize: 12
                     enabled: themeManager.pywalAvailable()
                     baseColor: themeManager.pywalAvailable() ? Qt.rgba(0.3, 0.6, 1, 0.2) : Qt.rgba(1, 1, 1, 0.05)
@@ -164,13 +164,13 @@ ColumnLayout {
                     onClicked: themeManager.importFromPywal()
                 }
                 Text {
-                    text: "Reads ~/.cache/wal/colors.json (manual, no auto-apply)"
+                    text: qsTr("Reads ~/.cache/wal/colors.json (manual, no auto-apply)")
                     color: configManager.themeTextSecondary; font.pixelSize: 12; Layout.fillWidth: true
                 }
             }
 
             Text {
-                text: "Theme is stored in ~/.config/lumalarm/theme.conf and reloads live when you edit it."
+                text: qsTr("Theme is stored in ~/.config/lumalarm/theme.conf and reloads live when you edit it.")
                 color: configManager.themeTextSecondary; font.pixelSize: 12; wrapMode: Text.Wrap; Layout.fillWidth: true
             }
 
@@ -179,13 +179,13 @@ ColumnLayout {
             // ================================================================
             // DEFAULT (functional settings)
             // ================================================================
-            Text { text: "Default"; color: configManager.themeTextSecondary; font.pixelSize: 13; font.bold: true; Layout.bottomMargin: -4 }
+            Text { text: qsTr("Default"); color: configManager.themeTextSecondary; font.pixelSize: 13; font.bold: true; Layout.bottomMargin: -4 }
 
             // Window Controls
-            Text { text: "Window Controls"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.bottomMargin: -6 }
+            Text { text: qsTr("Window Controls"); color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.bottomMargin: -6 }
             RowLayout {
                 Layout.fillWidth: true; spacing: 14
-                Text { text: "Show Minimize Button"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.fillWidth: true }
+                Text { text: qsTr("Show Minimize Button"); color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.fillWidth: true }
                 ToggleSwitch {
                     checked: themeManager.show_minimize_button
                     onToggled: function(checked) { themeManager.show_minimize_button = checked }
@@ -193,7 +193,7 @@ ColumnLayout {
             }
             RowLayout {
                 Layout.fillWidth: true; spacing: 14
-                Text { text: "Show Maximize Button"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.fillWidth: true }
+                Text { text: qsTr("Show Maximize Button"); color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.fillWidth: true }
                 ToggleSwitch {
                     checked: themeManager.show_maximize_button
                     onToggled: function(checked) { themeManager.show_maximize_button = checked }
@@ -201,7 +201,7 @@ ColumnLayout {
             }
             RowLayout {
                 Layout.fillWidth: true; spacing: 14
-                Text { text: "Show Close Button"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.fillWidth: true }
+                Text { text: qsTr("Show Close Button"); color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.fillWidth: true }
                 ToggleSwitch {
                     checked: themeManager.show_close_button
                     onToggled: function(checked) { themeManager.show_close_button = checked }
@@ -209,10 +209,10 @@ ColumnLayout {
             }
 
             // System Tray
-            Text { text: "System Tray"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.bottomMargin: -6 }
+            Text { text: qsTr("System Tray"); color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.bottomMargin: -6 }
             RowLayout {
                 Layout.fillWidth: true; spacing: 14
-                Text { text: "Show system tray icon"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.fillWidth: true }
+                Text { text: qsTr("Show system tray icon"); color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.fillWidth: true }
                 ToggleSwitch {
                     checked: configManager.trayIconEnabled
                     onToggled: function(checked) { configManager.trayIconEnabled = checked }
@@ -224,10 +224,10 @@ ColumnLayout {
             Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: Qt.rgba(1,1,1,0.07) }
 
             // Alarm Defaults
-            Text { text: "Alarm Defaults"; color: configManager.themeTextSecondary; font.pixelSize: 13; font.bold: true; Layout.bottomMargin: -4 }
+            Text { text: qsTr("Alarm Defaults"); color: configManager.themeTextSecondary; font.pixelSize: 13; font.bold: true; Layout.bottomMargin: -4 }
             RowLayout {
                 Layout.fillWidth: true; spacing: 14
-                Text { text: "Default Wake Mode"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.preferredWidth: 180 }
+                Text { text: qsTr("Default Wake Mode"); color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.preferredWidth: 180 }
                 Item { Layout.fillWidth: true }
                 RoundedCombo {
                     id: wakeCombo
@@ -240,11 +240,11 @@ ColumnLayout {
 
             RowLayout {
                 Layout.fillWidth: true; spacing: 14
-                Text { text: "Time picker style"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.preferredWidth: 180 }
+                Text { text: qsTr("Time picker style"); color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.preferredWidth: 180 }
                 Item { Layout.fillWidth: true }
                 RoundedCombo {
                     id: timePickerCombo
-                    model: ["Wheel", "Spin"]
+                    model: [qsTr("Wheel"), qsTr("Spin")]
                     currentIndex: configManager.timePickerMode === "spin" ? 1 : 0
                     Layout.preferredWidth: 140
                     onActivated: configManager.timePickerMode = currentIndex === 1 ? "spin" : "wheel"
@@ -256,9 +256,9 @@ ColumnLayout {
             // ================================================================
             Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: Qt.rgba(1,1,1,0.07) }
 
-            Text { text: "Test alarm"; color: configManager.themeTextSecondary; font.pixelSize: 13; font.bold: true; Layout.bottomMargin: -4 }
+            Text { text: qsTr("Test alarm"); color: configManager.themeTextSecondary; font.pixelSize: 13; font.bold: true; Layout.bottomMargin: -4 }
             Text {
-                text: "Arm a real wake without creating an alarm, to check that this machine actually wakes."
+                text: qsTr("Arm a real wake without creating an alarm, to check that this machine actually wakes.")
                 color: configManager.themeTextSecondary; font.pixelSize: 12
                 wrapMode: Text.WordWrap; Layout.fillWidth: true; Layout.bottomMargin: 4
             }
@@ -270,11 +270,11 @@ ColumnLayout {
                 // Presets (60 s .. 60 min) plus a custom numeric field.
                 RowLayout {
                     Layout.fillWidth: true; spacing: 14
-                    Text { text: "Wake in"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.preferredWidth: 80 }
+                    Text { text: qsTr("Wake in"); color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.preferredWidth: 80 }
                     Item { Layout.fillWidth: true }
                     RoundedCombo {
                         id: testWakeCombo
-                        model: ["60 s", "2 min", "5 min", "10 min", "30 min", "60 min", "Custom…"]
+                        model: [qsTr("60 s"), qsTr("2 min"), qsTr("5 min"), qsTr("10 min"), qsTr("30 min"), qsTr("60 min"), qsTr("Custom…")]
                         // Initial selection comes from the persisted duration.
                         currentIndex: presetIndexFor(configManager.testWakeDuration)
                         visible: !customField.visible
@@ -305,7 +305,7 @@ ColumnLayout {
                     color: configManager.themeTextPrimary
                     font.pixelSize: 14
                     leftPadding: 10
-                    placeholderText: "Custom seconds (60-3600)"
+                    placeholderText: qsTr("Custom seconds (60-3600)")
                     validator: IntValidator { bottom: 60; top: 3600 }
                     background: Rectangle {
                         radius: 7
@@ -322,13 +322,13 @@ ColumnLayout {
                 RowLayout {
                     Layout.fillWidth: true; spacing: 10
                     GlassButton {
-                        text: "Arm test alarm"
+                        text: qsTr("Arm test alarm")
                         pixelSize: 13
                         enabled: wakeManager.wakeState !== "armed"
                         onClicked: wakeManager.armTestWake(testAlarmCard.selectedSeconds())
                     }
                     GlassButton {
-                        text: "Cancel test alarm"
+                        text: qsTr("Cancel test alarm")
                         pixelSize: 13
                         enabled: wakeManager.wakeState === "armed"
                         onClicked: wakeManager.cancelTestWake()
@@ -363,10 +363,10 @@ ColumnLayout {
                 Connections {
                     target: wakeManager
                     function onTestWakeArmed(seconds) {
-                        testAlarmStatus.text = "Test alarm armed in " + seconds + " s"
+                        testAlarmStatus.text = qsTr("Test alarm armed in %1 s").arg(seconds)
                     }
                     function onTestWakeFailed(reason) {
-                        testAlarmStatus.text = "Test alarm failed: " + reason
+                        testAlarmStatus.text = qsTr("Test alarm failed: %1").arg(reason)
                     }
                     function onWakeStateChanged() {
                         if (wakeManager.wakeState === "idle")
@@ -378,10 +378,10 @@ ColumnLayout {
             Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: Qt.rgba(1,1,1,0.07) }
 
             // Behavior
-            Text { text: "Behavior"; color: configManager.themeTextSecondary; font.pixelSize: 13; font.bold: true; Layout.bottomMargin: -4 }
+            Text { text: qsTr("Behavior"); color: configManager.themeTextSecondary; font.pixelSize: 13; font.bold: true; Layout.bottomMargin: -4 }
             RowLayout {
                 Layout.fillWidth: true; spacing: 14
-                Text { text: "Show milliseconds in stopwatch"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.fillWidth: true }
+                Text { text: qsTr("Show milliseconds in stopwatch"); color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.fillWidth: true }
                 ToggleSwitch {
                     checked: configManager.stopwatchShowMs
                     onToggled: function(checked) { configManager.stopwatchShowMs = checked }
@@ -389,7 +389,7 @@ ColumnLayout {
             }
             RowLayout {
                 Layout.fillWidth: true; spacing: 14
-                Text { text: "Desktop notifications"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.fillWidth: true }
+                Text { text: qsTr("Desktop notifications"); color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.fillWidth: true }
                 ToggleSwitch {
                     checked: configManager.notificationsEnabled
                     onToggled: function(checked) { configManager.notificationsEnabled = checked }
@@ -397,12 +397,31 @@ ColumnLayout {
             }
             RowLayout {
                 Layout.fillWidth: true; spacing: 14
-                Text { text: "Setup wizard"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.fillWidth: true }
+                Text { text: qsTr("Setup wizard"); color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.fillWidth: true }
                 GlassButton {
-                    text: "Run again"
+                    text: qsTr("Run again")
                     pixelSize: 13
                     // Clears wizard/completed and brings the overlay straight back.
                     onClicked: wizard.reset()
+                }
+            }
+            RowLayout {
+                Layout.fillWidth: true; spacing: 14
+                Text { text: qsTr("Language"); color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.fillWidth: true }
+                RoundedCombo {
+                    id: languageCombo
+                    // Language names are shown in their own script on purpose:
+                    // a label for a language the reader cannot read defeats the
+                    // purpose. Only "System default" is translatable, and it is
+                    // what the empty ui/language value resolves to in main.cpp.
+                    model: [qsTr("System default"), "English", "العربية"]
+                    currentIndex: configManager.language === "en" ? 1
+                                  : (configManager.language === "ar" ? 2 : 0)
+                    Layout.preferredWidth: 170
+                    onActivated: {
+                        const codes = ["", "en", "ar"]
+                        configManager.language = codes[currentIndex]
+                    }
                 }
             }
 
@@ -411,16 +430,16 @@ ColumnLayout {
             // ================================================================
             Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: Qt.rgba(1,1,1,0.07) }
 
-            Text { text: "Night Mode"; color: configManager.themeTextSecondary; font.pixelSize: 13; font.bold: true; Layout.bottomMargin: -4 }
+            Text { text: qsTr("Night Mode"); color: configManager.themeTextSecondary; font.pixelSize: 13; font.bold: true; Layout.bottomMargin: -4 }
             Text {
-                text: "Dim the window before an alarm so it does not light up a dark room."
+                text: qsTr("Dim the window before an alarm so it does not light up a dark room.")
                 color: configManager.themeTextSecondary; font.pixelSize: 12
                 wrapMode: Text.WordWrap; Layout.fillWidth: true; Layout.bottomMargin: 4
             }
 
             RowLayout {
                 Layout.fillWidth: true; spacing: 14
-                Text { text: "Enable night mode"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.fillWidth: true }
+                Text { text: qsTr("Enable night mode"); color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.fillWidth: true }
                 ToggleSwitch {
                     checked: nightMode.enabled
                     onToggled: function(checked) { nightMode.enabled = checked }
@@ -431,7 +450,7 @@ ColumnLayout {
                 Layout.fillWidth: true; spacing: 14
                 enabled: nightMode.enabled
                 opacity: nightMode.enabled ? 1.0 : 0.5
-                Text { text: "Dim before alarm"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.preferredWidth: 180 }
+                Text { text: qsTr("Dim before alarm"); color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.preferredWidth: 180 }
                 Item { Layout.fillWidth: true }
                 Slider {
                     id: nightMinutesSlider
@@ -444,7 +463,7 @@ ColumnLayout {
                     }
                 }
                 Text {
-                    text: nightMode.minutesBefore + " min"
+                    text: nightMode.minutesBefore + qsTr(" min")
                     color: configManager.themeTextSecondary; font.pixelSize: 14
                     Layout.preferredWidth: 62; horizontalAlignment: Text.AlignRight
                 }
@@ -454,7 +473,7 @@ ColumnLayout {
                 Layout.fillWidth: true; spacing: 14
                 enabled: nightMode.enabled
                 opacity: nightMode.enabled ? 1.0 : 0.5
-                Text { text: "Dim strength"; color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.preferredWidth: 180 }
+                Text { text: qsTr("Dim strength"); color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.preferredWidth: 180 }
                 Item { Layout.fillWidth: true }
                 Slider {
                     id: nightOpacitySlider
@@ -476,7 +495,7 @@ ColumnLayout {
             RowLayout {
                 Layout.fillWidth: true; spacing: 10
                 GlassButton {
-                    text: "Preview"
+                    text: qsTr("Preview")
                     pixelSize: 13
                     enabled: !nightMode.active
                     // NightMode.activate() holds the veil for two seconds and
@@ -486,7 +505,7 @@ ColumnLayout {
                 Item { Layout.fillWidth: true }
                 Text {
                     visible: nightMode.active
-                    text: nightMode.active ? "Dimming" : ""
+                    text: nightMode.active ? qsTr("Dimming") : ""
                     color: configManager.themeTextSecondary; font.pixelSize: 12
                 }
             }
@@ -497,7 +516,7 @@ ColumnLayout {
                 Layout.fillWidth: true; Layout.bottomMargin: 4
                 Item { Layout.fillWidth: true }
                 GlassButton {
-                    text: "Reset to Defaults"
+                    text: qsTr("Reset to Defaults")
                     pixelSize: 13
                     baseColor: Qt.rgba(1, 0.3, 0.3, 0.12)
                     hoverColor: Qt.rgba(1, 0.3, 0.3, 0.22)

@@ -18,6 +18,14 @@ Window {
     flags: Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
     color: "transparent"
 
+    // i18n (STG-5.2): follow the loaded catalog's script. main.cpp sets
+    // Qt.application.layoutDirection from the translator, and mirroring is
+    // inherited by every child so Row/RowLayout/anchors flip for Arabic.
+    // Individual strings stay readable in either direction because nothing
+    // here relies on hard-coded left/right anchors for text.
+    LayoutMirroring.enabled: Qt.application.layoutDirection === Qt.RightToLeft
+    LayoutMirroring.childrenInherit: true
+
     // Clip the window content to the rounded rectangle shape.
     // Without this, the square window surface shows behind the rounded bgLayer.
     Component.onCompleted: {
@@ -178,7 +186,7 @@ Window {
                             var s = root.countdownValue
                             if (s < 0) return ""
                             var h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60
-                            return ("00" + h).slice(-2) + "h " + ("00" + m).slice(-2) + "m " + ("00" + sec).slice(-2) + "s"
+                            return ("00" + h).slice(-2) + qsTr("h ") + ("00" + m).slice(-2) + qsTr("m ") + ("00" + sec).slice(-2) + qsTr("s")
                         }
                         color: configManager.themeTextSecondary; font.pixelSize: 14; font.bold: true
                         Layout.alignment: Qt.AlignVCenter
@@ -235,11 +243,11 @@ Window {
                 SegmentedControl {
                     anchors.centerIn: parent
                     items: [
-                        {label: "Alarms", mode: "alarms", icon: "alarms"},
-                        {label: "Timer", mode: "timer", icon: "timer"},
-                        {label: "Stopwatch", mode: "stopwatch", icon: "stopwatch"},
-                        {label: "Sounds", mode: "sounds", icon: "sounds"},
-                        {label: "Settings", mode: "settings", icon: "settings"}
+                        {label: qsTr("Alarms"), mode: "alarms", icon: "alarms"},
+                        {label: qsTr("Timer"), mode: "timer", icon: "timer"},
+                        {label: qsTr("Stopwatch"), mode: "stopwatch", icon: "stopwatch"},
+                        {label: qsTr("Sounds"), mode: "sounds", icon: "sounds"},
+                        {label: qsTr("Settings"), mode: "settings", icon: "settings"}
                     ]
                     current: currentMode
                     onSelected: function(m) { currentMode = m }
@@ -289,7 +297,7 @@ Window {
                             }
                             Text {
                                 anchors.centerIn: parent; visible: !alarmEditor.hasSelection
-                                text: "Select or create an alarm"
+                                text: qsTr("Select or create an alarm")
                                 color: configManager.themeTextSecondary; font.pixelSize: 14
                             }
                         }
@@ -297,9 +305,9 @@ Window {
                         RowLayout {
                             Layout.fillWidth: true; visible: alarmEditor.hasSelection; spacing: 8
                             Item { Layout.fillWidth: true }
-                            GlassButton { text: "Cancel"; pixelSize: 13; onClicked: alarmEditor.clearSelection() }
+                            GlassButton { text: qsTr("Cancel"); pixelSize: 13; onClicked: alarmEditor.clearSelection() }
                             GlassButton {
-                                text: alarmEditor.editIndex >= 0 ? "Update" : "Create"; pixelSize: 13
+                                text: alarmEditor.editIndex >= 0 ? qsTr("Update") : qsTr("Create"); pixelSize: 13
                                 baseColor: Qt.rgba(0.3, 0.6, 1, 0.2); hoverColor: Qt.rgba(0.3, 0.6, 1, 0.3)
                                 onClicked: { alarmEditor.commitAlarm(); alarmEditor.clearSelection() }
                             }
@@ -314,12 +322,12 @@ Window {
                                 GlassButton {
                                     id: armBtn
                                     text: {
-                                        if (!root.hasNextAlarm) return "No alarm armed"
+                                        if (!root.hasNextAlarm) return qsTr("No alarm armed")
                                         var ws = scheduler.wakeState
-                                        if (ws === "arming") return "Arming..."
-                                        if (ws === "armed") return "Armed ✓"
-                                        if (ws === "failed") return "Arm FAILED"
-                                        return "Arm Wake"
+                                        if (ws === "arming") return qsTr("Arming...")
+                                        if (ws === "armed") return qsTr("Armed ✓")
+                                        if (ws === "failed") return qsTr("Arm FAILED")
+                                        return qsTr("Arm Wake")
                                     }
                                     pixelSize: 12
                                     baseColor: {
@@ -359,7 +367,7 @@ Window {
                                 }
                                 GlassButton {
                                     id: poweroffBtn
-                                    text: "Power Off & Wake"
+                                    text: qsTr("Power Off & Wake")
                                     visible: scheduler.wakeState === "armed"
                                     enabled: scheduler.wakeState === "armed"
                                     pixelSize: 12
@@ -374,13 +382,13 @@ Window {
                             Text {
                                 Layout.fillWidth: true; wrapMode: Text.Wrap
                                 visible: scheduler.wakeState === "armed"
-                                text: scheduler.pendingInfo + " — RTC alarm armed and verified; power off to wake the machine"
+                                text: scheduler.pendingInfo + " — " + qsTr("RTC alarm armed and verified; power off to wake the machine")
                                 color: configManager.themeTextSecondary; font.pixelSize: 11
                             }
                             Text {
                                 Layout.fillWidth: true; wrapMode: Text.Wrap
                                 visible: scheduler.lastError !== ""
-                                text: "Error: " + scheduler.lastError
+                                text: qsTr("Error: ") + scheduler.lastError
                                 color: "#ff6b6b"; font.pixelSize: 11
                             }
                         }

@@ -79,7 +79,7 @@ Rectangle {
         z: 10
 
         Text {
-            text: "ALARM"
+            text: qsTr("ALARM")
             color: "#FFFFFF"; font.pixelSize: 52; font.bold: true; opacity: 0.9
             Layout.alignment: Qt.AlignHCenter
             style: Text.Raised; styleColor: Qt.rgba(0,0,0,0.5)
@@ -100,7 +100,7 @@ Rectangle {
         }
 
         GlassButton {
-            text: "STOP"
+            text: qsTr("STOP")
             pixelSize: 20; implicitWidth: 140; implicitHeight: 60; radius: 16
             Layout.alignment: Qt.AlignHCenter
             baseColor: Qt.rgba(1, 0.2, 0.2, 0.2)

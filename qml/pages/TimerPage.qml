@@ -34,7 +34,7 @@ ColumnLayout {
         return ("00"+h).slice(-2) + ":" + ("00"+m).slice(-2) + ":" + ("00"+s).slice(-2)
     }
 
-    Text { text: "Timer"; color: configManager.themeTextPrimary; font.pixelSize: 24; font.bold: true }
+    Text { text: qsTr("Timer"); color: configManager.themeTextPrimary; font.pixelSize: 24; font.bold: true }
 
     Item { Layout.fillHeight: true }
 
@@ -47,7 +47,7 @@ ColumnLayout {
     }
 
     Text {
-        text: timerRunning ? "Running" : (remainingSecs > 0 ? "Paused" : "Set a duration")
+        text: timerRunning ? qsTr("Running") : (remainingSecs > 0 ? qsTr("Paused") : qsTr("Set a duration"))
         color: timerRunning ? Qt.rgba(0.3,1,0.3,0.8) : configManager.themeTextSecondary
         font.pixelSize: 14
         Layout.alignment: Qt.AlignHCenter
@@ -60,9 +60,9 @@ ColumnLayout {
         Layout.alignment: Qt.AlignHCenter
         Repeater {
             model: [
-                {label: "Hours", max: 99},
-                {label: "Min", max: 59},
-                {label: "Sec", max: 59}
+                {label: qsTr("Hours"), max: 99},
+                {label: qsTr("Min"), max: 59},
+                {label: qsTr("Sec"), max: 59}
             ]
             ColumnLayout {
                 spacing: 4
@@ -89,7 +89,7 @@ ColumnLayout {
         spacing: 12
         Layout.alignment: Qt.AlignHCenter
         GlassButton {
-            text: timerRunning ? "Pause" : "Start"
+            text: timerRunning ? qsTr("Pause") : qsTr("Start")
             pixelSize: 14
             implicitWidth: 110; implicitHeight: 40
             filled: !timerRunning
@@ -107,7 +107,7 @@ ColumnLayout {
             }
         }
         GlassButton {
-            text: "Reset"
+            text: qsTr("Reset")
             pixelSize: 14
             implicitWidth: 100; implicitHeight: 40
             baseColor: Qt.rgba(1,0.2,0.2,0.15)
@@ -120,7 +120,7 @@ ColumnLayout {
 
     RowLayout {
         Layout.fillWidth: true; spacing: 10
-        Text { text: "Sound when done:"; color: configManager.themeTextSecondary; font.pixelSize: 14; Layout.alignment: Qt.AlignVCenter }
+        Text { text: qsTr("Sound when done:"); color: configManager.themeTextSecondary; font.pixelSize: 14; Layout.alignment: Qt.AlignVCenter }
         RoundedCombo {
             id: timerSoundCmb
             Layout.fillWidth: true

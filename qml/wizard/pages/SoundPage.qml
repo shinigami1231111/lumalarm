@@ -8,9 +8,9 @@ import GlassAlarm
 // editor offers, so nothing here is hard-coded.
 WizardPage {
     id: root
-    title: "Default alarm sound"
-    subtitle: "Pick the tone new alarms start with. You can still change it per alarm in the editor."
-    primaryLabel: "Next"
+    title: qsTr("Default alarm sound")
+    subtitle: qsTr("Pick the tone new alarms start with. You can still change it per alarm in the editor.")
+    primaryLabel: qsTr("Next")
     primaryEnabled: wizard.canGoNext
     onPrimaryClicked: wizard.next()
 
@@ -23,7 +23,7 @@ WizardPage {
         wrapMode: Text.WordWrap
         color: configManager.themeTextSecondary
         font.pixelSize: 13
-        text: "No tones were found yet. You can add .wav, .mp3, .ogg or .flac files to the tones folder later and pick them per alarm."
+        text: qsTr("No tones were found yet. You can add .wav, .mp3, .ogg or .flac files to the tones folder later and pick them per alarm.")
     }
 
     Flickable {
@@ -69,12 +69,12 @@ WizardPage {
                             elide: Text.ElideMiddle
                         }
                         GlassButton {
-                            text: "Preview"
+                            text: qsTr("Preview")
                             pixelSize: 12
                             onClicked: wizard.previewSound(modelData.id)
                         }
                         GlassButton {
-                            text: root.selected === modelData.id ? "Selected" : "Use"
+                            text: root.selected === modelData.id ? qsTr("Selected") : qsTr("Use")
                             pixelSize: 12
                             filled: root.selected !== modelData.id
                             onClicked: {

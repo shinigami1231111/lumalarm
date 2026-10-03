@@ -7,9 +7,9 @@ import GlassAlarm
 // blocks progress.
 WizardPage {
     id: root
-    title: "Notifications"
-    subtitle: "Lumalarm can notify you on the desktop before an alarm rings. This step checks whether this session has a notification daemon."
-    primaryLabel: "Next"
+    title: qsTr("Notifications")
+    subtitle: qsTr("Lumalarm can notify you on the desktop before an alarm rings. This step checks whether this session has a notification daemon.")
+    primaryLabel: qsTr("Next")
     primaryEnabled: true
     onPrimaryClicked: wizard.next()
 
@@ -30,7 +30,7 @@ WizardPage {
             spacing: 6
 
             Text {
-                text: wizard.notificationsAvailable ? "Notifications available" : "No notification daemon"
+                text: wizard.notificationsAvailable ? qsTr("Notifications available") : qsTr("No notification daemon")
                 color: configManager.themeTextPrimary
                 font.pixelSize: 15
                 font.bold: true
@@ -43,8 +43,8 @@ WizardPage {
                 color: configManager.themeTextSecondary
                 font.pixelSize: 13
                 text: wizard.notificationsAvailable
-                    ? "Alarms can be announced through the desktop notification service."
-                    : "Desktop notifications will not be shown on this session. Alarms still ring normally — this is not blocking."
+                    ? qsTr("Alarms can be announced through the desktop notification service.")
+                    : qsTr("Desktop notifications will not be shown on this session. Alarms still ring normally — this is not blocking.")
             }
         }
     }
@@ -55,11 +55,11 @@ WizardPage {
         visible: wizard.notificationsAvailable
 
         GlassButton {
-            text: "Send test notification"
+            text: qsTr("Send test notification")
             pixelSize: 13
             onClicked: root.probeResult = wizard.testNotification()
-                ? "Test notification sent."
-                : "Could not send the notification."
+                ? qsTr("Test notification sent.")
+                : qsTr("Could not send the notification.")
         }
         Item { Layout.fillWidth: true }
     }

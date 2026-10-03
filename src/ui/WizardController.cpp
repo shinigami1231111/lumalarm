@@ -181,8 +181,8 @@ bool WizardController::testWake()
     }
 
     const QString status = armed
-        ? QStringLiteral("Wake test succeeded — this machine can wake up.")
-        : QStringLiteral("Wake test failed: %1").arg(m_wake->lastError());
+        ? tr("Wake test succeeded — this machine can wake up.")
+        : tr("Wake test failed: %1").arg(m_wake->lastError());
     if (m_wakeStatus != status) {
         m_wakeStatus = status;
         emit wakeStatusChanged();
@@ -224,8 +224,8 @@ bool WizardController::testNotification()
         QStringLiteral("Lumalarm"),      // app_name
         quint32(0),                      // replaces_id
         QStringLiteral("alarm"),         // app_icon
-        QStringLiteral("Lumalarm is ready"),   // summary
-        QStringLiteral("Notifications are working."),   // body
+        tr("Lumalarm is ready"),               // summary
+        tr("Notifications are working."),      // body
         QStringList(),                   // actions (as)
         QVariantMap(),                   // hints (a{sv})
         8000);                           // expire_timeout (ms)
@@ -268,14 +268,14 @@ void WizardController::previewSound(const QString &id)
 QString WizardController::detectWakeMethod() const
 {
     if (!m_wake)
-        return QStringLiteral("Unknown");
+        return tr("Unknown");
 
     // Only what WakeManager already exposes — no new detection code and no
     // change to WakeManager itself (STG-5.5 must not touch its behaviour).
     if (m_wake->isRtcWakeAvailable())
-        return QStringLiteral("Real-time clock wake (rtcwake) — recommended");
+        return tr("Real-time clock wake (rtcwake) — recommended");
 
-    return QStringLiteral("No hardware wake source — alarms ring only while the machine is awake");
+    return tr("No hardware wake source — alarms ring only while the machine is awake");
 }
 
 void WizardController::setDefaultSound(const QString &id)

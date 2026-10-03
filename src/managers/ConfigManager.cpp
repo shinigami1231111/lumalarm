@@ -254,6 +254,21 @@ void ConfigManager::setWizardCompleted(bool completed)
     emit configChanged();
 }
 
+QString ConfigManager::language() const
+{
+    // Missing key = follow the system locale.
+    return m_settings->value(QStringLiteral("ui/language"), QString()).toString();
+}
+
+void ConfigManager::setLanguage(const QString &lang)
+{
+    const QString previous = language();
+    m_settings->setValue(QStringLiteral("ui/language"), lang);
+    emit configChanged();
+    if (previous != lang)
+        emit languageChanged();
+}
+
 QString ConfigManager::configFilePath() const
 {
     return m_settings->fileName();

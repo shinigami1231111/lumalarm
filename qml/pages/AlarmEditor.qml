@@ -116,7 +116,7 @@ GlassCard {
         spacing: 16
 
         Text {
-            text: editIndex >= 0 ? "Edit Alarm" : "New Alarm"
+            text: editIndex >= 0 ? qsTr("Edit Alarm") : qsTr("New Alarm")
             color: configManager.themeTextPrimary
             font.pixelSize: 22
             font.bold: true
@@ -126,14 +126,14 @@ GlassCard {
             spacing: 4
             Layout.fillWidth: true
             Text {
-                text: "Name (optional)"
+                text: qsTr("Name (optional)")
                 color: configManager.themeTextSecondary; font.pixelSize: 12
             }
             TextField {
                 id: nameField
                 Layout.fillWidth: true
                 text: editName
-                placeholderText: "e.g. Morning, Work, Wake up"
+                placeholderText: qsTr("e.g. Morning, Work, Wake up")
                 color: configManager.themeTextPrimary; font.pixelSize: 14
                 background: Rectangle {
                     color: Qt.rgba(1,1,1,0.05); radius: 8
@@ -178,7 +178,7 @@ GlassCard {
 
                     ValueCtrl {
                         id: hourCtrl
-                        label: "Hour"; suffix: ""
+                        label: qsTr("Hour"); suffix: ""
                         minVal: 0; maxVal: 23; step: 1
                         onValueChanged: editHour = value
                         Component.onCompleted: value = editHour
@@ -186,7 +186,7 @@ GlassCard {
 
                     ValueCtrl {
                         id: minuteCtrl
-                        label: "Minute"; suffix: ""
+                        label: qsTr("Minute"); suffix: ""
                         minVal: 0; maxVal: 59; step: 1
                         onValueChanged: editMinute = value
                         Component.onCompleted: value = editMinute
@@ -197,7 +197,7 @@ GlassCard {
 
         GlassCheckBox {
             id: daysCheck
-            labelText: "Set Days"
+            labelText: qsTr("Set Days")
             checked: {
                 for (var i = 0; i < 7; i++)
                     if (editDays[i]) return true
@@ -215,7 +215,7 @@ GlassCard {
             Flow {
                 spacing: 5
                 Repeater {
-                    model: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+                    model: [qsTr("Mon"), qsTr("Tue"), qsTr("Wed"), qsTr("Thu"), qsTr("Fri"), qsTr("Sat"), qsTr("Sun")]
                     GlassButton {
                         text: modelData
                         pixelSize: 10
@@ -233,10 +233,10 @@ GlassCard {
             }
         }
 
-        ValueCtrl { label: "Auto Stop"; value: editAutoStop; minVal: 10; maxVal: 600; step: 10; suffix: "s"; onValueChanged: editAutoStop = value }
+        ValueCtrl { label: qsTr("Auto Stop"); value: editAutoStop; minVal: 10; maxVal: 600; step: 10; suffix: "s"; onValueChanged: editAutoStop = value }
 
         GlassCheckBox {
-            labelText: "Enable Sound"
+            labelText: qsTr("Enable Sound")
             checked: editEnableSound
             onCheckedChanged: editEnableSound = checked
         }
@@ -291,7 +291,7 @@ GlassCard {
         }
 
         GlassCheckBox {
-            labelText: "Enable Command"
+            labelText: qsTr("Enable Command")
             checked: editEnableCommand
             onCheckedChanged: editEnableCommand = checked
         }
@@ -299,7 +299,7 @@ GlassCard {
         TextField {
             visible: editEnableCommand
             Layout.fillWidth: true
-            placeholderText: "e.g. notify-send 'Wake up!'"
+            placeholderText: qsTr("e.g. notify-send 'Wake up!'")
             text: editCommand
             onTextChanged: editCommand = text
             color: configManager.themeTextPrimary

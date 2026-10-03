@@ -30,10 +30,10 @@ ColumnLayout {
     RowLayout {
         Layout.fillWidth: true
         Layout.margins: 2
-        Text { text: "Alarms"; color: configManager.themeTextPrimary; font.pixelSize: 20; font.bold: true }
+        Text { text: qsTr("Alarms"); color: configManager.themeTextPrimary; font.pixelSize: 20; font.bold: true }
         Item { Layout.fillWidth: true }
         GlassButton {
-            text: "+  New"
+            text: qsTr("+  New")
             pixelSize: 12
             implicitWidth: 70; implicitHeight: 32
             filled: true
@@ -146,8 +146,8 @@ ColumnLayout {
                     ColumnLayout {
                         Layout.alignment: Qt.AlignVCenter
                         spacing: 4
-                        GlassButton { text:"Edit"; pixelSize:10; implicitWidth:46; implicitHeight:24; radius:6; onClicked: root.editAlarm(index) }
-                        GlassButton { text:"Del"; pixelSize:10; implicitWidth:46; implicitHeight:24; radius:6; baseColor: Qt.rgba(1,0.2,0.2,0.15); hoverColor: Qt.rgba(1,0.2,0.2,0.28); onClicked: root.deleteAlarm(index) }
+                        GlassButton { text:qsTr("Edit"); pixelSize:10; implicitWidth:46; implicitHeight:24; radius:6; onClicked: root.editAlarm(index) }
+                        GlassButton { text:qsTr("Del"); pixelSize:10; implicitWidth:46; implicitHeight:24; radius:6; baseColor: Qt.rgba(1,0.2,0.2,0.15); hoverColor: Qt.rgba(1,0.2,0.2,0.28); onClicked: root.deleteAlarm(index) }
                     }
                 }
             }
