@@ -13,6 +13,9 @@ features. Read on for the conventions that keep review cheap.
 - **CMake >= 3.21**
 - A **C++17** compiler — GCC 11+ or Clang 14+
 - Optional: **KF6WindowSystem** (KWin), which enables native KDE blur-behind
+- Optional: **Qt Linguist tools** (`lupdate`/`lrelease`, package `qt6-tools` on Arch),
+  needed only to compile or refresh translations — see [Translations](#translations).
+  Without them the build still succeeds and the UI stays in English.
 - Platforms: developed and tested on Arch Linux. Ubuntu 24.04 and Fedora 40 are
   expected to work; please report what breaks elsewhere.
 
@@ -63,8 +66,53 @@ ctest --test-dir build --output-on-failure
 | `tst_configmanager` | `ConfigManager` (managers): settings round-trips, `timePickerMode` normalization |
 | `tst_thememanager` | `ThemeManager` (managers): seeded defaults, palette presets, theme file round-trip |
 | `tst_blurmanager` | `BlurManager` (ui): construction and null-window contract |
+| `tst_wakemanager` | `WakeManager` (wake): test-alarm range validation plus the arm/cancel surface; the privileged D-Bus cases skip when no helper is present |
+| `tst_notifier` | `Notifier` (ui): construction, master switch and the no-bus path (live delivery is checked manually with `busctl --user monitor`) |
+| `tst_trayicon` | `TrayIcon` (ui): construction and tooltip text on a headless box (offscreen platform, no system tray) |
+| `tst_nightmode` | `NightMode` (ui): edge-trigger semantics, settings round-trip and lead-window clamping |
+| `tst_wizard` | `WizardController` (ui): step machine, next/back gates, the `wizard/completed` flag, and the probe-skipped path |
+| `tst_i18n` | i18n: English source fallback, the embedded Arabic catalog at `:/i18n`, `QQmlEngine::retranslate()`, the `ui/language` round-trip and `.ts` catalog consistency |
 
 Any PR must keep all tests green. New behavior should come with a new test.
+
+## Translations
+
+Every user-facing string goes through `qsTr()` in QML and `tr()` in C++. The catalogs
+live in `translations/`:
+
+| File | Contents |
+|---|---|
+| `translations/lumalarm_en.ts` | source-language template — English *is* the source, so its entries stay `type="unfinished"` by design |
+| `translations/lumalarm_ar.ts` | Arabic catalog, kept at 0 unfinished entries |
+
+```sh
+cmake --build build --target update_translations   # re-run lupdate over the sources
+cmake --build build                                # lrelease + embed the .qm files
+```
+
+`update_translations` is opt-in: a normal build only compiles the committed `.ts`
+files and never rewrites them, so building cannot dirty the working tree.
+
+Rules for string changes:
+
+- Wrap anything a user can read — `qsTr("...")` in QML, `tr("...")` in C++. Leave logs
+  and `qWarning()` output alone, along with product names ("Lumalarm"), palette preset
+  names, and any combo whose `currentText` is stored verbatim as a setting (translating
+  those would corrupt the value; combos selected by `currentIndex` are safe to
+  translate).
+- Keep the leading/trailing spaces inside fragments such as `"h "`, `" min"` and
+  `"Tones folder: "`: the UI concatenates them around a countdown, and `tst_i18n`
+  asserts they survive translation.
+- After adding a string, run `update_translations` and translate the new entry in the
+  same commit. `tst_i18n` fails on any `type="unfinished"` entry in `lumalarm_ar.ts`,
+  so an untranslated string cannot ship unnoticed.
+- `Qt6::LinguistTools` is found **optionally** in `CMakeLists.txt`, so a machine or CI
+  image without `lupdate`/`lrelease` still configures, builds and runs; only the
+  catalog-dependent cases of `tst_i18n` report a skip there.
+
+Right-to-left: `main.cpp` sets the application layout direction from the *loaded*
+catalog, and `qml/main.qml` enables `LayoutMirroring` from
+`Qt.application.layoutDirection`, so Arabic mirrors the whole window.
 
 ## Continuous Integration
 
@@ -125,17 +173,20 @@ src/
   managers/  AlarmManager, ConfigManager, ThemeManager
   audio/     AudioPlayer
   wake/      Scheduler, SchedulerState, WakeManager
-  ui/        BlurManager
+  ui/        BlurManager, Notifier, TrayIcon, NightMode, WizardController
 qml/
   main.qml
+  NightDim.qml
   components/   GlassButton, GlassCard, GlassCheckBox, RoundedCombo,
                 SegmentedControl, ToggleSwitch
   pages/        AlarmEditor, AlarmListView, SettingsPage, StopwatchPage, TimerPage
   pickers/      ClockFace, WheelTimePicker
   overlays/     RingingOverlay, SoundManager
+  wizard/       WizardOverlay, WizardPage, pages/ (the five setup steps)
+translations/   lumalarm_en.ts, lumalarm_ar.ts
 helper/    lumalarm-wake-helper.cpp   (privileged D-Bus wake helper)
 data/      D-Bus activation + policy, Polkit action, systemd unit
-tests/     one .cpp per test binary (8 in total)
+tests/     one .cpp per test binary (14 in total)
 resources/ icons, .qrc, .desktop file, app icons
 ```
 
@@ -158,8 +209,10 @@ Layout rules:
   (`.h`/`.cpp`).
 - **QML**: PascalCase file names, camelCase property names, 4-space indent, keep
   components in the right sub-directory.
-- There is **no automated formatter configured** — no `.clang-format` at the repo root —
-  so match the neighbors of the code you touch.
+- **Formatting**: `.clang-format` and `.clang-tidy` are configured at the repository
+  root — see [Formatting and lint configs](#formatting-and-lint-configs). The
+  pre-existing code is not fully reformatted yet, so run them on the code you touch
+  instead of reformatting a whole file.
 - Do not reformat unrelated code in a pull request; it buries the real change.
 
 ## Commit conventions

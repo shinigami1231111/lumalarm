@@ -5,6 +5,56 @@ Format based on Keep a Changelog (https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+
+- Source tree reorganized into `src/models`, `src/managers`, `src/audio`,
+  `src/wake` and `src/ui`, and QML into `qml/components`, `qml/pages`,
+  `qml/pickers`, `qml/overlays` and `qml/wizard` (STG-3). Module
+  boundaries are now enforced by tests instead of convention.
+- A 14-binary test suite: alarm/wake state machine, alarm model and
+  selection, audio player, config, theme, blur, QML resource layout,
+  test-alarm surface, notifier, tray icon, night mode, wizard and i18n.
+- `CONTRIBUTING.md` — prerequisites, CI matrix, project layout, code
+  style, commit conventions and the privileged-components rules — plus
+  CI badges in the README.
+- Continuous integration: `.github/workflows/ci.yml` (Release build and
+  `ctest` on Ubuntu 24.04, Fedora 40 and Arch) and
+  `.github/workflows/lint.yml` (advisory clang-tidy), with a
+  container-free local mirror in `scripts/ci-local.sh` (`make ci`), an
+  optional pre-push hook (`scripts/install-hooks.sh`), and
+  `.clang-format` / `.clang-tidy` at the repository root.
+- Test alarm (STG-5.1): arm a real wake 60–3600 s ahead without creating
+  an alarm, to prove the machine actually wakes, and cancel it again —
+  `WakeManager::armTestWake()` / `cancelTestWake()`.
+- Desktop notifications (STG-5.3): upcoming alarm (at the threshold in
+  `scheduler.json`), fired alarm and armed test wake, spoken directly
+  over `org.freedesktop.Notifications` — no libnotify dependency.
+  `Scheduler::alarmApproaching` is the signal behind them.
+- System tray icon (STG-5.4) showing the next alarm in its tooltip, with
+  an Open/Quit menu and a Settings toggle.
+- Automatic pre-alarm screen dimming (STG-5.6): `NightMode` plus
+  `qml/NightDim.qml` hold a translucent overlay for the configured lead
+  time before the next alarm, until it fires or is cancelled, disabled
+  or deleted. Per-window only; no backlight or compositor-specific API.
+- First-run setup wizard (STG-5.5): five skippable steps (welcome, wake
+  method with a non-destructive probe, notification probe, default sound,
+  summary) shown once per installation and re-runnable from Settings.
+  New key `wizard/completed` and the `--show-wizard` flag.
+- Translations (STG-5.2): every user-facing string now goes through
+  `qsTr()` / `tr()`, with a complete Arabic catalog embedded under
+  `:/i18n` and a Language selector in Settings that swaps catalogs and
+  re-evaluates live bindings without restarting. New key `ui/language`
+  (default: follow the system locale) and automatic right-to-left
+  mirroring when the Arabic catalog loads. Qt Linguist is an optional
+  **build** tool — without it the app builds and runs in English.
+
+### Changed
+
+- `.clang-format` now matches the style actually used in the tree, and
+  the two noisiest clang-tidy checks were dropped; 28 `bugprone-*`
+  findings were resolved in `src/` (follow-up A1–A4). Lint stays
+  advisory in both CI and `ci-local.sh`.
+
 ## [1.0.5] - 2026-10-02
 
 ### Added
@@ -24,6 +74,13 @@ Format based on Keep a Changelog (https://keepachangelog.com/).
 
 ### Removed
 - README instructions for editing /etc/sudoers.d/lumalarm.
+
+### Fixed
+- WheelTimePicker quirks repaired, and a secondary spin-style time
+  picker added as an alternative to the wheels (`timePickerMode`).
+- Toggling an alarm no longer loses its id: `setAlarmEnabled` is
+  id-based instead of index-based, so a model refresh between click and
+  write could not disable the wrong row.
 
 ### Deviations from original spec (empirically required)
 

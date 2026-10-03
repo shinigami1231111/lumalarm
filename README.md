@@ -29,6 +29,9 @@ ctest --test-dir build --output-on-failure
 The local mirror of CI is `bash scripts/ci-local.sh` (or `make ci`): same Release build
 with KDE blur disabled, then ctest, then an advisory clang-tidy pass.
 
+Translations are compiled into the binary automatically when Qt Linguist is installed;
+see [CONTRIBUTING.md](CONTRIBUTING.md#translations) for how to add or refresh a language.
+
 See [CONTRIBUTING.md](CONTRIBUTING.md) for prerequisites, the CI matrix, the optional
 pre-push hook, and everything else.
 
@@ -85,16 +88,27 @@ That suspend-to-wake behavior is the core power of Lumalarm. Everything else —
 - **Volume fade-in & auto-stop** — wakes you up gently instead of blasting you out of bed
 - **Custom commands** — run any shell command when an alarm fires
 - **Fully themeable** — a built-in color picker for background, accent, and opacity, plus a selectable time-picker style (wheels, dual clocks, single clock)
+- **System tray** — a tray icon with the next alarm in its tooltip and Open/Quit actions, toggleable from Settings
+- **Desktop notifications** — a heads-up before an alarm is due and a notification when it rings, over the freedesktop notification service (no libnotify)
+- **Test alarm** — arm a real wake 60 s to 1 h ahead without creating an alarm, to prove the machine actually wakes
+- **Night mode** — dims the window a few minutes before the alarm so it never lights up a dark room
+- **First-run setup wizard** — five skippable checks on the very first launch: wake method, notifications and default sound
+- **English & Arabic UI** — pick the language in Settings; Arabic mirrors the layout to right-to-left
 
 ---
 
 ## Table of Contents
 
+- [Building & Testing](#building--testing)
+- [The idea](#the-idea)
+- [Screenshots](#screenshots)
+- [Features](#features)
 - [Installation](#installation)
   - [Dependencies](#dependencies)
   - [Build from Source](#build-from-source)
   - [AUR](#aur)
 - [Configuration](#configuration)
+- [Theming](#theming)
 - [Wake Setup (D-Bus helper)](#wake-setup-d-bus-helper)
 - [Contributing](#contributing)
 - [License](#license)
@@ -106,9 +120,10 @@ That suspend-to-wake behavior is the core power of Lumalarm. Everything else —
 ### Dependencies
 
 - **Qt 6** — Core, Multimedia, Qml, Quick, Declarative
-- **CMake** ≥ 3.16
+- **CMake** ≥ 3.21
 - **C++17** compiler (GCC or Clang)
 - **KF6WindowSystem** *(optional but recommended for KDE Plasma users)* — provides KWin blur-behind; package `kwindowsystem` (Arch), `libkf6windowsystem-dev` (Debian/Ubuntu), `kf6-kwindowsystem` (Fedora). If absent, the app still builds/runs without KWin-native blur.
+- **Qt 6 Linguist tools** *(optional, `lupdate`/`lrelease`)* — package `qt6-tools` (Arch), `qt6-tools-dev` (Debian/Ubuntu), `qt6-qttools-devel` (Fedora). Only needed to compile or refresh translations; if absent the app still builds and runs, in English.
 - **rtcwake** *(optional)* — from `util-linux`, needed for suspend-to-RAM
 
 <details>
@@ -248,6 +263,7 @@ If the file is absent, the button is disabled and nothing happens.
 `font_family` is free-text. If the font isn't installed, Lumalarm silently falls back
 to the system default — it never crashes on a missing font.
 
+### Alarm tones
 
 To add tones without the GUI:
 
