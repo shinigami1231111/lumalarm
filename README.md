@@ -277,7 +277,7 @@ cp my-sound.wav ~/.config/lumalarm/tones/
 
 Install the package; the wake helper is registered automatically via D-Bus.
 
-Wake scheduling runs behind a privilege boundary: the app calls the `org.lumalarm.Helper` system service, which runs as root and invokes `systemd-run --on-active=… --property=WakeSystem=yes` (systemd ≥ 254) or `rtcwake` directly (older systemd). No sudoers rule and no password prompt are involved.
+Wake scheduling runs behind a privilege boundary: the app calls the `org.lumalarm.Helper` system service, which runs as root and invokes `systemd-run --on-active=… --timer-property=WakeSystem=yes` (systemd ≥ 254) or `rtcwake` directly (older systemd). No sudoers rule is involved. A normal desktop user is authorized through the polkit action `org.lumalarm.schedule.wake` (`auth_admin_keep`): the desktop authentication agent is contacted when a challenge is required, and the result is then kept.
 
 The helper requires **rtcwake** (`util-linux`) or **systemd ≥ 254**.
 

@@ -1,9 +1,22 @@
 # Maintainer: Glass Alarm Developer
 # Contributor: Arch Linux User
+#
+# STG-1 packaging contract:
+#   * builds from THIS source tree — no release tag yet contains the D-Bus
+#     wake helper or the polkit policy (v1.0.0/v1.0.2/v1.0.3 all predate
+#     them), so a tarball recipe would ship a non-STG-1 application. The
+#     repository's current packaging strategy is therefore a local build,
+#     which is also what PKGBUILD.local does.
+#   * no sudoers rule is ever installed or requested: wake scheduling runs
+#     through /usr/lib/lumalarm/lumalarm-wake-helper + the polkit action
+#     org.lumalarm.schedule.wake (STG-1.6).
+#   * install hooks live in lumalarm.install — an inline hook function inside a
+#     PKGBUILD is ignored by makepkg, so the packaging contract must not
+#     depend on one.
 
 pkgname=lumalarm
-pkgver=1.0.0
-pkgrel=2
+pkgver=1.0.5
+pkgrel=1
 pkgdesc="A professional glassmorphism alarm clock for Linux with rtcwake support"
 arch=('x86_64' 'aarch64')
 url="https://github.com/shinigami1231111/lumalarm"
@@ -20,50 +33,25 @@ makedepends=(
     'gcc'
     'qt6-tools'
 )
-source=("${pkgname}-${pkgver}.tar.gz::https://github.com/shinigami1231111/lumalarm/archive/v${pkgver}.tar.gz")
-sha256sums=('SKIP')
+source=()
+install=lumalarm.install
 
 build() {
-    cd "${srcdir}/${pkgname}-${pkgver}"
+    cd "${startdir}"
     cmake -B build \
         -DCMAKE_INSTALL_PREFIX=/usr \
         -DCMAKE_BUILD_TYPE=Release \
-        -DCMAKE_CXX_FLAGS="-O2 -pipe -march=x86-64 -mtune=generic"
+        -DCMAKE_CXX_FLAGS="-O2 -pipe"
     cmake --build build -j$(nproc)
 }
 
 package() {
-    cd "${srcdir}/${pkgname}-${pkgver}"
+    cd "${startdir}"
     DESTDIR="${pkgdir}" cmake --install build
 
     install -Dm644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
 
     mkdir -p "${pkgdir}/usr/share/${pkgname}/tones"
-
-    install -Dm644 resources/lumalarm.desktop "${pkgdir}/usr/share/applications/lumalarm.desktop"
-
-    install -d "${pkgdir}/etc/sudoers.d"
-
-    echo "# Lumalarm: Allow rtcwake without password" > "${pkgdir}/etc/sudoers.d/lumalarm"
-    echo "%wheel ALL=(ALL) NOPASSWD: /usr/bin/rtcwake" >> "${pkgdir}/etc/sudoers.d/lumalarm"
-    chmod 440 "${pkgdir}/etc/sudoers.d/lumalarm"
-}
-
-post_install() {
-    echo "=== Lumalarm - Post-Install Setup ==="
-    echo ""
-    echo "1. Config directory (auto-created on first run):"
-    echo "   ~/.config/lumalarm/tones"
-    echo ""
-    echo "2. Place custom alarm tones (WAV/MP3) in:"
-    echo "   ~/.config/lumalarm/tones/"
-    echo ""
-    echo "3. For rtcwake (system wake from suspend):"
-    echo "   The PKGBUILD installs a sudoers rule allowing rtcwake without password."
-    echo "   If you need to set it manually:"
-    echo "   echo 'YOUR_USERNAME ALL=(ALL) NOPASSWD: /usr/bin/rtcwake' | sudo tee /etc/sudoers.d/lumalarm"
-    echo "   sudo chmod 440 /etc/sudoers.d/lumalarm"
-    echo ""
-    echo "4. Run the application:"
-    echo "   lumalarm"
+    install -Dm644 resources/lumalarm.desktop \
+        "${pkgdir}/usr/share/applications/${pkgname}.desktop"
 }

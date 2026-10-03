@@ -32,9 +32,21 @@ public:
     QString wakeState() const;
     QString lastError() const;
 
+    // True while the D-Bus helper owns the currently programmed wake. Set only
+    // after the helper confirmed a schedule, and released only after a
+    // confirmed (or truthfully empty) cancellation — see clearWakeAlarm().
+    // Exposed for diagnostics and regression tests; not a Q_INVOKABLE.
+    bool helperOwnsWake() const;
+
     // Legacy suspend flow (rtcwake -m <mode> -s <seconds>), kept for
     // compatibility. The Scheduler's armWake() uses the verified absolute-
     // timestamp flow below instead.
+    //
+    // STG-1.3: both arguments are validated against WakePolicy BEFORE any
+    // process is started or D-Bus call is made; an out-of-range delay or a
+    // malformed mode fails with state "failed" and leaves any existing wake
+    // untouched. STG-1.5: the fallback is a plain, unprivileged rtcwake —
+    // there is no sudo in this path any more.
     Q_INVOKABLE void prepareWake(int secondsUntilAlarm, const QString &mode = "mem");
     Q_INVOKABLE bool isRtcWakeAvailable() const;
 
@@ -47,6 +59,10 @@ public:
     // `rtcwake -m no -t <epoch>` (sets the alarm without suspending). Runs
     // synchronously, captures output, checks the exit code. Refuses to claim
     // success unless the process actually succeeded.
+    //
+    // STG-1.3: the implied delay (epochUtc - now) must satisfy the same
+    // WakePolicy::isValidWakeDelay() boundary as the seconds-based APIs;
+    // otherwise nothing is programmed and no privileged command is spawned.
     bool programWakeAlarm(qint64 epochUtc, QString *error = nullptr);
 
     // Read back /sys/class/rtc/rtcN/wakealarm and require it to match the
@@ -54,26 +70,32 @@ public:
     // Returns false when the interface cannot be read (explicit limitation).
     bool verifyWakeAlarm(qint64 expectedUtc, QString *error = nullptr) const;
 
-    // Best-effort removal of a stale RTC alarm (writes 0).
+    // Remove a programmed wake. For a helper-owned wake this cancels through
+    // the helper (the only thing that can stop the transient timer) and keeps
+    // ownership when that fails, so the next call retries instead of silently
+    // stranding a live timer (F6). Returns false rather than a false success.
     bool clearWakeAlarm(QString *error = nullptr);
 
     // Current value of the RTC wakealarm sysfs file in epoch seconds,
     // or -1 when unavailable.
     qint64 readWakeAlarmValue() const;
 
-    // Request machine power-off through systemd/logind (polkit, no sudo
-    // needed in a normal desktop session) with a sudo fallback. Returns the
-    // actual outcome; never claims success without exit code 0.
+    // Request machine power-off through systemd/logind only. STG-1.5 removed
+    // the `sudo -n systemctl poweroff` fallback: power-off is authorised by
+    // polkit's org.freedesktop.login1.* actions through the desktop session,
+    // so no local privilege-escalation path is needed. Returns the actual
+    // outcome; never claims success without exit code 0.
     bool requestPowerOff(QString *error = nullptr);
 
     // ── Test alarm (diagnostic; never touches the alarm list) ───────────────
     // Arm a real wake `seconds` from now through the same D-Bus helper path a
     // normal alarm uses, without creating or modifying any alarm, and without
-    // writing alarms.json or scheduler.json. `seconds` must be within
-    // [kTestWakeMinSeconds, kTestWakeMaxSeconds]; an out-of-range request is
-    // refused (testWakeFailed) rather than silently clamped. A wake armed
-    // earlier is cancelled first, so arming twice leaves exactly one pending
-    // wake. Returns true only when the helper confirmed the scheduling.
+    // writing alarms.json or scheduler.json. `seconds` must satisfy
+    // WakePolicy::isValidWakeDelay() and be within [kTestWakeMinSeconds,
+    // kTestWakeMaxSeconds]; an out-of-range request is refused
+    // (testWakeFailed) rather than silently clamped. A wake armed earlier is
+    // cancelled first, so arming twice leaves exactly one pending wake.
+    // Returns true only when the helper confirmed the scheduling.
     Q_INVOKABLE bool armTestWake(int seconds);
 
     // Cancel a wake armed by armTestWake(). Best effort: a failure is logged
@@ -93,24 +115,50 @@ signals:
 private slots:
     void onProcessFinished(int exitCode, QProcess::ExitStatus status);
 
+protected:
+    // ── Integration seams ───────────────────────────────────────────────────
+    // The only three places WakeManager talks to the outside world for wake
+    // bookkeeping. They are virtual purely so the regression tests can
+    // substitute the *failure* paths deterministically (precedent:
+    // WizardController::armProbeWake) instead of taking down the real D-Bus
+    // helper. Nothing overrides them in production.
+
+    // Outcome of one ScheduleWake attempt against the privileged helper.
+    enum class HelperResult { Scheduled, Unavailable, Declined };
+
+    // Ask the helper to schedule a wake `seconds` from now. Unavailable
+    // (ServiceUnknown / AccessDenied / transport failure) and Declined
+    // (range, polkit or backend rejection) both leave the caller on the direct
+    // rtcwake path. `message` receives the helper's response text.
+    // Refuses outright (Declined) when `seconds` is outside the WakePolicy
+    // boundary, so no out-of-range value can ever reach the privileged service.
+    virtual HelperResult scheduleViaHelper(uint seconds, QString *message);
+
+    // Ask the helper to cancel the wake it scheduled. True = helper confirmed
+    // the cancellation (or truthfully reported nothing to cancel).
+    virtual bool cancelViaHelper(QString *message);
+
+    // True when systemd still reports an armed lumalarm-wake-*.timer. Used by
+    // clearWakeAlarm() to tell "cancel failed, wake still alive" (report
+    // failure, keep ownership) apart from "cancel failed, wake already gone".
+    virtual bool helperWakeStillArmed() const;
+
 private:
-    // Accepted range for armTestWake(), in seconds.
-    static constexpr int kTestWakeMinSeconds = 60;
+    // Accepted range for armTestWake(), in seconds. The lower bound is
+    // WakePolicy::kMinWakeSeconds (60), enforced through
+    // WakePolicy::isValidWakeDelay(); armTestWake additionally never exceeds
+    // kTestWakeMaxSeconds, so its window is a strict subset of the boundary.
     static constexpr int kTestWakeMaxSeconds = 3600;
 
     static bool runSynchronous(const QString &program, const QStringList &args,
                                int timeoutMs, QString *error, QString *output = nullptr);
 
-    // ── D-Bus helper integration (org.lumalarm.Helper, system bus) ─────────
-    // Outcome of one ScheduleWake attempt against the privileged helper.
-    enum class HelperResult { Scheduled, Unavailable, Declined };
-    // Ask the helper to schedule a wake `seconds` from now. Unavailable
-    // (ServiceUnknown / AccessDenied / transport failure) and Declined
-    // (range or backend rejection) both leave the caller on the legacy
-    // direct-rtcwake path. `message` receives the helper's response text.
-    HelperResult scheduleViaHelper(uint seconds, QString *message);
-    // Ask the helper to cancel the wake it scheduled. True = handled.
-    bool cancelViaHelper(QString *message);
+    // Base names of armed lumalarm-wake-*.timer units, straight from systemd.
+    static QStringList armedWakeTimerBases();
+
+    // Read the RTC wakealarm sysfs file as the current process (no privilege
+    // escalation); -1 when unreadable or empty.
+    static qint64 readWakeAlarmFile(const QString &sysfsPath);
 
     bool m_helperOwnedWake = false;   // helper owns the currently programmed wake
     QProcess *m_process;

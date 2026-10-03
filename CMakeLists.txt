@@ -158,6 +158,9 @@ qt_add_executable(lumalarm-wake-helper
     helper/lumalarm-wake-helper.cpp
 )
 target_link_libraries(lumalarm-wake-helper PRIVATE Qt6::Core Qt6::DBus)
+# The helper shares the STG-1 boundary/polkit/timer contract with the app so
+# the two can never enforce different rules (see src/wake/WakeSecurity.h).
+target_include_directories(lumalarm-wake-helper PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 # ── Tests ─────────────────────────────────────────────────────────────────────
 include(CTest)
@@ -185,6 +188,25 @@ if(BUILD_TESTING)
     target_include_directories(tst_wakemanager PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
     target_link_libraries(tst_wakemanager PRIVATE Qt6::Core Qt6::Test Qt6::DBus)
     add_test(NAME tst_wakemanager COMMAND tst_wakemanager)
+
+    # ── STG-1 security regression tests ───────────────────────────────────
+    # Deterministic coverage of the shared validation boundary, the polkit
+    # argument list and the packaging contract (no sudoers, required D-Bus /
+    # polkit / systemd files), plus the live helper checks — bounds, replace
+    # semantics, restart rediscovery and non-root denial — which QSKIP when
+    # the system bus, systemd and an installed helper are not available.
+    qt6_add_executable(tst_stg1security
+        tests/tst_stg1security.cpp
+        src/wake/WakeManager.cpp
+    )
+    target_include_directories(tst_stg1security PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+    target_link_libraries(tst_stg1security PRIVATE Qt6::Core Qt6::Test Qt6::DBus)
+    # The packaging/install assertions read the real source and build trees.
+    target_compile_definitions(tst_stg1security PRIVATE
+        STG1_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
+        STG1_BINARY_DIR="${CMAKE_BINARY_DIR}"
+    )
+    add_test(NAME tst_stg1security COMMAND tst_stg1security)
 
     # Notifier (src/ui/): construction and the disabled / no-bus paths. The
     # live-daemon path is verified manually with busctl --user monitor.

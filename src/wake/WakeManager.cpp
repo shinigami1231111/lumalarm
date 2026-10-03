@@ -1,6 +1,7 @@
 #include "wake/WakeManager.h"
 
 #include <QDBusConnection>
+#include <QDBusConnectionInterface>
 #include <QDBusError>
 #include <QDBusInterface>
 #include <QDBusMessage>
@@ -14,6 +15,7 @@
 #include <unistd.h>
 
 #include "wake/SchedulerState.h"
+#include "wake/WakeSecurity.h"
 
 namespace {
 bool isRoot()
@@ -21,15 +23,11 @@ bool isRoot()
     return geteuid() == 0;
 }
 
-// Prefix a privileged command with sudo when we are not root. `sudo -n` fails
-// fast when the user would be prompted for a password, so the scheduler never
-// hangs waiting on a password prompt.
-QStringList privileged(const QString &program, const QStringList &args)
-{
-    if (isRoot())
-        return QStringList() << program << args;
-    return QStringList() << "sudo" << "-n" << program << args;
-}
+// How long a client waits for the privileged helper. It must exceed the
+// helper's own pkcheck window (WakeHelper::kPkcheckTimeoutMs) so the helper
+// can finish an interactive polkit challenge and answer, instead of the
+// client giving up first and double-arming on the direct-rtcwake fallback.
+constexpr int kHelperCallTimeoutMs = 70000;
 } // namespace
 
 WakeManager::WakeManager(QObject *parent)
@@ -51,8 +49,39 @@ QString WakeManager::lastError() const
     return m_lastError;
 }
 
+bool WakeManager::helperOwnsWake() const
+{
+    return m_helperOwnedWake;
+}
+
 void WakeManager::prepareWake(int secondsUntilAlarm, const QString &mode)
 {
+    // ── STG-1.3: the one validation boundary, applied FIRST ────────────────
+    // Checked before any process is started and before any D-Bus call, so an
+    // unvalidated value can never reach sudo rtcwake (removed), direct
+    // rtcwake, the helper or any other privileged wake mechanism. An invalid
+    // request changes nothing: no kill, no state transition to "arming", no
+    // wake programmed.
+    if (!WakePolicy::isValidWakeDelay(secondsUntilAlarm)) {
+        m_state = QStringLiteral("failed");
+        m_lastError = QStringLiteral("wake delay %1 s is outside the allowed range [%2, %3] s")
+                          .arg(secondsUntilAlarm)
+                          .arg(WakePolicy::kMinWakeSeconds)
+                          .arg(WakePolicy::kMaxWakeSeconds);
+        qWarning() << "[WakeManager] prepareWake refused:" << m_lastError;
+        emit wakeError(m_lastError);
+        emit wakeStateChanged();
+        return;
+    }
+    if (!WakePolicy::isValidWakeMode(mode)) {
+        m_state = QStringLiteral("failed");
+        m_lastError = QStringLiteral("invalid rtcwake mode '%1'").arg(mode);
+        qWarning() << "[WakeManager] prepareWake refused:" << m_lastError;
+        emit wakeError(m_lastError);
+        emit wakeStateChanged();
+        return;
+    }
+
     if (m_process->state() != QProcess::NotRunning) {
         m_process->kill();
         m_process->waitForFinished(1000);
@@ -63,10 +92,12 @@ void WakeManager::prepareWake(int secondsUntilAlarm, const QString &mode)
     emit wakeStateChanged();
 
     // Preferred: privileged D-Bus helper (org.lumalarm.Helper) — no sudoers
-    // rule required. The legacy `sudo rtcwake` invocation below is kept as
-    // the fallback when the helper is unavailable or declines the request.
+    // rule required. STG-1.5: the fallback below is a plain, unprivileged
+    // rtcwake; when the helper is unavailable or declines, this fails with an
+    // honest error instead of escalating privileges.
     QString helperMsg;
-    if (scheduleViaHelper(uint(secondsUntilAlarm), &helperMsg) == HelperResult::Scheduled) {
+    const uint seconds = static_cast<uint>(secondsUntilAlarm); // safe: validated above
+    if (scheduleViaHelper(seconds, &helperMsg) == HelperResult::Scheduled) {
         qInfo() << "[WakeManager] Using D-Bus helper";
         m_helperOwnedWake = true;
         m_state = "armed";
@@ -75,18 +106,45 @@ void WakeManager::prepareWake(int secondsUntilAlarm, const QString &mode)
         emit wakeStateChanged();
         return;
     }
-    qWarning() << "[WakeManager] Falling back to direct rtcwake:" << helperMsg;
+    qWarning() << "[WakeManager] D-Bus helper unavailable/declined:" << helperMsg
+               << "- falling back to a direct (unprivileged) rtcwake";
     m_helperOwnedWake = false;
 
     QStringList args;
     args << "-m" << mode << "-s" << QString::number(secondsUntilAlarm);
-    m_process->start("sudo", QStringList() << "rtcwake" << args);
+    m_process->start(QStringLiteral("rtcwake"), args);
 }
 
 bool WakeManager::isRtcWakeAvailable() const
 {
     const RtcCapabilities caps = inspectRtc();
     return caps.wakeAlarmSupported;
+}
+
+QStringList WakeManager::armedWakeTimerBases()
+{
+    QProcess p;
+    p.start(QStringLiteral("systemctl"),
+            {QStringLiteral("list-units"), QStringLiteral("--all"),
+             QStringLiteral("--no-legend"), QStringLiteral("--plain"),
+             QStringLiteral("--full"),
+             QStringLiteral("%1*.timer").arg(QLatin1String(WakePolicy::kTimerPrefix))});
+    if (!p.waitForStarted(3000) || !p.waitForFinished(5000)) {
+        qWarning() << "[WakeManager] could not enumerate Lumalarm wake timers:"
+                   << p.errorString();
+        return QStringList();
+    }
+    if (p.exitStatus() != QProcess::NormalExit || p.exitCode() != 0) {
+        qWarning() << "[WakeManager] systemctl list-units failed (exit"
+                   << p.exitCode() << ")";
+        return QStringList();
+    }
+    return WakePolicy::armedTimerBases(QString::fromUtf8(p.readAllStandardOutput()));
+}
+
+bool WakeManager::helperWakeStillArmed() const
+{
+    return !armedWakeTimerBases().isEmpty();
 }
 
 void WakeManager::onProcessFinished(int exitCode, QProcess::ExitStatus status)
@@ -138,9 +196,21 @@ bool WakeManager::runSynchronous(const QString &program, const QStringList &args
 
 WakeManager::HelperResult WakeManager::scheduleViaHelper(uint seconds, QString *message)
 {
-    QDBusInterface iface(QStringLiteral("org.lumalarm.Helper"),
-                         QStringLiteral("/org/lumalarm/Helper"),
-                         QStringLiteral("org.lumalarm.Helper"),
+    // Defence in depth (STG-1.3): even though every caller validates first,
+    // never hand the privileged service an out-of-range value.
+    if (!WakePolicy::isValidWakeDelay(seconds)) {
+        if (message)
+            *message = QStringLiteral("internal error: %1 s is outside the allowed range [%2, %3] s")
+                           .arg(seconds)
+                           .arg(WakePolicy::kMinWakeSeconds)
+                           .arg(WakePolicy::kMaxWakeSeconds);
+        qWarning() << "[WakeManager] scheduleViaHelper refused out-of-range value:" << seconds;
+        return HelperResult::Declined;
+    }
+
+    QDBusInterface iface(QString::fromLatin1(WakePolicy::kHelperService),
+                         QString::fromLatin1(WakePolicy::kHelperPath),
+                         QString::fromLatin1(WakePolicy::kHelperInterface),
                          QDBusConnection::systemBus());
     if (!iface.isValid()) {
         const QDBusError err = iface.lastError();
@@ -153,7 +223,18 @@ WakeManager::HelperResult WakeManager::scheduleViaHelper(uint seconds, QString *
 
     // Signature per data/org.lumalarm.Helper.xml:
     //   ScheduleWake(u seconds) -> (b success, s message)
-    const QDBusMessage raw = iface.call(QStringLiteral("ScheduleWake"), seconds);
+    // An explicit timeout is required: the helper may hold the call open while
+    // a polkit agent authenticates the user, and giving up early here would
+    // wrongly report Unavailable and arm a second wake on the fallback path.
+    QDBusMessage msg = QDBusMessage::createMethodCall(
+        QString::fromLatin1(WakePolicy::kHelperService),
+        QString::fromLatin1(WakePolicy::kHelperPath),
+        QString::fromLatin1(WakePolicy::kHelperInterface),
+        QStringLiteral("ScheduleWake"));
+    msg << QVariant::fromValue(seconds);
+    const QDBusMessage raw =
+        iface.connection().call(msg, QDBus::Block, kHelperCallTimeoutMs);
+
     if (raw.type() == QDBusMessage::ErrorMessage) {
         const QString errText = raw.errorName() + QStringLiteral(": ") + raw.errorMessage();
         if (message)
@@ -178,9 +259,9 @@ WakeManager::HelperResult WakeManager::scheduleViaHelper(uint seconds, QString *
 
 bool WakeManager::cancelViaHelper(QString *message)
 {
-    QDBusInterface iface(QStringLiteral("org.lumalarm.Helper"),
-                         QStringLiteral("/org/lumalarm/Helper"),
-                         QStringLiteral("org.lumalarm.Helper"),
+    QDBusInterface iface(QString::fromLatin1(WakePolicy::kHelperService),
+                         QString::fromLatin1(WakePolicy::kHelperPath),
+                         QString::fromLatin1(WakePolicy::kHelperInterface),
                          QDBusConnection::systemBus());
     if (!iface.isValid()) {
         const QDBusError err = iface.lastError();
@@ -189,7 +270,12 @@ bool WakeManager::cancelViaHelper(QString *message)
         return false;
     }
 
-    const QDBusMessage raw = iface.call(QStringLiteral("CancelWake"));
+    QDBusMessage msg = QDBusMessage::createMethodCall(
+        QString::fromLatin1(WakePolicy::kHelperService),
+        QString::fromLatin1(WakePolicy::kHelperPath),
+        QString::fromLatin1(WakePolicy::kHelperInterface),
+        QStringLiteral("CancelWake"));
+    const QDBusMessage raw = iface.connection().call(msg, QDBus::Block, kHelperCallTimeoutMs);
     if (raw.type() == QDBusMessage::ErrorMessage) {
         if (message)
             *message = raw.errorName() + QStringLiteral(": ") + raw.errorMessage();
@@ -262,6 +348,25 @@ RtcCapabilities WakeManager::inspectRtc() const
 
 bool WakeManager::programWakeAlarm(qint64 epochUtc, QString *error)
 {
+    // ── STG-1.3: same boundary as the seconds-based APIs, enforced FIRST ───
+    // This is the last privileged wake path, so the delay it would produce
+    // (epochUtc - now) has to satisfy the very same WakePolicy gate before a
+    // single process is spawned. A wake in the past, one second away, or more
+    // than a day away is refused without touching the RTC or the helper, so no
+    // alternate path can bypass the validation. Signed on purpose: a past
+    // epoch yields a negative delta and is rejected rather than wrapping.
+    const qint64 requestedDelta = epochUtc - QDateTime::currentSecsSinceEpoch();
+    if (!WakePolicy::isValidWakeDelay(requestedDelta)) {
+        if (error)
+            *error = QStringLiteral("wake delay %1 s is outside the allowed range [%2, %3] s; "
+                                    "no wake was programmed")
+                         .arg(requestedDelta)
+                         .arg(WakePolicy::kMinWakeSeconds)
+                         .arg(WakePolicy::kMaxWakeSeconds);
+        qWarning() << "[WakeManager] ERROR: refusing to program RTC wake:" << *error;
+        return false;
+    }
+
     const RtcCapabilities caps = inspectRtc();
     if (!caps.wakeAlarmSupported) {
         if (error)
@@ -278,24 +383,20 @@ bool WakeManager::programWakeAlarm(qint64 epochUtc, QString *error)
         qWarning() << "[WakeManager] hwclock sync failed (non-fatal):" << syncErr;
     }
 
-    // Preferred: privileged D-Bus helper. The helper's API takes a relative
-    // delay, so convert the absolute epoch; outside the helper's accepted
-    // window (or if the helper is unavailable/declines) the direct rtcwake
-    // path below stays in charge.
-    const qint64 deltaSeconds = epochUtc - QDateTime::currentSecsSinceEpoch();
-    if (deltaSeconds >= 60 && deltaSeconds <= 86400) {
-        QString helperMsg;
-        if (scheduleViaHelper(uint(deltaSeconds), &helperMsg) == HelperResult::Scheduled) {
-            qInfo() << "[WakeManager] Using D-Bus helper for wake in" << deltaSeconds << "s";
-            m_helperOwnedWake = true;
-            return true;
-        }
-        qWarning() << "[WakeManager] Falling back to direct rtcwake:" << helperMsg;
-    } else {
-        qWarning() << "[WakeManager] wake offset" << deltaSeconds
-                   << "s is outside the helper range [60, 86400];"
-                   << "falling back to direct rtcwake";
+    // Preferred: privileged D-Bus helper. Its API takes a relative delay, so
+    // convert the absolute epoch (already validated above). When the helper is
+    // unavailable or declines, the direct rtcwake path below stays in charge —
+    // unprivileged, so it fails honestly instead of escalating (STG-1.5).
+    const qint64 deltaSeconds = requestedDelta;
+    QString helperMsg;
+    if (scheduleViaHelper(static_cast<uint>(deltaSeconds), &helperMsg)
+        == HelperResult::Scheduled) {
+        qInfo() << "[WakeManager] Using D-Bus helper for wake in" << deltaSeconds << "s";
+        m_helperOwnedWake = true;
+        return true;
     }
+    qWarning() << "[WakeManager] D-Bus helper unavailable/declined, falling back to direct"
+               << "rtcwake:" << helperMsg;
     m_helperOwnedWake = false;
 
     qInfo() << "[WakeManager] Programming RTC wake alarm:" << epochUtc
@@ -308,8 +409,8 @@ bool WakeManager::programWakeAlarm(qint64 epochUtc, QString *error)
     QString output;
     QString err;
     if (!runSynchronous("rtcwake", args, 20000, &err, &output)) {
-        // Fallback: write the sysfs wakealarm directly when we have the
-        // privilege (root already, or sudo works without a password).
+        // Fallback: write the sysfs wakealarm directly when we already have
+        // the privilege (root). Never escalated — STG-1.5 removed sudo.
         if (isRoot()) {
             qWarning() << "[WakeManager] rtcwake failed, falling back to sysfs write:" << err;
             QFile f(caps.sysfsPath + "/wakealarm");
@@ -342,13 +443,9 @@ bool WakeManager::verifyWakeAlarm(qint64 expectedUtc, QString *error) const
     // wake while the system is awake (and always mismatches the expectation).
     // An active lumalarm-wake-*.timer is the authoritative evidence here.
     if (m_helperOwnedWake) {
-        QProcess p;
-        p.start("systemctl", {"list-timers", "--no-legend", "--no-pager", "lumalarm-wake-*.timer"});
-        p.waitForFinished(2000);
-        const QString out = QString::fromUtf8(p.readAllStandardOutput()).trimmed();
-        const bool armed = !out.isEmpty();
-        if (armed) {
-            qInfo() << "[WakeManager] Wake verified via active systemd timer:" << out;
+        const QStringList armed = armedWakeTimerBases();
+        if (!armed.isEmpty()) {
+            qInfo() << "[WakeManager] Wake verified via active systemd timer:" << armed;
             return true;
         }
         if (error)
@@ -400,12 +497,11 @@ bool WakeManager::verifyWakeAlarm(qint64 expectedUtc, QString *error) const
     return true;
 }
 
-qint64 WakeManager::readWakeAlarmValue() const
+qint64 WakeManager::readWakeAlarmFile(const QString &sysfsPath)
 {
-    const RtcCapabilities caps = inspectRtc();
-    if (!caps.wakeAlarmSupported)
+    if (sysfsPath.isEmpty())
         return -1;
-    QFile f(caps.sysfsPath + "/wakealarm");
+    QFile f(sysfsPath + QStringLiteral("/wakealarm"));
     if (!f.open(QIODevice::ReadOnly))
         return -1;
     const QString content = QString::fromUtf8(f.readAll()).trimmed();
@@ -415,11 +511,21 @@ qint64 WakeManager::readWakeAlarmValue() const
     return ok ? v : -1;
 }
 
+qint64 WakeManager::readWakeAlarmValue() const
+{
+    const RtcCapabilities caps = inspectRtc();
+    if (!caps.wakeAlarmSupported)
+        return -1;
+    return readWakeAlarmFile(caps.sysfsPath);
+}
+
 bool WakeManager::clearWakeAlarm(QString *error)
 {
-    // If the helper programmed this wake, cancel it through the helper too
-    // (stops the transient timer, not just the RTC). Helper failure or a
-    // helper-owned wake that vanished falls through to the direct clear.
+    // ── Helper-owned wake (STG-1.4 + F6) ──────────────────────────────────
+    // The helper is the only thing that can stop the transient timer it
+    // created, so this branch must not silently fall through to a direct RTC
+    // clear — that cannot touch the timer and would report a success while a
+    // wake is still armed.
     if (m_helperOwnedWake) {
         QString helperMsg;
         if (cancelViaHelper(&helperMsg)) {
@@ -427,13 +533,45 @@ bool WakeManager::clearWakeAlarm(QString *error)
             m_helperOwnedWake = false;
             return true;
         }
-        qWarning() << "[WakeManager] Falling back to direct rtcwake:" << helperMsg;
-        m_helperOwnedWake = false;
+
+        // Cancel failed. Ownership must SURVIVE this so the next call retries:
+        // dropping it here strands a live transient timer and makes every later
+        // cancel skip the helper entirely (the F6 defect).
+        if (helperWakeStillArmed()) {
+            if (error)
+                *error = helperMsg;
+            qWarning() << "[WakeManager] helper cancel failed; wake still armed,"
+                       << "helper ownership kept for a retry:" << helperMsg;
+            return false;
+        }
+
+        // No transient timer is armed. Decide truthfully between "the wake is
+        // gone" and "a wake lives in the RTC instead" before releasing
+        // ownership — never a false success, never a false failure.
+        const RtcCapabilities caps = inspectRtc();
+        const qint64 now = QDateTime::currentSecsSinceEpoch();
+        const qint64 rtc = caps.wakeAlarmSupported ? readWakeAlarmFile(caps.sysfsPath) : -1;
+        if (rtc <= 0 || rtc <= now) {
+            qInfo() << "[WakeManager] helper cancel failed but no timer and no future RTC"
+                    << "alarm remain - the wake is gone:" << helperMsg;
+            m_helperOwnedWake = false;
+            return true;
+        }
+        qWarning() << "[WakeManager] helper cancel failed; falling back to the direct RTC"
+                   << "clear for the remaining alarm at" << rtc << ":" << helperMsg;
     }
 
+    // ── Direct RTC clear ──────────────────────────────────────────────────
+    // Also reached for wakes programmed without the helper. Ownership is only
+    // released once this reports that nothing is left armed.
     const RtcCapabilities caps = inspectRtc();
-    if (!caps.wakeAlarmSupported)
+    if (!caps.wakeAlarmSupported) {
+        if (error)
+            *error = caps.error.isEmpty() ? QStringLiteral("RTC wake alarm not supported")
+                                          : caps.error;
+        qWarning() << "[WakeManager] ERROR: cannot clear wake alarm:" << *error;
         return false;
+    }
     if (isRoot()) {
         QFile f(caps.sysfsPath + "/wakealarm");
         if (!f.open(QIODevice::WriteOnly)) {
@@ -443,6 +581,7 @@ bool WakeManager::clearWakeAlarm(QString *error)
         }
         f.write("0");
         f.close();
+        m_helperOwnedWake = false;
         return true;
     }
     QString err;
@@ -452,34 +591,31 @@ bool WakeManager::clearWakeAlarm(QString *error)
             *error = err;
         return false;
     }
+    m_helperOwnedWake = false;
     return true;
 }
 
 bool WakeManager::requestPowerOff(QString *error)
 {
-    if (isRoot()) {
-        if (runSynchronous("systemctl", QStringList() << "poweroff", 30000, error))
-            return true;
-    } else {
-        // systemd/logind path: normally allowed for the active desktop
-        // session via polkit, without sudo.
-        QString logindErr;
-        if (runSynchronous("systemctl", QStringList() << "poweroff", 30000, &logindErr))
-            return true;
-        // Fallback preserving the project's existing sudo integration.
-        if (runSynchronous("sudo", QStringList() << "-n" << "systemctl" << "poweroff",
-                           30000, error))
-            return true;
-        if (error)
-            *error = "poweroff request failed (logind/polkit and sudo both denied): " + logindErr;
-    }
-    qWarning() << "[WakeManager] ERROR: poweroff request failed:"
-               << (error ? *error : QString());
+    // systemd/logind only (STG-1.5). The `sudo -n systemctl poweroff` fallback
+    // is gone: power-off is authorised by polkit's org.freedesktop.login1.*
+    // action for the active desktop session, so a local escalation path is
+    // neither needed nor permitted here.
+    QString logindErr;
+    if (runSynchronous("systemctl", QStringList() << "poweroff", 30000, &logindErr))
+        return true;
+    if (error)
+        *error = QStringLiteral("poweroff request failed (logind/polkit denied): %1")
+                     .arg(logindErr);
+    qWarning() << "[WakeManager] ERROR: poweroff request failed:" << (error ? *error : QString());
     return false;
 }
+
 bool WakeManager::armTestWake(int seconds)
 {
-    if (seconds < kTestWakeMinSeconds || seconds > kTestWakeMaxSeconds) {
+    // The shared STG-1.3 boundary first, then the narrower test-wake window on
+    // top of it — the test window can never exceed the helper's boundary.
+    if (!WakePolicy::isValidWakeDelay(seconds) || seconds > kTestWakeMaxSeconds) {
         qWarning() << "[WakeManager] armTestWake refused: out of range" << seconds;
         emit testWakeFailed(QStringLiteral("out of range"));
         return false;
@@ -517,7 +653,18 @@ void WakeManager::cancelTestWake()
         m_state = QStringLiteral("idle");
         qInfo() << "[WakeManager] Test wake cancelled";
         emit wakeStateChanged();
-    } else {
-        qWarning() << "[WakeManager] Test wake cancel failed:" << msg;
+        return;
     }
+    // F6: a failed cancel must not drop ownership — unless systemd proves the
+    // wake is already gone, in which case reporting "idle" is the truth.
+    if (helperWakeStillArmed()) {
+        qWarning() << "[WakeManager] Test wake cancel failed; wake still armed:"
+                   << msg;
+        return;
+    }
+    qWarning() << "[WakeManager] Test wake cancel failed but no Lumalarm timer is armed:"
+               << msg;
+    m_helperOwnedWake = false;
+    m_state = QStringLiteral("idle");
+    emit wakeStateChanged();
 }

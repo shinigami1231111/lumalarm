@@ -7,21 +7,31 @@
 // Contract (data/org.lumalarm.Helper.xml):
 //   ScheduleWake(u seconds) -> (b success, s message)
 //   CancelWake()            -> (b success, s message)
-//   GetStatus()             -> (s status)   idle | scheduled:<n> | error:<msg>
+//   GetStatus()             -> (s status)   idle | scheduled | scheduled:<n> | error
 //
 // Security rules kept deliberately narrow:
-//   - seconds must be in [60, 86400]; anything else is rejected.
+//   - seconds must satisfy WakePolicy::isValidWakeDelay() i.e. [60, 86400],
+//     checked from the shared header src/wake/WakeSecurity.h BEFORE anything
+//     else, so the app and the helper can never enforce different bounds.
 //   - systemd >= 254: transient timer  systemd-run --on-active=<N>s
-//     --property=WakeSystem=yes --unit=lumalarm-wake-<uuid> /bin/true
+//     --timer-property=WakeSystem=yes --description=lumalarm-wake-seconds=<N>
+//     --unit=lumalarm-wake-<uuid> /bin/true
 //     (the UUID suffix prevents two schedules from clobbering each other).
 //   - otherwise:     rtcwake -m no -s <N>
 //   - QProcess argument lists ONLY — no system(), no shell, no string
 //     interpolation into a shell, no configuration, no file I/O.
 //   - every accepted and rejected call is logged with the caller's UID.
-//   - privilege gate: uid 0 passes; every other caller must satisfy the
-//     polkit action org.lumalarm.schedule.wake (auth_admin_keep), checked
-//     through `pkcheck --action-id … --process <pid>` (argument list only).
-//     The helper itself performs no file I/O and never uses a shell.
+//   - privilege gate: uid 0 passes (fast path); every other caller must
+//     satisfy the polkit action org.lumalarm.schedule.wake (auth_admin_keep),
+//     checked through `pkcheck --action-id … --system-bus-name <name>`
+//     (or --process <pid>) WITH --allow-user-interaction so the desktop
+//     polkit agent can actually run the challenge the policy describes.
+//
+// State (STG-1.4): this process keeps NO authoritative state of its own. The
+// armed transient timer in systemd — enumerated by its lumalarm-wake-* name
+// and read back through its Description= label — is the single source of
+// truth, so a helper restart still reports and cancels a wake that is
+// already armed.
 
 #include <QCoreApplication>
 #include <QDBusConnection>
@@ -33,12 +43,17 @@
 #include <QStringList>
 #include <QUuid>
 
+#include "wake/WakeSecurity.h"
+
 namespace {
-constexpr auto kServiceName = "org.lumalarm.Helper";
-constexpr auto kObjectPath = "/org/lumalarm/Helper";
-constexpr uint kMinSeconds = 60;      // ScheduleWake range, both ends enforced
-constexpr uint kMaxSeconds = 86400;
 constexpr int kSystemdRunMinVersion = 254;   // WakeSystem= transient timers
+
+// Upper bound on one pkcheck run. Generous because --allow-user-interaction
+// may hold the call open while a human answers the polkit dialog; bounded so
+// a helper with no reachable agent cannot be wedged forever. Must stay BELOW
+// the client's kHelperCallTimeoutMs (70 s) so the client never gives up first
+// and double-arms on its direct-rtcwake fallback.
+constexpr int kPkcheckTimeoutMs = 60000;
 
 // systemctl --version, parsed once: first line is "systemd <major> (...)".
 int systemdMajorVersion()
@@ -102,15 +117,30 @@ private:
     uint callerPid() const;
     // Polkit gate for the privileged operations. uid 0 passes directly;
     // everyone else must satisfy org.lumalarm.schedule.wake, checked with
-    // `pkcheck --action-id <action> --process <pid>` (QProcess argument
-    // list only — fail-closed when pkcheck is unavailable or errors).
+    // `pkcheck` (QProcess argument list only — fail-closed when pkcheck is
+    // unavailable or errors).
     bool authorize(uint uid, QString *reason) const;
+
     bool runCommand(const QString &program, const QStringList &args,
                     QString *error, int timeoutMs = 20000) const;
 
+    // Base names (no .timer) of every armed lumalarm-wake-*.timer in systemd,
+    // enumerated fresh on every call — never from this process's memory.
+    QStringList armedTimerBasesFromSystemd() const;
+    // Description= of a transient timer, used to recover the requested delay.
+    QString timerDescription(const QString &unitBase) const;
+    // Adopt whatever systemd says is armed as this instance's state. Called
+    // before status reporting so a restart cannot report "idle" for a wake
+    // that is still armed.
+    void rediscoverState();
+
+    // Stop `<base>.timer` (and its service/failed state). True only when the
+    // timer is really gone afterwards.
+    bool stopTimer(const QString &unitBase, QString *error);
+
     QString m_state = QStringLiteral("idle");  // "idle" | "scheduled" | "error"
     QString m_lastError;
-    QString m_unitName;      // transient timer unit, systemd path
+    QString m_unitName;      // transient timer unit base name, systemd path
     bool m_usedRtcwake = false;
     uint m_seconds = 0;      // accepted request, echoed by GetStatus
 };
@@ -137,6 +167,112 @@ uint WakeHelper::callerPid() const
     return pid.isValid() ? pid.value() : ~0u;
 }
 
+// ── Systemd state discovery (STG-1.4) ────────────────────────────────────────
+//
+// The helper deliberately keeps no file state (see the security rules above),
+// so the transient timer units themselves carry everything: their names are
+// prefixed lumalarm-wake- and their Description= holds the requested delay.
+
+QStringList WakeHelper::armedTimerBasesFromSystemd() const
+{
+    const QStringList args{
+        QStringLiteral("list-units"),
+        QStringLiteral("--all"),
+        QStringLiteral("--no-legend"),
+        QStringLiteral("--plain"),
+        QStringLiteral("--full"),
+        QStringLiteral("%1*.timer").arg(QLatin1String(WakePolicy::kTimerPrefix)),
+    };
+    QProcess p;
+    p.start(QStringLiteral("systemctl"), args);   // argument list — never a shell
+    if (!p.waitForStarted(3000) || !p.waitForFinished(5000))
+        return QStringList();
+    if (p.exitStatus() != QProcess::NormalExit || p.exitCode() != 0)
+        return QStringList();
+    return WakePolicy::armedTimerBases(QString::fromUtf8(p.readAllStandardOutput()));
+}
+
+QString WakeHelper::timerDescription(const QString &unitBase) const
+{
+    const QStringList args{
+        QStringLiteral("show"),
+        unitBase + QStringLiteral(".timer"),
+        QStringLiteral("--property=Description"),
+        QStringLiteral("--value"),
+    };
+    QProcess p;
+    p.start(QStringLiteral("systemctl"), args);
+    if (!p.waitForStarted(3000) || !p.waitForFinished(5000))
+        return QString();
+    if (p.exitStatus() != QProcess::NormalExit || p.exitCode() != 0)
+        return QString();
+    return QString::fromUtf8(p.readAllStandardOutput()).trimmed();
+}
+
+void WakeHelper::rediscoverState()
+{
+    const QStringList bases = armedTimerBasesFromSystemd();
+
+    if (!bases.isEmpty()) {
+        const QString base = bases.first();
+        if (bases.size() > 1)
+            qWarning() << "[wake-helper]" << bases.size() << "armed Lumalarm timers found;"
+                       << "adopting" << base;
+
+        qint64 labelledSeconds = 0;
+        const bool labelled =
+            WakePolicy::secondsFromTimerLabel(timerDescription(base), &labelledSeconds);
+
+        if (m_unitName != base)
+            qInfo() << "[wake-helper] rediscovered armed wake timer" << base
+                    << (labelled ? QString("label %1 s").arg(labelledSeconds)
+                                 : QStringLiteral("no label"));
+
+        m_unitName = base;
+        m_usedRtcwake = false;
+        m_state = QStringLiteral("scheduled");
+        if (labelled)
+            m_seconds = static_cast<uint>(labelledSeconds);
+        return;
+    }
+
+    // Nothing armed in systemd. Only touch state that belongs to a systemd
+    // timer — an rtcwake-based wake this instance armed is not visible here
+    // and must survive.
+    if (!m_unitName.isEmpty()) {
+        qInfo() << "[wake-helper] timer" << m_unitName
+                << "is gone (fired or stopped externally) -> idle";
+        m_unitName.clear();
+        if (m_state == QLatin1String("scheduled")) {
+            m_state = QStringLiteral("idle");
+            m_seconds = 0;
+            m_lastError.clear();
+        }
+    }
+}
+
+bool WakeHelper::stopTimer(const QString &unitBase, QString *error)
+{
+    // D5: use the fully-qualified .timer name — a bare `systemctl stop
+    // lumalarm-wake-<uuid>` resolves to <base>.service, "succeeds" (the
+    // inactive service stops fine) and leaves the timer armed.
+    if (!runCommand(QStringLiteral("systemctl"),
+                    QStringList() << QStringLiteral("stop")
+                                  << unitBase + QStringLiteral(".timer"), error))
+        return false;
+
+    // Best-effort cleanup of the leftover service unit and any failed-unit
+    // state; not fatal if they are already gone.
+    runCommand(QStringLiteral("systemctl"),
+               QStringList() << QStringLiteral("stop")
+                             << unitBase + QStringLiteral(".service"), nullptr);
+    runCommand(QStringLiteral("systemctl"),
+               QStringList() << QStringLiteral("reset-failed")
+                             << unitBase + QStringLiteral(".timer")
+                             << unitBase + QStringLiteral(".service"), nullptr);
+    return true;
+}
+
 // D2: Polkit gate. The D-Bus policy file alone is not sufficient —
 // without an explicit pkcheck here, any local process in the same
 // session can call ScheduleWake without authentication.
@@ -147,29 +283,34 @@ bool WakeHelper::authorize(uint uid, QString *reason) const
     if (uid == 0)
         return true;
 
+    // Identify the caller the way polkit expects: prefer the unique bus name
+    // (owned and tracked by the bus daemon, so it cannot be recycled or
+    // spoofed the way a bare PID can), falling back to the bus-tracked PID
+    // when the message carries no sender.
+    const QString busName = calledFromDBus() ? message().service() : QString();
     const uint pid = callerPid();
-    if (uid == ~0u || pid == ~0u) {
+    if (uid == ~0u || (busName.isEmpty() && pid == ~0u)) {
         if (reason)
             *reason = QStringLiteral("not authorized: unknown caller");
         return false;
     }
 
-    // Polkit, non-interactive: uid != 0 must satisfy
-    // org.lumalarm.schedule.wake (auth_admin_keep). No agent is contacted
-    // (pkcheck flags default to no interaction), so headless callers are
-    // denied and a desktop agent can still authenticate the user.
+    // --allow-user-interaction is what makes the policy reachable at all:
+    // data/org.lumalarm.schedule.policy declares allow_active=auth_admin_keep,
+    // so without it pkcheck refuses to contact the desktop authentication
+    // agent and every non-root caller is denied forever with
+    // "Authorization requires authentication and -u wasn't passed".
+    // The arguments (including the action id) come from the shared STG-1
+    // header so they cannot drift from what the app and tests expect.
     QProcess p;
-    p.start(QStringLiteral("pkcheck"),
-            QStringList() << QStringLiteral("--action-id")
-                          << QStringLiteral("org.lumalarm.schedule.wake")
-                          << QStringLiteral("--process") << QString::number(pid));
+    p.start(QStringLiteral("pkcheck"), WakePolicy::pkcheckArguments(busName, pid));
     if (!p.waitForStarted(5000)) {
         if (reason)
             *reason = QStringLiteral("not authorized: pkcheck unavailable: %1")
                           .arg(p.errorString());
         return false;
     }
-    if (!p.waitForFinished(15000)) {
+    if (!p.waitForFinished(kPkcheckTimeoutMs)) {
         p.kill();
         p.waitForFinished(2000);
         if (reason)
@@ -223,8 +364,9 @@ bool WakeHelper::ScheduleWake(uint seconds, QString &message)
 {
     const uint uid = callerUid();
 
-    // 1. Range gate — the only input the caller controls.
-    if (seconds < kMinSeconds || seconds > kMaxSeconds) {
+    // 1. Range gate — the only input the caller controls, checked FIRST and
+    //    through the same shared function the app validates with (STG-1.3).
+    if (!WakePolicy::isValidWakeDelay(seconds)) {
         message = QStringLiteral("out of range");
         qWarning() << "[wake-helper] ScheduleWake: uid" << uid << "seconds" << seconds
                    << "-> REJECTED:" << message;
@@ -243,18 +385,24 @@ bool WakeHelper::ScheduleWake(uint seconds, QString &message)
 
     // 3a. systemd >= 254: transient WakeSystem timer (preferred).
     if (systemdMajorVersion() >= kSystemdRunMinVersion) {
-        // Replace semantics: disarm a timer still armed by an earlier call,
-        // otherwise re-scheduling orphans the previous transient timer
-        // (observed empirically: it stayed active after a second ScheduleWake).
-        // Best-effort — the old unit may already have fired or be gone.
-        if (!m_unitName.isEmpty()) {
-            runCommand(QStringLiteral("systemctl"),
-                       QStringList() << QStringLiteral("stop")
-                                     << m_unitName + QStringLiteral(".timer"), nullptr);
-            runCommand(QStringLiteral("systemctl"),
-                       QStringList() << QStringLiteral("stop")
-                                     << m_unitName + QStringLiteral(".service"), nullptr);
+        // Replace semantics, taken from systemd rather than from this
+        // process's memory: enumerate what is actually armed (this also
+        // covers a helper that restarted after its predecessor scheduled a
+        // wake) and disarm all of it, so at most one Lumalarm wake exists.
+        const QStringList existing = armedTimerBasesFromSystemd();
+        for (const QString &base : existing) {
+            QString stopErr;
+            stopTimer(base, &stopErr);   // failure is detected by the re-check below
         }
+        if (!armedTimerBasesFromSystemd().isEmpty()) {
+            m_state = QStringLiteral("error");
+            m_lastError = QStringLiteral("could not disarm the previous Lumalarm wake");
+            message = m_lastError;
+            qWarning() << "[wake-helper] ScheduleWake: uid" << uid
+                       << "-> REJECTED:" << message;
+            return false;
+        }
+
         const QString unit =
             QStringLiteral("lumalarm-wake-") + QUuid::createUuid().toString(QUuid::WithoutBraces);
         QString err;
@@ -267,11 +415,13 @@ bool WakeHelper::ScheduleWake(uint seconds, QString &message)
             // no unit created). --timer-property= targets the generated
             // timer — same intent, actually functional.
             QStringLiteral("--timer-property=WakeSystem=yes"),
+            // The label is the restart-safe copy of the requested delay: it
+            // lives in systemd, so GetStatus() can still report the real
+            // number after this process is gone (STG-1.4).
+            QStringLiteral("--description=%1").arg(WakePolicy::timerLabel(seconds)),
             QStringLiteral("--unit=%1").arg(unit),
             QStringLiteral("/bin/true")
         };
-        // D3: --timer-property (not --property). systemd 262 rejects
-        // --property=WakeSystem=yes with "Unknown assignment".
         if (runCommand(QStringLiteral("systemd-run"), args, &err)) {
             m_state = QStringLiteral("scheduled");
             m_unitName = unit;
@@ -292,6 +442,9 @@ bool WakeHelper::ScheduleWake(uint seconds, QString &message)
     }
 
     // 3b. Older systemd: direct rtcwake (the helper itself runs as root).
+    //     Known limitation: the RTC carries no Lumalarm marker, so a restart
+    //     on systemd < 254 cannot re-attribute this wake (the helper does no
+    //     file I/O by design). The systemd path above is the supported one.
     QString err;
     if (runCommand(QStringLiteral("rtcwake"),
                    QStringList() << QStringLiteral("-m") << QStringLiteral("no")
@@ -328,42 +481,40 @@ bool WakeHelper::CancelWake(QString &message)
         return false;
     }
 
-    // D5: Use fully-qualified unit name (.timer) — bare `systemctl
-    // stop lumalarm-wake-<uuid>` matches the .service and leaves
-    // the timer armed.
-    // Path A: a transient systemd timer from this helper instance.
-    if (!m_unitName.isEmpty()) {
-        // m_unitName is the bare systemd-run --unit= base name. The armed
-        // unit is <base>.timer — stopping the bare name makes systemctl
-        // resolve it to <base>.service, which "succeeds" (the inactive
-        // service stops fine) while the timer stays armed. Observed
-        // empirically, so target the .timer explicitly.
-        QString err;
-        if (!runCommand(QStringLiteral("systemctl"),
-                        QStringList() << QStringLiteral("stop")
-                                      << m_unitName + QStringLiteral(".timer"), &err)) {
+    // Enumerate from systemd first (STG-1.4): after a helper restart the
+    // armed timer is not in this process's memory, and answering "idle" here
+    // would be a false success while the wake is still live. Stop everything
+    // found, not just the unit this instance remembers.
+    const QStringList bases = armedTimerBasesFromSystemd();
+    if (!bases.isEmpty()) {
+        for (const QString &base : bases) {
+            QString stopErr;
+            if (!stopTimer(base, &stopErr)) {
+                // Truthful failure: the timer is (still) armed.
+                m_state = QStringLiteral("error");
+                m_lastError = stopErr;
+                message = stopErr;
+                qWarning() << "[wake-helper] CancelWake: uid" << uid
+                           << "-> REJECTED (stop failed for" << base << "):" << stopErr;
+                return false;
+            }
+        }
+        if (!armedTimerBasesFromSystemd().isEmpty()) {
             m_state = QStringLiteral("error");
-            m_lastError = err;
-            message = err;
-            qWarning() << "[wake-helper] CancelWake: uid" << uid
-                       << "-> REJECTED (stop failed):" << err;
+            m_lastError = QStringLiteral("timer still armed after stop");
+            message = m_lastError;
+            qWarning() << "[wake-helper] CancelWake: uid" << uid << "-> REJECTED:" << message;
             return false;
         }
-        // Best-effort cleanup of the leftover service unit and any
-        // failed-unit state; not fatal if they are already gone.
-        runCommand(QStringLiteral("systemctl"),
-                   QStringList() << QStringLiteral("stop")
-                                 << m_unitName + QStringLiteral(".service"), nullptr);
-        runCommand(QStringLiteral("systemctl"),
-                   QStringList() << QStringLiteral("reset-failed")
-                                 << m_unitName + QStringLiteral(".timer")
-                                 << m_unitName + QStringLiteral(".service"), nullptr);
         m_unitName.clear();
+        m_usedRtcwake = false;
         m_state = QStringLiteral("idle");
         m_lastError.clear();
         m_seconds = 0;
         message = QStringLiteral("cancelled");
-        qInfo() << "[wake-helper] CancelWake: uid" << uid << "-> accepted (systemd timer stopped)";
+        qInfo() << "[wake-helper] CancelWake: uid" << uid
+                << "-> accepted (systemd timer" << (bases.size() > 1 ? QStringLiteral("s") : QString())
+                << "stopped)";
         return true;
     }
 
@@ -389,9 +540,10 @@ bool WakeHelper::CancelWake(QString &message)
         return true;
     }
 
-    // Nothing scheduled in this instance — idempotent success, and any
-    // leftover error state from an earlier failed call is cleared so
-    // GetStatus() reports "idle" after a successful cancel.
+    // Nothing armed anywhere — idempotent success, and any leftover error
+    // state from an earlier failed call is cleared so GetStatus() reports
+    // "idle" after a successful cancel.
+    m_unitName.clear();
     m_state = QStringLiteral("idle");
     m_lastError.clear();
     m_seconds = 0;
@@ -402,12 +554,31 @@ bool WakeHelper::CancelWake(QString &message)
 
 QString WakeHelper::GetStatus()
 {
-    qInfo() << "[wake-helper] GetStatus: uid" << callerUid() << "->" << m_state;
-    if (m_state == QLatin1String("scheduled"))
-        return QStringLiteral("scheduled:") + QString::number(m_seconds);
-    if (m_state == QLatin1String("error"))
-        return QStringLiteral("error:") + m_lastError;
-    return QStringLiteral("idle");
+    // STG-1.4: ask systemd, not this process, so a helper restart cannot
+    // report "idle" for a wake that is still armed.
+    rediscoverState();
+
+    const uint uid = callerUid();
+    if (m_state == QLatin1String("scheduled")) {
+        const QString status = m_seconds > 0
+            ? QStringLiteral("scheduled:") + QString::number(m_seconds)
+            : QStringLiteral("scheduled");
+        qInfo() << "[wake-helper] GetStatus: uid" << uid << "->" << status;
+        return status;
+    }
+
+    // STG-1.7/F7: GetStatus stays public and read-only — it performs no
+    // privileged operation, and the fact that a Lumalarm wake is armed is
+    // already world-readable from `systemctl list-timers 'lumalarm-wake-*.timer'`,
+    // so gating it on polkit would buy nothing while breaking unauthenticated
+    // diagnostics. What is NOT public is the free-form error detail: only the
+    // state word crosses the bus to an unauthenticated caller, and the full
+    // text stays in the root-only journal.
+    const QString status = m_state == QLatin1String("error")
+        ? QStringLiteral("error")
+        : QStringLiteral("idle");
+    qInfo() << "[wake-helper] GetStatus: uid" << uid << "->" << status;
+    return status;
 }
 
 int main(int argc, char **argv)
@@ -422,13 +593,13 @@ int main(int argc, char **argv)
     }
 
     WakeHelper helper;
-    if (!bus.registerService(QString::fromLatin1(kServiceName))) {
-        qCritical() << "[wake-helper] failed to register" << kServiceName << ':'
+    if (!bus.registerService(QString::fromLatin1(WakePolicy::kHelperService))) {
+        qCritical() << "[wake-helper] failed to register" << WakePolicy::kHelperService << ':'
                     << bus.lastError().message()
                     << "(is the send/own policy installed in /usr/share/dbus-1/system.d/?)";
         return 1;
     }
-    bus.registerObject(QString::fromLatin1(kObjectPath), &helper,
+    bus.registerObject(QString::fromLatin1(WakePolicy::kHelperPath), &helper,
                         QDBusConnection::ExportAllSlots);
 
     qInfo() << "[wake-helper] org.lumalarm.Helper ready on the system bus";
