@@ -61,11 +61,15 @@ Rectangle {
                       alarmMedia.endsWith(".mkv") || alarmMedia.endsWith(".webm")
         var isGif = alarmMedia.endsWith(".gif")
         if (isVideo) {
-            vidPlayer.source = "file://" + configManager.tonesDirectory + "/" + alarmMedia
+            // Resolved through ConfigManager: QUrl::fromLocalFile instead of a
+            // hand-built "file://" + path, so names with spaces, '#', '%',
+            // Unicode or Arabic characters keep working (and system tones in
+            // /usr/share/lumalarm/tones resolve too).
+            vidPlayer.source = configManager.toneFileUrl(alarmMedia)
             videoOut.visible = true; gifPlayer.visible = false
             if (ringing) vidPlayer.play()
         } else if (isGif) {
-            gifPlayer.source = "file://" + configManager.tonesDirectory + "/" + alarmMedia
+            gifPlayer.source = configManager.toneFileUrl(alarmMedia)
             gifPlayer.visible = true; videoOut.visible = false
             if (ringing) gifPlayer.playing = true
         } else {

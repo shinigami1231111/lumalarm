@@ -8,6 +8,7 @@
 #include <QStandardPaths>
 #include <QDir>
 #include <QFile>
+#include <QUrl>
 
 class ThemeManager;
 
@@ -17,6 +18,18 @@ class ConfigManager : public QObject
     Q_PROPERTY(QString defaultWakeMode READ defaultWakeMode WRITE setDefaultWakeMode NOTIFY configChanged)
     Q_PROPERTY(QString timePickerMode READ timePickerMode WRITE setTimePickerMode NOTIFY configChanged)
     Q_PROPERTY(QString tonesDirectory READ tonesDirectory NOTIFY configChanged)
+    // Package-installed, read-only tone folder (the first existing XDG data
+    // location carrying lumalarm/tones — /usr/share/lumalarm/tones on an Arch
+    // install). Empty when the install ships no shared folder.
+    Q_PROPERTY(QString systemTonesDirectory READ systemTonesDirectory NOTIFY configChanged)
+    // Machine-readable reason the last tone import/delete failed; "" = success.
+    // Codes: "exists" | "source-missing" | "invalid-path" | "unsupported" |
+    // "destination" | "permission" | "copy-failed" | "not-found" | "read-only"
+    // | "delete-failed". The UI asks the user before an "exists" overwrite —
+    // Issue #2's single duplicate policy.
+    Q_PROPERTY(QString toneError READ toneError NOTIFY toneErrorChanged)
+    // Translated, user-visible form of toneError(). Empty alongside it.
+    Q_PROPERTY(QString toneErrorMessage READ toneErrorMessage NOTIFY toneErrorChanged)
     // Theme properties
     Q_PROPERTY(QString themeBg READ themeBg WRITE setThemeBg NOTIFY configChanged)
     Q_PROPERTY(QString themeAccent READ themeAccent WRITE setThemeAccent NOTIFY configChanged)
@@ -55,11 +68,27 @@ public:
     void setTimePickerMode(const QString &mode);
 
     QString tonesDirectory() const;
+    QString systemTonesDirectory() const;
 
     Q_INVOKABLE QStringList availableTones() const;
 
+    // Imports sourcePath into the user tones folder. Refuses to overwrite a
+    // tone of the same name: reports toneError() == "exists" and copies
+    // nothing, so the UI can ask first. Returns the stored file name on
+    // success, an empty string on failure (the reason is always in toneError).
+    // sourcePath accepts a "file://" URL string — as QML hands one over — or a
+    // plain filesystem path.
     Q_INVOKABLE QString copyToTones(const QString &sourcePath);
+    // The same import, explicitly overwriting an existing tone of that name.
+    // Reachable from the UI only after the user confirmed the replacement.
+    Q_INVOKABLE QString replaceTone(const QString &sourcePath);
     Q_INVOKABLE bool deleteTone(const QString &fileName);
+    // Absolute local path -> file URL for a tone, resolved through the same
+    // search list as discovery. Null when the tone does not exist.
+    Q_INVOKABLE QUrl toneFileUrl(const QString &fileName) const;
+
+    QString toneError() const;
+    QString toneErrorMessage() const;
 
     Q_INVOKABLE QString configFilePath() const;
 
@@ -121,11 +150,22 @@ signals:
     // Emitted only by setLanguage(); lets main.cpp reload the catalog without
     // re-running for every unrelated configChanged().
     void languageChanged();
+    // Emitted whenever the last tone operation's outcome changes, so the
+    // import/delete feedback in SoundManager.qml can never go stale.
+    void toneErrorChanged();
 
 private:
+    // Shared implementation of copyToTones()/replaceTone().
+    QString importTone(const QString &sourcePath, bool replaceExisting);
+    // Records the outcome of a tone operation ("" == success) and notifies.
+    // detail names the offending file for the messages that need one.
+    void setToneError(const QString &code, const QString &detail = QString());
+
     QSettings *m_settings;
     QString m_configDir;
     QString m_tonesDir;
+    QString m_toneError;
+    QString m_toneErrorDetail;
     ThemeManager *m_theme;
     // True when this profile carries no evidence of an earlier Lumalarm run;
     // sampled once in the constructor, before anything is created on disk.

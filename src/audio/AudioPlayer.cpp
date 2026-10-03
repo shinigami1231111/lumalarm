@@ -1,7 +1,6 @@
 #include "audio/AudioPlayer.h"
+#include "managers/TonePaths.h"
 #include <QUrl>
-#include <QFileInfo>
-#include <QStandardPaths>
 #include <QMediaDevices>
 #include <QAudioDevice>
 
@@ -20,14 +19,11 @@ AudioPlayer::AudioPlayer(QObject *parent)
 
 QString AudioPlayer::resolvePath(const QString &filePath) const
 {
-    if (filePath.isEmpty()) return {};
-    QString resolved = filePath;
-    if (!resolved.contains('/') && !resolved.contains('\\')) {
-        QString configDir = QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + "/lumalarm/tones";
-        resolved = configDir + "/" + resolved;
-    }
-    QFileInfo fi(resolved);
-    return fi.isFile() ? resolved : QString();
+    // TonePaths::resolve() is the same lookup ConfigManager::availableTones()
+    // uses (user tones folder first, then the package-installed system
+    // folders), so a tone the sound list shows is always a tone this player
+    // can open — bare names and full paths both keep their old meaning.
+    return TonePaths::resolve(filePath);
 }
 
 int AudioPlayer::volume() const

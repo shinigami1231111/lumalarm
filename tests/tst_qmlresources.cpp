@@ -7,6 +7,8 @@
 
 #include <utility> // std::as_const
 
+#include "managers/TonePaths.h"
+
 // ============================================================================
 // Smoke tests for the v1.0.1 build-requirement update:
 //   - CMake >= 3.21 and Qt >= 6.5 (cmake_minimum_required(VERSION 3.21),
@@ -60,6 +62,7 @@ private slots:
     void allQmlFilesFromCmakeListExistInResource(); // CMake QML_FILES <-> qrc
     void qrcQmlLiteralsInSourcesResolve();          // stale literals in src/ + qml/
     void iconReferencesInQmlResolve();              // literal + dynamic icon refs
+    void importDialogFiltersMatchDiscoveryFormats(); // Issue #2: picker <-> discovery
 };
 
 // ----------------------------------------------------------------------------
@@ -309,6 +312,41 @@ void TestQmlResources::iconReferencesInQmlResolve()
                  qPrintable(QStringLiteral("no .svg files in dynamic icon base directory: %1")
                                 .arg(base)));
     }
+}
+
+// Issue #2: the FileDialog nameFilters in SoundManager.qml must advertise
+// exactly the extensions availableTones() discovers. A format the picker
+// accepts but discovery ignores imports successfully and then silently
+// disappears from the list — the reported *.aac case. Both sides are derived
+// from one list (TonePaths::supportedSuffixes()), so this test is the guard
+// that keeps the QML filter from drifting away from it.
+void TestQmlResources::importDialogFiltersMatchDiscoveryFormats()
+{
+    const QString soundManager =
+        sourceRoot() + QStringLiteral("/qml/overlays/SoundManager.qml");
+    const QString qml = readSourceFile(soundManager);
+    if (qml.isEmpty())
+        QSKIP("source tree not available (tests/ not inside the build tree); "
+              "dialog filter scan requires qml/ next to tests/.");
+
+    const QRegularExpression lineRe(QStringLiteral("nameFilters\\s*:\\s*\\[.*\\]"));
+    const QRegularExpressionMatch line = lineRe.match(qml);
+    QVERIFY2(line.hasMatch(),
+             "SoundManager.qml no longer declares FileDialog.nameFilters — "
+             "update this test alongside the import dialog");
+
+    QStringList dialogGlobs;
+    const QRegularExpression globRe(QStringLiteral(R"(\*\.[A-Za-z0-9]+)"));
+    auto it = globRe.globalMatch(line.captured(0));
+    while (it.hasNext())
+        dialogGlobs << it.next().captured(0);
+    dialogGlobs.sort();
+
+    QStringList discoveryGlobs = TonePaths::nameFilters();
+    discoveryGlobs.sort();
+
+    QVERIFY2(!dialogGlobs.isEmpty(), "no *.ext globs found in nameFilters");
+    QCOMPARE(dialogGlobs, discoveryGlobs);
 }
 
 QTEST_GUILESS_MAIN(TestQmlResources)

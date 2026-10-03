@@ -57,6 +57,7 @@ set(HEADERS
     src/wake/SchedulerState.h
     src/wake/WakeManager.h
     src/managers/ConfigManager.h
+    src/managers/TonePaths.h
     src/managers/ThemeManager.h
     src/ui/BlurManager.h
     src/ui/Notifier.h
@@ -371,6 +372,18 @@ install(FILES resources/lumalarm.desktop DESTINATION ${CMAKE_INSTALL_DATADIR}/ap
 install(FILES resources/icon.svg DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/hicolor/scalable/apps RENAME lumalarm.svg)
 install(FILES resources/icon-256.png DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/hicolor/256x256/apps RENAME lumalarm.png)
 install(FILES resources/icon-512.png DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/hicolor/512x512/apps RENAME lumalarm.png)
+
+# ── Shared tone folder (Issue #2) ────────────────────────────────────────────
+# The Arch package has always created /usr/share/lumalarm/tones and the app now
+# scans every XDG data location for a lumalarm/tones directory, so a plain
+# `cmake --install` has to build the same layout or the two installation paths
+# drift apart again. Nothing is placed in it here: packagers and admins drop
+# read-only tones there, users import into ~/.config/lumalarm/tones.
+# Bracket syntax keeps $ENV{DESTDIR} and ${CMAKE_INSTALL_PREFIX} for install
+# time, where --prefix and DESTDIR are actually known.
+install(CODE [[
+    file(MAKE_DIRECTORY "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/share/lumalarm/tones")
+]])
 
 # ── Wake helper install rules (STG-1.1) ──────────────────────────────────────
 install(TARGETS lumalarm-wake-helper RUNTIME DESTINATION /usr/lib/lumalarm)

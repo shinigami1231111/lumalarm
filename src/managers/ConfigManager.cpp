@@ -1,7 +1,29 @@
 #include "managers/ConfigManager.h"
 #include "managers/ThemeManager.h"
+#include "managers/TonePaths.h"
 #include <QFileInfoList>
 #include <QFileInfo>
+
+namespace {
+// QML hands a url over as a JavaScript string in QUrl::PrettyDecoded form:
+// spaces and non-ASCII are already decoded, while '%23' (#) and '%25' (%) stay
+// percent-encoded. Hand-stripping "file://" — the pre-Issue-#2 code — therefore
+// produced a path that did not exist for names containing '#' or '%'. Going
+// through QUrl decodes what is encoded and tolerates what is not.
+QString localPathFromUrlString(const QString &source)
+{
+    if (source.isEmpty())
+        return {};
+
+    const QUrl url(source);
+    const QString scheme = url.scheme();
+    if (scheme.isEmpty())
+        return source; // plain filesystem path
+    if (scheme == QLatin1String("file"))
+        return url.toLocalFile();
+    return {}; // http:/ftp:/… cannot be imported from a local picker
+}
+} // namespace
 
 ConfigManager::ConfigManager(QObject *parent)
     : QObject(parent)
@@ -23,7 +45,7 @@ ConfigManager::ConfigManager(QObject *parent)
 
     QDir().mkpath(m_configDir);
 
-    m_tonesDir = m_configDir + "/tones";
+    m_tonesDir = TonePaths::userDirectory();
     QDir().mkpath(m_tonesDir);
 
     QString settingsPath = m_configDir + "/settings.ini";
@@ -74,48 +96,187 @@ QString ConfigManager::tonesDirectory() const
     return m_tonesDir;
 }
 
+QString ConfigManager::systemTonesDirectory() const
+{
+    const QStringList system = TonePaths::systemDirectories();
+    return system.isEmpty() ? QString() : system.first();
+}
+
 QStringList ConfigManager::availableTones() const
 {
     QStringList tones;
-    QDir dir(m_tonesDir);
-    QFileInfoList files = dir.entryInfoList(QStringList() << "*.wav" << "*.mp3" << "*.ogg" << "*.flac",
-                                            QDir::Files | QDir::Readable, QDir::Name);
-    for (const QFileInfo &fi : files) {
-        tones.append(fi.fileName());
+    // searchDirectories() starts with the user folder, so a user file wins any
+    // name clash with a packaged one; the list is sorted once at the end so the
+    // sound combo boxes keep a single predictable order.
+    const QStringList dirs = TonePaths::searchDirectories();
+    for (const QString &dir : dirs) {
+        const QFileInfoList files = QDir(dir).entryInfoList(TonePaths::nameFilters(),
+                                                            QDir::Files | QDir::Readable,
+                                                            QDir::Name);
+        for (const QFileInfo &fi : files) {
+            if (!tones.contains(fi.fileName()))
+                tones.append(fi.fileName());
+        }
     }
+    tones.sort();
     return tones;
 }
 
 QString ConfigManager::copyToTones(const QString &sourcePath)
 {
-    if (sourcePath.isEmpty()) return QString();
+    return importTone(sourcePath, false);
+}
 
-    QFileInfo fi(sourcePath);
-    QString fileName = fi.fileName();
-    QString destPath = m_tonesDir + "/" + fileName;
+QString ConfigManager::replaceTone(const QString &sourcePath)
+{
+    return importTone(sourcePath, true);
+}
 
-    if (fi.absolutePath() == m_tonesDir)
-        return fileName;
+QString ConfigManager::importTone(const QString &sourcePath, bool replaceExisting)
+{
+    setToneError(QString());
 
-    if (QFile::exists(destPath))
-        return fileName;
-
-    if (QFile::copy(sourcePath, destPath)) {
-        emit configChanged();
-        return fileName;
+    const QString local = localPathFromUrlString(sourcePath);
+    if (local.isEmpty()) {
+        setToneError(QStringLiteral("invalid-path"));
+        return {};
     }
 
-    return QString();
+    const QFileInfo fi(local);
+    if (!fi.exists() || !fi.isFile()) {
+        setToneError(QStringLiteral("source-missing"));
+        return {};
+    }
+
+    // Checked before anything else, so an unsupported file can never be copied
+    // into the tones folder and then sit there undiscovered.
+    if (!TonePaths::isSupportedToneFile(fi.fileName())) {
+        setToneError(QStringLiteral("unsupported"));
+        return {};
+    }
+
+    QString fileName = fi.fileName(); // non-const: returned by value below
+
+    // The picker offered a file that already lives in the tones folder:
+    // nothing to copy, and it is already in the list.
+    if (QDir::cleanPath(fi.absolutePath()) == QDir::cleanPath(m_tonesDir))
+        return fileName;
+
+    const QString destPath = m_tonesDir + QLatin1Char('/') + fileName;
+    const bool destExists = QFileInfo::exists(destPath);
+
+    // Issue #2's single duplicate policy is "ask": refuse here, let the UI
+    // confirm, and come back through replaceTone().
+    if (destExists && !replaceExisting) {
+        setToneError(QStringLiteral("exists"), fileName);
+        return {};
+    }
+
+    if (!QDir(m_tonesDir).exists() && !QDir().mkpath(m_tonesDir)) {
+        setToneError(QStringLiteral("destination"));
+        return {};
+    }
+    if (!QFileInfo(m_tonesDir).isWritable()) {
+        setToneError(QStringLiteral("permission"));
+        return {};
+    }
+
+    if (destExists) {
+        // QFile::copy() never overwrites, so a confirmed replacement drops the
+        // old file first.
+        if (!QFile::remove(destPath)) {
+            setToneError(QStringLiteral("permission"));
+            return {};
+        }
+    }
+
+    if (!QFile::copy(local, destPath)) {
+        setToneError(QStringLiteral("copy-failed"));
+        return {};
+    }
+
+    emit configChanged();
+    return fileName;
+}
+
+QUrl ConfigManager::toneFileUrl(const QString &fileName) const
+{
+    const QString path = TonePaths::resolve(fileName);
+    if (path.isEmpty())
+        return {};
+    return QUrl::fromLocalFile(path);
 }
 
 bool ConfigManager::deleteTone(const QString &fileName)
 {
-    if (fileName.isEmpty()) return false;
-    QString filePath = m_tonesDir + "/" + fileName;
-    bool ok = QFile::remove(filePath);
-    if (ok)
-        emit configChanged();
-    return ok;
+    setToneError(QString());
+
+    if (fileName.isEmpty() || fileName.contains(QLatin1Char('/'))
+        || fileName.contains(QLatin1Char('\\'))) {
+        setToneError(QStringLiteral("invalid-path"));
+        return false;
+    }
+
+    const QString filePath = m_tonesDir + QLatin1Char('/') + fileName;
+    if (!QFileInfo::exists(filePath)) {
+        // A system tone shows up in the same list but lives in a read-only
+        // folder — refusing must say so instead of failing silently.
+        setToneError(TonePaths::resolve(fileName).isEmpty() ? QStringLiteral("not-found")
+                                                            : QStringLiteral("read-only"),
+                     fileName);
+        return false;
+    }
+
+    if (!QFile::remove(filePath)) {
+        setToneError(QStringLiteral("delete-failed"));
+        return false;
+    }
+
+    emit configChanged();
+    return true;
+}
+
+QString ConfigManager::toneError() const
+{
+    return m_toneError;
+}
+
+QString ConfigManager::toneErrorMessage() const
+{
+    // The codes are a stable contract with the QML and the unit tests; this is
+    // the only place they become text.
+    if (m_toneError.isEmpty())
+        return {};
+
+    if (m_toneError == QLatin1String("exists"))
+        return tr("A tone named \"%1\" already exists.").arg(m_toneErrorDetail);
+    if (m_toneError == QLatin1String("source-missing"))
+        return tr("The selected file no longer exists.");
+    if (m_toneError == QLatin1String("invalid-path"))
+        return tr("The selected item is not a local file.");
+    if (m_toneError == QLatin1String("unsupported"))
+        return tr("Unsupported file. Use .wav, .mp3, .ogg, .flac or .aac.");
+    if (m_toneError == QLatin1String("destination"))
+        return tr("The tones folder could not be created.");
+    if (m_toneError == QLatin1String("permission"))
+        return tr("The tones folder is not writable.");
+    if (m_toneError == QLatin1String("copy-failed"))
+        return tr("The file could not be copied into the tones folder.");
+    if (m_toneError == QLatin1String("not-found"))
+        return tr("The tone \"%1\" no longer exists.").arg(m_toneErrorDetail);
+    if (m_toneError == QLatin1String("read-only"))
+        return tr("The tone \"%1\" is installed system-wide and cannot be deleted.")
+            .arg(m_toneErrorDetail);
+    if (m_toneError == QLatin1String("delete-failed"))
+        return tr("The tone could not be deleted.");
+    return tr("The operation failed.");
+}
+
+void ConfigManager::setToneError(const QString &code, const QString &detail)
+{
+    m_toneError = code;
+    m_toneErrorDetail = detail;
+    emit toneErrorChanged();
 }
 
 QString ConfigManager::themeBg() const
