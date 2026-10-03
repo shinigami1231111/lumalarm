@@ -5,7 +5,7 @@ import GlassAlarm
 WizardPage {
     id: root
     title: qsTr("Welcome to Lumalarm")
-    subtitle: qsTr("This short setup checks the three things an alarm clock depends on: how this machine wakes up, whether desktop notifications are available, and which sound new alarms use. It takes about a minute.")
+    subtitle: qsTr("This short setup picks your language and checks the three things an alarm clock depends on: which sound new alarms use, how this machine wakes up, and whether desktop notifications are available. It takes about a minute.")
     primaryLabel: qsTr("Get started")
     primaryEnabled: true
     onPrimaryClicked: wizard.next()

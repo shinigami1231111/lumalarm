@@ -71,6 +71,7 @@ set(QML_FILES
     qml/wizard/WizardOverlay.qml
     qml/wizard/WizardPage.qml
     qml/wizard/pages/WelcomePage.qml
+    qml/wizard/pages/LanguagePage.qml
     qml/wizard/pages/WakeMethodPage.qml
     qml/wizard/pages/NotificationPage.qml
     qml/wizard/pages/SoundPage.qml
@@ -230,6 +231,8 @@ if(BUILD_TESTING)
     # probe helpers. WakeManager is real; the privileged arming half of
     # testWake() is substituted through the armProbeWake() seam, and the
     # notification probe is compared against an independent bus check.
+    # AlarmManager/AlarmModel are linked so the "a wizard run never adds or
+    # rewrites an alarm" contract is asserted against the real store.
     qt6_add_executable(tst_wizard
         tests/tst_wizard.cpp
         src/ui/WizardController.cpp
@@ -237,6 +240,8 @@ if(BUILD_TESTING)
         src/managers/ThemeManager.cpp   # ConfigManager owns a ThemeManager
         src/wake/WakeManager.cpp
         src/audio/AudioPlayer.cpp
+        src/managers/AlarmManager.cpp
+        src/models/AlarmModel.cpp
     )
     target_include_directories(tst_wizard PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
     target_link_libraries(tst_wizard PRIVATE Qt6::Core Qt6::Test Qt6::DBus Qt6::Gui Qt6::Multimedia)

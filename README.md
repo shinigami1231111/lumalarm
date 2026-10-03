@@ -92,8 +92,8 @@ That suspend-to-wake behavior is the core power of Lumalarm. Everything else —
 - **Desktop notifications** — a heads-up before an alarm is due and a notification when it rings, over the freedesktop notification service (no libnotify)
 - **Test alarm** — arm a real wake 60 s to 1 h ahead without creating an alarm, to prove the machine actually wakes
 - **Night mode** — dims the window a few minutes before the alarm so it never lights up a dark room
-- **First-run setup wizard** — five skippable checks on the very first launch: wake method, notifications and default sound
-- **English & Arabic UI** — pick the language in Settings; Arabic mirrors the layout to right-to-left
+- **First-run setup wizard** — six skippable steps on the very first launch: language, default sound, test alarm, notifications and a summary. Existing installations are never prompted after an upgrade, and `--show-wizard` reopens it any time
+- **English & Arabic UI** — pick the language in Settings or during setup; Arabic mirrors the layout to right-to-left
 
 ---
 

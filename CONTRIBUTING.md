@@ -70,7 +70,7 @@ ctest --test-dir build --output-on-failure
 | `tst_notifier` | `Notifier` (ui): construction, master switch and the no-bus path (live delivery is checked manually with `busctl --user monitor`) |
 | `tst_trayicon` | `TrayIcon` (ui): construction and tooltip text on a headless box (offscreen platform, no system tray) |
 | `tst_nightmode` | `NightMode` (ui): edge-trigger semantics, settings round-trip and lead-window clamping |
-| `tst_wizard` | `WizardController` (ui): step machine, next/back gates, the `wizard/completed` flag, and the probe-skipped path |
+| `tst_wizard` | `WizardController` (ui): step machine, next/back gates, first-run vs. existing-profile detection, the `wizard/completed` flag, language selection, and the guarantee that a wizard run writes no alarm |
 | `tst_i18n` | i18n: English source fallback, the embedded Arabic catalog at `:/i18n`, `QQmlEngine::retranslate()`, the `ui/language` round-trip and `.ts` catalog consistency |
 
 Any PR must keep all tests green. New behavior should come with a new test.
@@ -182,7 +182,7 @@ qml/
   pages/        AlarmEditor, AlarmListView, SettingsPage, StopwatchPage, TimerPage
   pickers/      ClockFace, WheelTimePicker
   overlays/     RingingOverlay, SoundManager
-  wizard/       WizardOverlay, WizardPage, pages/ (the five setup steps)
+  wizard/       WizardOverlay, WizardPage, pages/ (the six setup steps)
 translations/   lumalarm_en.ts, lumalarm_ar.ts
 helper/    lumalarm-wake-helper.cpp   (privileged D-Bus wake helper)
 data/      D-Bus activation + policy, Polkit action, systemd unit

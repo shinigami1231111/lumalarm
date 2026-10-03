@@ -36,10 +36,12 @@ Format based on Keep a Changelog (https://keepachangelog.com/).
   `qml/NightDim.qml` hold a translucent overlay for the configured lead
   time before the next alarm, until it fires or is cancelled, disabled
   or deleted. Per-window only; no backlight or compositor-specific API.
-- First-run setup wizard (STG-5.5): five skippable steps (welcome, wake
-  method with a non-destructive probe, notification probe, default sound,
-  summary) shown once per installation and re-runnable from Settings.
-  New key `wizard/completed` and the `--show-wizard` flag.
+- First-run setup wizard (STG-5.5): six skippable steps (welcome, language,
+  default sound, wake method with a non-destructive test alarm, notification
+  probe, summary) shown once per installation and re-runnable from Settings.
+  New key `wizard/completed` and the `--show-wizard` flag. Only a profile with
+  no `settings.ini` and no `theme.conf` counts as a first run, so existing
+  installations are never prompted after an upgrade.
 - Translations (STG-5.2): every user-facing string now goes through
   `qsTr()` / `tr()`, with a complete Arabic catalog embedded under
   `:/i18n` and a Language selector in Settings that swaps catalogs and

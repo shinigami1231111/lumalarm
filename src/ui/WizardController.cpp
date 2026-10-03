@@ -75,14 +75,14 @@ bool WizardController::canGoBack() const
 bool WizardController::canGoNext() const
 {
     switch (m_currentStep) {
-    case WakeMethod:
-        // Unlock only after a successful probe or an explicit skip.
-        return m_wakeProbePassed || m_wakeProbeSkipped;
     case Sound:
         // Normally always a selection (default = first tone). When the tones
         // catalogue is empty there is nothing to pick, so Next must not trap
         // the user on this page.
         return !m_defaultSound.isEmpty() || availableSounds().isEmpty();
+    case WakeMethod:
+        // Unlock only after a successful probe or an explicit skip.
+        return m_wakeProbePassed || m_wakeProbeSkipped;
     default:
         return true;
     }
@@ -91,6 +91,23 @@ bool WizardController::canGoNext() const
 bool WizardController::wizardCompleted() const
 {
     return m_completed;
+}
+
+QString WizardController::language() const
+{
+    // Always the live ConfigManager value: the wizard holds no copy of its own.
+    return m_config ? m_config->language() : QString();
+}
+
+void WizardController::setLanguage(const QString &lang)
+{
+    if (!m_config || m_config->language() == lang)
+        return;
+    // One key, one writer: ConfigManager::setLanguage() emits languageChanged,
+    // which main.cpp answers by swapping the QTranslator and calling
+    // engine.retranslate() — so RTL/LTR flips while this page is on screen.
+    m_config->setLanguage(lang);
+    emit languageChanged();
 }
 
 QString WizardController::wakeStatus() const
@@ -108,7 +125,7 @@ void WizardController::next()
     if (!canGoNext())
         return;
     if (m_currentStep >= kStepCount - 1)
-        return;                       // step 4 is the last one; Next is not offered
+        return;                       // step 5 is the last one; Next is not offered
     setCurrentStep(m_currentStep + 1);
 
     // Re-probe the session bus when the notification page becomes current so
@@ -129,7 +146,9 @@ void WizardController::skip()
     if (!m_config)
         return;
     // Skipping records completion (so it never auto-shows again) and hides the
-    // overlay. Choices made on the walked pages are deliberately not applied.
+    // overlay, and writes nothing else. The language already persisted itself
+    // the moment it was chosen; the sound and the wake probe are never
+    // persisted, so there is nothing left to roll back.
     m_config->setWizardCompleted(true);
     setCompleted(true);
 }

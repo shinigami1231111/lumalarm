@@ -9,6 +9,18 @@ ConfigManager::ConfigManager(QObject *parent)
     migrateOldConfig();
 
     m_configDir = QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + "/lumalarm";
+
+    // First-run detection (STG-5.5.5), decided before this constructor creates
+    // anything. A profile that already carries settings.ini or theme.conf was
+    // set up by a Lumalarm release predating the wizard, so an upgrade must not
+    // report it as a first run and force the setup open.
+    //
+    // alarms.json is deliberately NOT part of the test: main() constructs
+    // AlarmManager before ConfigManager, and AlarmManager::loadFromFile()
+    // creates the file on a brand-new profile.
+    m_firstRunProfile = !QFileInfo::exists(m_configDir + "/settings.ini")
+                        && !QFileInfo::exists(m_configDir + "/theme.conf");
+
     QDir().mkpath(m_configDir);
 
     m_tonesDir = m_configDir + "/tones";
@@ -244,8 +256,17 @@ void ConfigManager::setNightModeOpacity(double opacity)
 
 bool ConfigManager::wizardCompleted() const
 {
-    // Missing key = never completed, so a brand-new profile shows the wizard.
-    return m_settings->value(QStringLiteral("wizard/completed"), false).toBool();
+    // An explicit key always wins, so Finish, Skip and Settings > "Run again"
+    // are the only things that can change the answer.
+    const QString key = QStringLiteral("wizard/completed");
+    if (m_settings->contains(key))
+        return m_settings->value(key).toBool();
+
+    // Key absent: only a genuinely new profile counts as "never completed".
+    // A profile predating the wizard reads as completed here so an upgrade
+    // never force-opens the setup — --show-wizard and Settings > "Run again"
+    // still open it explicitly without touching this key.
+    return !m_firstRunProfile;
 }
 
 void ConfigManager::setWizardCompleted(bool completed)

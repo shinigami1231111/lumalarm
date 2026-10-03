@@ -4,7 +4,7 @@ import GlassAlarm
 
 // Shared chrome for every wizard page: title, subtitle, content slot and the
 // footer (Back · Skip setup · primary action). Pages only describe their
-// content and which label the primary button carries, so the five steps stay
+// content and which label the primary button carries, so the six steps stay
 // visually identical without duplicating layout code.
 Rectangle {
     id: page

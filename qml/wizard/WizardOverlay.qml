@@ -39,9 +39,10 @@ Item {
             Behavior on opacity { NumberAnimation { duration: 100; easing.type: Easing.InOutQuad } }
 
             WelcomePage { }
+            LanguagePage { }
+            SoundPage { }
             WakeMethodPage { }
             NotificationPage { }
-            SoundPage { }
             DonePage { }
         }
 

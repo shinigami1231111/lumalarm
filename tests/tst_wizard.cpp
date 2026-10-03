@@ -9,6 +9,7 @@
 #include <QDBusConnectionInterface>
 
 #include "managers/ConfigManager.h"
+#include "managers/AlarmManager.h"
 #include "wake/WakeManager.h"
 #include "audio/AudioPlayer.h"
 #include "ui/WizardController.h"
@@ -47,6 +48,33 @@ bool notificationDaemonPresent()
     return bus.isConnected() && bus.interface()
         && bus.interface()->isServiceRegistered(QLatin1String(kNotificationsService));
 }
+
+// Profile paths the wizard is expected to leave alone.
+QString profileDir()
+{
+    return QStandardPaths::writableLocation(QStandardPaths::ConfigLocation)
+           + QStringLiteral("/lumalarm");
+}
+
+QString alarmsPath()
+{
+    return profileDir() + QStringLiteral("/alarms.json");
+}
+
+QString themePath()
+{
+    return profileDir() + QStringLiteral("/theme.conf");
+}
+
+// Callers that care whether the file existed pair this with QFile::exists();
+// here "absent" and "empty" are both just "no bytes".
+QByteArray readBytes(const QString &path)
+{
+    QFile f(path);
+    if (!f.open(QIODevice::ReadOnly))
+        return {};
+    return f.readAll();
+}
 } // namespace
 
 class TestWizard : public QObject
@@ -59,20 +87,25 @@ private slots:
     void cleanup();
 
     void initialStepIsZeroAndCannotGoBack();
-    void nextWalksAllFiveSteps();
+    void nextWalksAllSteps();
     void nextOnLastStepIsANoop();
     void backOnFirstStepIsANoop();
     void skipPersistsAndEmitsExactlyOnce();
     void finishPersistsAndEmitsExactlyOnce();
     void finishTwiceEmitsOnlyOnce();
     void completedFlagRoundTripsThroughDisk();
-    void freshConfigIsNotCompleted();
+    void genuineFreshProfileOpensWizard();
+    void establishedProfileIsNotPromptedAgain();
+    void completedWizardDoesNotReopen();
     void forceShowOverridesPersistedFlag();
+    void languageSelectionUpdatesConfiguration();
     void testWakeSuccessUnlocksNext();
     void testWakeFailureLeavesNextLocked();
     void testNotificationReportsBusTruthfully();
     void availableSoundsAreEnumerated();
     void defaultSoundRoundTrips();
+    void skipLeavesConfigurationIntact();
+    void wizardRunNeverTouchesAlarms();
 
 private:
     ConfigManager *m_config = nullptr;
@@ -126,24 +159,24 @@ void TestWizard::initialStepIsZeroAndCannotGoBack()
     ProbeableWizard w(m_config, m_wake, m_audio);
     QCOMPARE(w.currentStep(), 0);
     QCOMPARE(w.canGoBack(), false);
-    QCOMPARE(w.stepCount(), 5);
+    QCOMPARE(w.stepCount(), 6);
     QCOMPARE(w.wizardCompleted(), false);
     QCOMPARE(w.currentStep(), int(0));
 }
 
-void TestWizard::nextWalksAllFiveSteps()
+void TestWizard::nextWalksAllSteps()
 {
     ProbeableWizard w(m_config, m_wake, m_audio);
     QSignalSpy spy(&w, &WizardController::currentStepChanged);
 
-    // Steps 1..4 need no gate; the wake page (1) is unlocked by a skip so the
-    // walk stays deterministic regardless of the host's wake capabilities.
+    // Only the wake page (3) gates Next; it is unlocked by a skip so the walk
+    // stays deterministic regardless of the host's wake capabilities.
     w.skipWakeStep();
-    for (int i = 0; i < 5; ++i)
+    for (int i = 0; i < WizardController::kStepCount; ++i)
         w.next();
 
-    QCOMPARE(w.currentStep(), 4);
-    QVERIFY(spy.count() >= 4);
+    QCOMPARE(w.currentStep(), WizardController::kStepCount - 1);
+    QVERIFY(spy.count() >= WizardController::kStepCount - 1);
 }
 
 void TestWizard::nextOnLastStepIsANoop()
@@ -152,14 +185,14 @@ void TestWizard::nextOnLastStepIsANoop()
     // Reach the last step first: the wake page deliberately gates Next, and
     // this case is about what happens *at* the end, not about that gate.
     w.skipWakeStep();
-    for (int i = 0; i < 5; ++i)
+    for (int i = 0; i < WizardController::kStepCount; ++i)
         w.next();
-    QCOMPARE(w.currentStep(), 4);
+    QCOMPARE(w.currentStep(), WizardController::kStepCount - 1);
 
     QSignalSpy spy(&w, &WizardController::currentStepChanged);
     w.next();
     w.next();
-    QCOMPARE(w.currentStep(), 4);
+    QCOMPARE(w.currentStep(), WizardController::kStepCount - 1);
     QCOMPARE(spy.count(), 0);
 }
 
@@ -222,17 +255,78 @@ void TestWizard::completedFlagRoundTripsThroughDisk()
     QVERIFY(reloaded.wizardCompleted());
 }
 
-void TestWizard::freshConfigIsNotCompleted()
+void TestWizard::genuineFreshProfileOpensWizard()
 {
-    // Remove the key entirely rather than writing false: a profile that has
-    // never seen the wizard must show it.
+    // A profile with neither settings.ini nor theme.conf has never been used by
+    // any Lumalarm release, so it is a first run and must open the wizard.
+    //
+    // m_config goes first: its ThemeManager holds a file watcher that would put
+    // theme.conf straight back before the constructor below could look for it.
+    delete m_config;
+    m_config = nullptr;
+
+    const QString dir = profileDir();
+    QFile::remove(dir + QStringLiteral("/settings.ini"));
+    QFile::remove(themePath());
+
+    bool reportedFirstRun = false;
+    bool overlayVisible = false;
+    int landingStep = -1;
+    {
+        ConfigManager fresh;
+        ProbeableWizard w(&fresh, m_wake, m_audio);
+        reportedFirstRun = !fresh.wizardCompleted();
+        overlayVisible = !w.wizardCompleted();
+        landingStep = w.currentStep();
+    }
+
+    // Put an instance back before asserting anything — cleanup() needs one.
+    m_config = new ConfigManager(this);
+
+    QVERIFY2(reportedFirstRun,
+             "a brand-new profile must report wizardCompleted()==false");
+    QVERIFY2(overlayVisible, "a brand-new profile must show the wizard overlay");
+    QCOMPARE(landingStep, 0);
+}
+
+void TestWizard::establishedProfileIsNotPromptedAgain()
+{
+    // A profile written by a release that predates the wizard: settings.ini is
+    // there (init() just wrote one) but the wizard key does not exist at all.
     {
         QSettings raw(m_config->configFilePath(), QSettings::IniFormat);
         raw.remove(QStringLiteral("wizard/completed"));
         raw.sync();
     }
-    ConfigManager fresh;
-    QVERIFY(!fresh.wizardCompleted());
+    QVERIFY(QFile::exists(m_config->configFilePath()));
+
+    ConfigManager established;
+    ProbeableWizard w(&established, m_wake, m_audio);
+
+    QVERIFY2(established.wizardCompleted(),
+             "an upgrade must not report an existing profile as a first run");
+    QVERIFY2(w.wizardCompleted(),
+             "the overlay must stay hidden for an existing profile");
+}
+
+void TestWizard::completedWizardDoesNotReopen()
+{
+    {
+        ProbeableWizard w(m_config, m_wake, m_audio);
+        w.finish();
+        QVERIFY(w.wizardCompleted());
+    }
+
+    // The next launch is a fresh controller over the same file: nothing forces
+    // the overlay back on.
+    ProbeableWizard again(m_config, m_wake, m_audio);
+    QVERIFY(again.wizardCompleted());
+
+    // ...and Settings > "Run setup wizard again" is still the way to reopen it.
+    again.reset();
+    QVERIFY(!again.wizardCompleted());
+    QVERIFY(!m_config->wizardCompleted());
+    QCOMPARE(again.currentStep(), 0);
 }
 
 void TestWizard::forceShowOverridesPersistedFlag()
@@ -253,11 +347,39 @@ void TestWizard::forceShowOverridesPersistedFlag()
     QCOMPARE(spy.count(), 1);
 }
 
+void TestWizard::languageSelectionUpdatesConfiguration()
+{
+    ProbeableWizard w(m_config, m_wake, m_audio);
+    w.setLanguage(QString());               // deterministic starting point
+
+    QSignalSpy spy(&w, &WizardController::languageChanged);
+    QCOMPARE(spy.count(), 0);
+
+    w.setLanguage(QStringLiteral("ar"));
+    QCOMPARE(w.language(), QStringLiteral("ar"));
+    QCOMPARE(m_config->language(), QStringLiteral("ar"));   // one shared key
+    QCOMPARE(spy.count(), 1);
+
+    w.setLanguage(QStringLiteral("ar"));                     // unchanged -> silent
+    QCOMPARE(spy.count(), 1);
+
+    w.setLanguage(QStringLiteral("en"));
+    QCOMPARE(w.language(), QStringLiteral("en"));
+    QCOMPARE(m_config->language(), QStringLiteral("en"));
+    QCOMPARE(spy.count(), 2);
+
+    w.setLanguage(QString());               // back to "follow the system locale"
+    QCOMPARE(spy.count(), 3);
+    QVERIFY(m_config->language().isEmpty());
+}
+
 void TestWizard::testWakeSuccessUnlocksNext()
 {
     ProbeableWizard page(m_config, m_wake, m_audio);
-    page.next();                       // welcome -> wake method
-    QCOMPARE(page.currentStep(), 1);
+    // welcome -> language -> sound -> wake method
+    for (int i = 0; i < WizardController::WakeMethod; ++i)
+        page.next();
+    QCOMPARE(page.currentStep(), int(WizardController::WakeMethod));
     QCOMPARE(page.canGoNext(), false); // locked before any probe
 
     QSignalSpy stepSpy(&page, &WizardController::currentStepChanged);
@@ -276,8 +398,10 @@ void TestWizard::testWakeSuccessUnlocksNext()
 void TestWizard::testWakeFailureLeavesNextLocked()
 {
     ProbeableWizard page(m_config, m_wake, m_audio);
-    page.next();                       // welcome -> wake method
-    QCOMPARE(page.currentStep(), 1);
+    // welcome -> language -> sound -> wake method
+    for (int i = 0; i < WizardController::WakeMethod; ++i)
+        page.next();
+    QCOMPARE(page.currentStep(), int(WizardController::WakeMethod));
     QCOMPARE(page.canGoNext(), false);
 
     QSignalSpy stepSpy(&page, &WizardController::currentStepChanged);
@@ -336,6 +460,92 @@ void TestWizard::defaultSoundRoundTrips()
     // Same value again: no emission.
     w.setDefaultSound(QStringLiteral("other-tone.mp3"));
     QCOMPARE(spy.count(), 1);
+}
+
+void TestWizard::skipLeavesConfigurationIntact()
+{
+    // Unrelated configuration the wizard has no business touching.
+    const QString wakeBefore = m_config->defaultWakeMode();
+    const double opacityBefore = m_config->themeOpacity();
+    const QString languageBefore = m_config->language();
+    m_config->setDefaultWakeMode(QStringLiteral("disk"));
+    m_config->setThemeOpacity(0.42);
+
+    const bool alarmsExisted = QFile::exists(alarmsPath());
+    const QByteArray alarmsBefore = readBytes(alarmsPath());
+    const QByteArray themeBefore = readBytes(themePath());
+
+    // Walk partway (so cancel/skip after real navigation is what is under
+    // test), change the language, then abandon the setup.
+    ProbeableWizard w(m_config, m_wake, m_audio);
+    w.next();
+    w.setLanguage(QStringLiteral("ar"));
+    w.next();
+    w.back();
+    w.skip();
+
+    QVERIFY(w.wizardCompleted());
+    QVERIFY(m_config->wizardCompleted());
+
+    // Every unrelated setting reads back exactly as it did.
+    QCOMPARE(m_config->defaultWakeMode(), QStringLiteral("disk"));
+    QCOMPARE(m_config->themeOpacity(), 0.42);
+    QCOMPARE(m_config->language(), QStringLiteral("ar"));
+
+    // Neither the alarm store nor the theme file was opened for writing.
+    QCOMPARE(QFile::exists(alarmsPath()), alarmsExisted);
+    QCOMPARE(readBytes(alarmsPath()), alarmsBefore);
+    QCOMPARE(readBytes(themePath()), themeBefore);
+
+    // Put the settings back so nothing leaks into the other test binaries.
+    m_config->setDefaultWakeMode(wakeBefore);
+    m_config->setThemeOpacity(opacityBefore);
+    m_config->setLanguage(languageBefore);
+}
+
+void TestWizard::wizardRunNeverTouchesAlarms()
+{
+    const bool existedBefore = QFile::exists(alarmsPath());
+    const QByteArray original = readBytes(alarmsPath());
+
+    int countBefore = -1;
+    int countAfter = -1;
+    bool storeUnchanged = false;
+    {
+        // Real store: loading may create alarms.json when it was absent, so the
+        // comparison starts after the alarm below has been seeded.
+        AlarmManager alarms;
+        QVariantMap seed;
+        seed.insert(QStringLiteral("hour"), 7);
+        seed.insert(QStringLiteral("minute"), 30);
+        seed.insert(QStringLiteral("name"), QStringLiteral("keep me"));
+        alarms.addAlarm(seed);
+        countBefore = alarms.alarmList().size();
+
+        const QByteArray seeded = readBytes(alarmsPath());
+
+        ProbeableWizard w(m_config, m_wake, m_audio);
+        w.probeResult = true;
+        w.testWake();                     // STG-5.1 test mode, no alarm by design
+        w.finish();
+
+        countAfter = alarms.alarmList().size();
+        storeUnchanged = (readBytes(alarmsPath()) == seeded);
+    }
+
+    // Other test binaries share this profile — restore it byte for byte.
+    if (existedBefore) {
+        QFile f(alarmsPath());
+        if (f.open(QIODevice::WriteOnly | QIODevice::Truncate))
+            f.write(original);
+    } else {
+        QFile::remove(alarmsPath());
+    }
+
+    QVERIFY2(countBefore >= 1, "the seeded alarm never made it into the store");
+    QCOMPARE(countAfter, countBefore);
+    QVERIFY2(storeUnchanged,
+             "a wizard run must not add to or rewrite the alarm store");
 }
 
 QTEST_GUILESS_MAIN(TestWizard)

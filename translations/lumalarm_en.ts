@@ -136,37 +136,95 @@
     </message>
     <message>
         <location filename="../qml/wizard/pages/DonePage.qml" line="33"/>
+        <source>Language</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/pages/DonePage.qml" line="40"/>
+        <source>System default</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/pages/DonePage.qml" line="50"/>
         <source>Wake method</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/DonePage.qml" line="46"/>
+        <location filename="../qml/wizard/pages/DonePage.qml" line="63"/>
+        <source>Test alarm</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/pages/DonePage.qml" line="68"/>
+        <source>Skipped</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/pages/DonePage.qml" line="78"/>
         <source>Notifications</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/DonePage.qml" line="49"/>
+        <location filename="../qml/wizard/pages/DonePage.qml" line="81"/>
         <source>Available</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/DonePage.qml" line="49"/>
+        <location filename="../qml/wizard/pages/DonePage.qml" line="81"/>
         <source>Not available</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/DonePage.qml" line="59"/>
+        <location filename="../qml/wizard/pages/DonePage.qml" line="91"/>
         <source>Default sound</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/DonePage.qml" line="74"/>
+        <location filename="../qml/wizard/pages/DonePage.qml" line="106"/>
         <source>Run this setup again any time from Settings.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/DonePage.qml" line="81"/>
+        <location filename="../qml/wizard/pages/DonePage.qml" line="113"/>
         <source>Run again next time</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>LanguagePage</name>
+    <message>
+        <location filename="../qml/wizard/pages/LanguagePage.qml" line="13"/>
+        <source>Language</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/pages/LanguagePage.qml" line="14"/>
+        <source>Choose the language Lumalarm should use. It takes effect right away and can be changed again at any time in Settings.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/pages/LanguagePage.qml" line="15"/>
+        <source>Next</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/pages/LanguagePage.qml" line="33"/>
+        <source>Interface language</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/pages/LanguagePage.qml" line="41"/>
+        <source>System default</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/pages/LanguagePage.qml" line="64"/>
+        <source>Choosing Arabic mirrors the whole window to right-to-left as soon as it is selected.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/pages/LanguagePage.qml" line="72"/>
+        <source>“System default” follows the language your desktop is running in.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -555,47 +613,57 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="414"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="410"/>
+        <source>Language</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/SettingsPage.qml" line="417"/>
+        <source>System default</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/SettingsPage.qml" line="433"/>
         <source>Night Mode</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="416"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="435"/>
         <source>Dim the window before an alarm so it does not light up a dark room.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="423"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="442"/>
         <source>Enable night mode</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="434"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="453"/>
         <source>Dim before alarm</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="447"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="466"/>
         <source> min</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="457"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="476"/>
         <source>Dim strength</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="479"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="498"/>
         <source>Preview</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="489"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="508"/>
         <source>Dimming</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="500"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="519"/>
         <source>Reset to Defaults</source>
         <translation type="unfinished"></translation>
     </message>
@@ -853,7 +921,7 @@
     </message>
     <message>
         <location filename="../qml/wizard/pages/WelcomePage.qml" line="8"/>
-        <source>This short setup checks the three things an alarm clock depends on: how this machine wakes up, whether desktop notifications are available, and which sound new alarms use. It takes about a minute.</source>
+        <source>This short setup picks your language and checks the three things an alarm clock depends on: which sound new alarms use, how this machine wakes up, and whether desktop notifications are available. It takes about a minute.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -883,37 +951,37 @@
 <context>
     <name>WizardController</name>
     <message>
-        <location filename="../src/ui/WizardController.cpp" line="184"/>
+        <location filename="../src/ui/WizardController.cpp" line="203"/>
         <source>Wake test succeeded — this machine can wake up.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/WizardController.cpp" line="185"/>
+        <location filename="../src/ui/WizardController.cpp" line="204"/>
         <source>Wake test failed: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/WizardController.cpp" line="227"/>
+        <location filename="../src/ui/WizardController.cpp" line="246"/>
         <source>Lumalarm is ready</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/WizardController.cpp" line="228"/>
+        <location filename="../src/ui/WizardController.cpp" line="247"/>
         <source>Notifications are working.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/WizardController.cpp" line="271"/>
+        <location filename="../src/ui/WizardController.cpp" line="290"/>
         <source>Unknown</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/WizardController.cpp" line="276"/>
+        <location filename="../src/ui/WizardController.cpp" line="295"/>
         <source>Real-time clock wake (rtcwake) — recommended</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/WizardController.cpp" line="278"/>
+        <location filename="../src/ui/WizardController.cpp" line="297"/>
         <source>No hardware wake source — alarms ring only while the machine is awake</source>
         <translation type="unfinished"></translation>
     </message>
@@ -939,102 +1007,102 @@
 <context>
     <name>main</name>
     <message>
-        <location filename="../qml/main.qml" line="181"/>
+        <location filename="../qml/main.qml" line="189"/>
         <source>h </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/main.qml" line="181"/>
+        <location filename="../qml/main.qml" line="189"/>
         <source>m </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/main.qml" line="181"/>
+        <location filename="../qml/main.qml" line="189"/>
         <source>s</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/main.qml" line="238"/>
+        <location filename="../qml/main.qml" line="246"/>
         <source>Alarms</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/main.qml" line="239"/>
+        <location filename="../qml/main.qml" line="247"/>
         <source>Timer</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/main.qml" line="240"/>
+        <location filename="../qml/main.qml" line="248"/>
         <source>Stopwatch</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/main.qml" line="241"/>
+        <location filename="../qml/main.qml" line="249"/>
         <source>Sounds</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/main.qml" line="242"/>
+        <location filename="../qml/main.qml" line="250"/>
         <source>Settings</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/main.qml" line="292"/>
+        <location filename="../qml/main.qml" line="300"/>
         <source>Select or create an alarm</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/main.qml" line="300"/>
+        <location filename="../qml/main.qml" line="308"/>
         <source>Cancel</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/main.qml" line="302"/>
+        <location filename="../qml/main.qml" line="310"/>
         <source>Update</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/main.qml" line="302"/>
+        <location filename="../qml/main.qml" line="310"/>
         <source>Create</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/main.qml" line="317"/>
+        <location filename="../qml/main.qml" line="325"/>
         <source>No alarm armed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/main.qml" line="319"/>
+        <location filename="../qml/main.qml" line="327"/>
         <source>Arming...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/main.qml" line="320"/>
+        <location filename="../qml/main.qml" line="328"/>
         <source>Armed ✓</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/main.qml" line="321"/>
+        <location filename="../qml/main.qml" line="329"/>
         <source>Arm FAILED</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/main.qml" line="322"/>
+        <location filename="../qml/main.qml" line="330"/>
         <source>Arm Wake</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/main.qml" line="362"/>
+        <location filename="../qml/main.qml" line="370"/>
         <source>Power Off &amp; Wake</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/main.qml" line="377"/>
+        <location filename="../qml/main.qml" line="385"/>
         <source>RTC alarm armed and verified; power off to wake the machine</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/main.qml" line="383"/>
+        <location filename="../qml/main.qml" line="391"/>
         <source>Error: </source>
         <translation type="unfinished"></translation>
     </message>

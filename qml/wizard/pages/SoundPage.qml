@@ -3,7 +3,7 @@ import QtQuick.Layouts
 import QtQuick.Controls
 import GlassAlarm
 
-// Page 4 — default alarm sound. The list comes straight from the app's own
+// Page 2 — default alarm sound. The list comes straight from the app's own
 // tone catalogue (ConfigManager::availableTones), the same one the alarm
 // editor offers, so nothing here is hard-coded.
 WizardPage {

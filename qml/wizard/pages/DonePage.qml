@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import GlassAlarm
 
-// Page 5 — summary and finish. Finish persists wizard/completed=true; the
+// Page 6 — summary and finish. Finish persists wizard/completed=true; the
 // secondary link closes the wizard *without* writing the flag so it appears
 // again on the next launch.
 WizardPage {
@@ -30,6 +30,23 @@ WizardPage {
             RowLayout {
                 Layout.fillWidth: true
                 spacing: 12
+                Text { text: qsTr("Language"); color: configManager.themeTextSecondary; font.pixelSize: 13; Layout.preferredWidth: 140 }
+                Text {
+                    Layout.fillWidth: true
+                    // Same presentation as the selector on page 2: language
+                    // names stay in their own script, only "System default"
+                    // is translated.
+                    text: wizard.language === "en" ? "English"
+                          : (wizard.language === "ar" ? "العربية" : qsTr("System default"))
+                    color: configManager.themeTextPrimary
+                    font.pixelSize: 13
+                    horizontalAlignment: Text.AlignRight
+                    elide: Text.ElideRight
+                }
+            }
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 12
                 Text { text: qsTr("Wake method"); color: configManager.themeTextSecondary; font.pixelSize: 13; Layout.preferredWidth: 140 }
                 Text {
                     Layout.fillWidth: true
@@ -38,6 +55,21 @@ WizardPage {
                     font.pixelSize: 13
                     horizontalAlignment: Text.AlignRight
                     elide: Text.ElideLeft
+                }
+            }
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 12
+                Text { text: qsTr("Test alarm"); color: configManager.themeTextSecondary; font.pixelSize: 13; Layout.preferredWidth: 140 }
+                Text {
+                    Layout.fillWidth: true
+                    // Empty means the step was skipped — there is no status
+                    // line to report. A probe always leaves one behind.
+                    text: wizard.wakeStatus.length > 0 ? wizard.wakeStatus : qsTr("Skipped")
+                    color: configManager.themeTextPrimary
+                    font.pixelSize: 13
+                    horizontalAlignment: Text.AlignRight
+                    wrapMode: Text.WordWrap
                 }
             }
             RowLayout {

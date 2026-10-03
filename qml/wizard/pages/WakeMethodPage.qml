@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import GlassAlarm
 
-// Page 2 — wake method. Reports the mechanism already detected by
+// Page 3 — wake method. Reports the mechanism already detected by
 // WakeManager, offers a non-destructive probe (arm, observe, cancel), and only
 // unlocks Next after the probe succeeded or the step was explicitly skipped.
 WizardPage {

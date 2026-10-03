@@ -103,8 +103,10 @@ public:
     double nightModeOpacity() const;
     void setNightModeOpacity(double opacity);
 
-    // First-run wizard (STG-5.5). Absent key == "this installation has never
-    // completed the guided setup", so a fresh profile opens the wizard.
+    // First-run wizard (STG-5.5). Explicit key == that value. No key: a fresh
+    // profile (no settings.ini / theme.conf yet) reads as not completed and
+    // opens the wizard; a profile that predates the wizard reads as completed,
+    // so an upgrade never force-opens it.
     bool wizardCompleted() const;
     void setWizardCompleted(bool completed);
 
@@ -125,6 +127,9 @@ private:
     QString m_configDir;
     QString m_tonesDir;
     ThemeManager *m_theme;
+    // True when this profile carries no evidence of an earlier Lumalarm run;
+    // sampled once in the constructor, before anything is created on disk.
+    bool m_firstRunProfile = true;
     void migrateOldConfig();
 };
 

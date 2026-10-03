@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import GlassAlarm
 
-// Page 3 — notifications. Presence of org.freedesktop.Notifications on the
+// Page 4 — notifications. Presence of org.freedesktop.Notifications on the
 // session bus is probed by the controller; sending one is optional and never
 // blocks progress.
 WizardPage {
