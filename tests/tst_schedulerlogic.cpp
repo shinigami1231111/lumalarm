@@ -1,9 +1,9 @@
 #include <QtTest>
 
 #include "managers/AlarmManager.h"
+#include "wake/Scheduler.h"
 #include "wake/SchedulerState.h"
 #include "wake/WakeManager.h"
-#include "wake/Scheduler.h"
 
 // ============================================================================
 // Unit tests for the scheduler wake-recovery logic:
@@ -60,8 +60,8 @@ Alarm TestSchedulerLogic::makeAlarm(const QString &id, int hour, int minute)
 
 QString TestSchedulerLogic::storePath(const char *name) const
 {
-    return QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation)
-           + "/" + name + ".json";
+    return QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation) + "/" + name +
+           ".json";
 }
 
 void TestSchedulerLogic::classificationNearPerfectWake()
@@ -130,7 +130,8 @@ void TestSchedulerLogic::occurrenceOnceThenNextDay()
 void TestSchedulerLogic::occurrenceDstSpringForward()
 {
     const QTimeZone ny("America/New_York");
-    if (!ny.isValid()) QSKIP("America/New_York timezone data unavailable");
+    if (!ny.isValid())
+        QSKIP("America/New_York timezone data unavailable");
 
     // US spring forward: 2026-03-08 02:00 → 03:00 EDT. A 02:30 alarm does not
     // exist that day; it must be mapped to 03:30 EDT (= 07:30 UTC).
@@ -138,21 +139,21 @@ void TestSchedulerLogic::occurrenceDstSpringForward()
     const Alarm a = makeAlarm("dst-fwd", 2, 30);
     const qint64 occ = computeNextOccurrenceUtc(a, now, ny);
 
-    const qint64 expected = QDateTime(QDate(2026, 3, 8), QTime(3, 30, 0), ny)
-                                .toUTC().toSecsSinceEpoch();
+    const qint64 expected =
+        QDateTime(QDate(2026, 3, 8), QTime(3, 30, 0), ny).toUTC().toSecsSinceEpoch();
     QCOMPARE(occ, expected);
 
     // A 01:30 alarm on the same day must be unaffected (before the jump).
     const Alarm b = makeAlarm("dst-fwd2", 1, 30);
     const qint64 occ2 = computeNextOccurrenceUtc(b, now, ny);
-    QCOMPARE(occ2, QDateTime(QDate(2026, 3, 8), QTime(1, 30, 0), ny)
-                       .toUTC().toSecsSinceEpoch());
+    QCOMPARE(occ2, QDateTime(QDate(2026, 3, 8), QTime(1, 30, 0), ny).toUTC().toSecsSinceEpoch());
 }
 
 void TestSchedulerLogic::occurrenceDstFallBack()
 {
     const QTimeZone ny("America/New_York");
-    if (!ny.isValid()) QSKIP("America/New_York timezone data unavailable");
+    if (!ny.isValid())
+        QSKIP("America/New_York timezone data unavailable");
 
     // US fall back: 2026-11-01 02:00 → 01:00 EST. 01:30 occurs twice (EDT and
     // EST). The result must be deterministic: computing twice yields the same
@@ -164,10 +165,10 @@ void TestSchedulerLogic::occurrenceDstFallBack()
     QCOMPARE(occ1, occ2);
 
     // And it must be one of the two real instants that 01:30 maps to.
-    const qint64 edt = QDateTime(QDate(2026, 11, 1), QTime(1, 30, 0), QTimeZone("UTC-04:00"))
-                           .toSecsSinceEpoch();
-    const qint64 est = QDateTime(QDate(2026, 11, 1), QTime(1, 30, 0), QTimeZone("UTC-05:00"))
-                           .toSecsSinceEpoch();
+    const qint64 edt =
+        QDateTime(QDate(2026, 11, 1), QTime(1, 30, 0), QTimeZone("UTC-04:00")).toSecsSinceEpoch();
+    const qint64 est =
+        QDateTime(QDate(2026, 11, 1), QTime(1, 30, 0), QTimeZone("UTC-05:00")).toSecsSinceEpoch();
     QVERIFY(occ1 == edt || occ1 == est);
 }
 
@@ -272,7 +273,7 @@ void TestSchedulerLogic::duplicateRecoveryIsNoOp()
     {
         Scheduler s2(&am, &wm, path);
         QSignalSpy spy(&s2, &Scheduler::alarmTriggered);
-        QTest::qWait(300); // give the deferred recovery a chance to run
+        QTest::qWait(300);        // give the deferred recovery a chance to run
         QCOMPARE(spy.count(), 0); // consumed → no-op
     }
     QFile::remove(path);
@@ -303,7 +304,7 @@ void TestSchedulerLogic::rtcFailureRefusesPoweroff()
 
     WakeManager wm;
     Scheduler s(&am, &wm, path);
-    QTest::qWait(300); // let the deferred recovery run (state "failed" → no-op)
+    QTest::qWait(300);   // let the deferred recovery run (state "failed" → no-op)
     s.powerOffMachine(); // must refuse: state is failed, never armed
     QCOMPARE(s.wakeState(), QString("idle"));
     QVERIFY(!s.lastError().isEmpty());
@@ -343,8 +344,7 @@ void TestSchedulerLogic::poweroffRefusesWhenScheduledWakeIsGone()
 
     s.powerOffMachine(); // live re-check finds no wake in place
     QCOMPARE(s.wakeState(), QString("failed"));
-    QVERIFY2(s.lastError().contains("no longer in place"),
-             qPrintable(s.lastError()));
+    QVERIFY2(s.lastError().contains("no longer in place"), qPrintable(s.lastError()));
     QVERIFY(s.lastError().contains("Cannot power off"));
     QFile::remove(path);
 }
@@ -382,8 +382,7 @@ void TestSchedulerLogic::armedStateDropsWhenScheduledWakeDisappears()
     // First tick lands ~1 s after construction, so allow the interval plus slack.
     QTRY_COMPARE_WITH_TIMEOUT(s.wakeState(), QString("failed"),
                               1000 * (Scheduler::kWakeReverifyIntervalTicks + 5));
-    QVERIFY2(s.lastError().contains("no longer in place"),
-             qPrintable(s.lastError()));
+    QVERIFY2(s.lastError().contains("no longer in place"), qPrintable(s.lastError()));
     QFile::remove(path);
 }
 

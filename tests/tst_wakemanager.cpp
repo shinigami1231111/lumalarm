@@ -1,8 +1,8 @@
-#include <QtTest>
-#include <QSignalSpy>
 #include <QDBusConnection>
 #include <QDBusInterface>
 #include <QDBusReply>
+#include <QSignalSpy>
+#include <QtTest>
 
 #include <climits>
 #include <cstdint>
@@ -53,8 +53,7 @@ protected:
         ++scheduleCalls;
         scheduledSeconds << seconds;
         if (message)
-            *message = scheduleSucceeds ? QStringLiteral("scheduled")
-                                        : QStringLiteral("denied");
+            *message = scheduleSucceeds ? QStringLiteral("scheduled") : QStringLiteral("denied");
         return scheduleSucceeds ? HelperResult::Scheduled : HelperResult::Declined;
     }
 
@@ -165,7 +164,7 @@ void TestWakeManager::sharedBoundaryIsExact()
     QVERIFY(!WakePolicy::isValidWakeDelay(100000));
 
     // Signed/unsigned handling: values above int range and every negative.
-    QVERIFY(!WakePolicy::isValidWakeDelay(qint64(UINT32_MAX)));        // 4294967295
+    QVERIFY(!WakePolicy::isValidWakeDelay(qint64(UINT32_MAX))); // 4294967295
     QVERIFY(!WakePolicy::isValidWakeDelay(qint64(INT_MAX)));
     QVERIFY(!WakePolicy::isValidWakeDelay(-1));
     QVERIFY(!WakePolicy::isValidWakeDelay(INT_MIN));
@@ -201,10 +200,10 @@ void TestWakeManager::prepareWakeRejectsInvalidDelays()
     QCOMPARE(wm.wakeState(), QStringLiteral("failed"));
     QVERIFY(!wm.lastError().isEmpty());
     QVERIFY(wm.lastError().contains(QStringLiteral("outside the allowed range")));
-    QCOMPARE(preparedSpy.count(), 0);       // no success was claimed
-    QCOMPARE(errorSpy.count(), 1);          // the failure was reported
-    QCOMPARE(wm.scheduleCalls, 0);          // never reached a privileged path
-    QVERIFY(!wm.helperOwnsWake());          // no ownership was invented
+    QCOMPARE(preparedSpy.count(), 0); // no success was claimed
+    QCOMPARE(errorSpy.count(), 1);    // the failure was reported
+    QCOMPARE(wm.scheduleCalls, 0);    // never reached a privileged path
+    QVERIFY(!wm.helperOwnsWake());    // no ownership was invented
 }
 
 void TestWakeManager::prepareWakeAcceptsBoundaryDelays()
@@ -232,12 +231,9 @@ void TestWakeManager::prepareWakeRejectsMalformedMode()
 {
     // `mode` reaches `rtcwake -m <mode>` on the legacy path; only a short
     // alphabetic token may pass.
-    for (const QString &mode : {QStringLiteral(""),
-                                QStringLiteral("mem;id"),
-                                QStringLiteral("/tmp/mem"),
-                                QStringLiteral("-t"),
-                                QStringLiteral("mem mem"),
-                                QStringLiteral("mem123")}) {
+    for (const QString &mode :
+         {QStringLiteral(""), QStringLiteral("mem;id"), QStringLiteral("/tmp/mem"),
+          QStringLiteral("-t"), QStringLiteral("mem mem"), QStringLiteral("mem123")}) {
         FakeWakeManager wm;
         QSignalSpy preparedSpy(&wm, &WakeManager::wakePrepared);
 
@@ -268,14 +264,14 @@ void TestWakeManager::prepareWakeRejectionTouchesNoWake()
     wm.prepareWake(59);
 
     QCOMPARE(wm.wakeState(), QStringLiteral("failed"));
-    QCOMPARE(wm.scheduleCalls, callsAfterArm);  // no re-schedule attempted
-    QCOMPARE(wm.cancelCalls, 0);                // and no cancellation attempted
-    QVERIFY(wm.helperOwnsWake());               // the armed wake is untouched
+    QCOMPARE(wm.scheduleCalls, callsAfterArm); // no re-schedule attempted
+    QCOMPARE(wm.cancelCalls, 0);               // and no cancellation attempted
+    QVERIFY(wm.helperOwnsWake());              // the armed wake is untouched
 }
 
 void TestWakeManager::programWakeAlarmRejectsInvalidDelays_data()
 {
-    QTest::addColumn<qint64>("offset");  // seconds relative to now
+    QTest::addColumn<qint64>("offset"); // seconds relative to now
     QTest::newRow("already-past") << qint64(-100);
     QTest::newRow("one-second") << qint64(1);
     QTest::newRow("below-minimum-59") << qint64(59);
@@ -364,8 +360,7 @@ void TestWakeManager::failedCancelKeepsHelperOwnership()
     QVERIFY(!error.isEmpty());
     // The defect: ownership was dropped here, stranding the live timer and
     // making every later cancel skip the helper.
-    QVERIFY2(wm.helperOwnsWake(),
-             "a failed cancellation must keep helper ownership for a retry");
+    QVERIFY2(wm.helperOwnsWake(), "a failed cancellation must keep helper ownership for a retry");
     QCOMPARE(wm.wakeState(), QStringLiteral("armed"));
 
     // Retry now succeeds and only then is ownership released.
@@ -464,11 +459,11 @@ void TestWakeManager::armTestWakeArmsAndEmitsSignal()
     QSignalSpy armedSpy(&wm, &WakeManager::testWakeArmed);
 
     if (!helperReachable(wm, 120)) {
-        const QString reason = wm.lastError().isEmpty()
-            ? QStringLiteral("helper declined") : wm.lastError();
+        const QString reason =
+            wm.lastError().isEmpty() ? QStringLiteral("helper declined") : wm.lastError();
         wm.cancelTestWake();
         QSKIP(qPrintable(QStringLiteral("D-Bus wake helper (org.lumalarm.Helper) unavailable on "
-                                       "the system bus — arming path not exercised: %1")
+                                        "the system bus — arming path not exercised: %1")
                              .arg(reason)));
     }
 

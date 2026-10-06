@@ -31,12 +31,10 @@ constexpr int kHelperCallTimeoutMs = 70000;
 } // namespace
 
 WakeManager::WakeManager(QObject *parent)
-    : QObject(parent)
-    , m_process(new QProcess(this))
-    , m_state("idle")
+    : QObject(parent), m_process(new QProcess(this)), m_state("idle")
 {
-    connect(m_process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
-            this, &WakeManager::onProcessFinished);
+    connect(m_process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this,
+            &WakeManager::onProcessFinished);
 }
 
 QString WakeManager::wakeState() const
@@ -125,18 +123,15 @@ QStringList WakeManager::armedWakeTimerBases()
 {
     QProcess p;
     p.start(QStringLiteral("systemctl"),
-            {QStringLiteral("list-units"), QStringLiteral("--all"),
-             QStringLiteral("--no-legend"), QStringLiteral("--plain"),
-             QStringLiteral("--full"),
+            {QStringLiteral("list-units"), QStringLiteral("--all"), QStringLiteral("--no-legend"),
+             QStringLiteral("--plain"), QStringLiteral("--full"),
              QStringLiteral("%1*.timer").arg(QLatin1String(WakePolicy::kTimerPrefix))});
     if (!p.waitForStarted(3000) || !p.waitForFinished(5000)) {
-        qWarning() << "[WakeManager] could not enumerate Lumalarm wake timers:"
-                   << p.errorString();
+        qWarning() << "[WakeManager] could not enumerate Lumalarm wake timers:" << p.errorString();
         return QStringList();
     }
     if (p.exitStatus() != QProcess::NormalExit || p.exitCode() != 0) {
-        qWarning() << "[WakeManager] systemctl list-units failed (exit"
-                   << p.exitCode() << ")";
+        qWarning() << "[WakeManager] systemctl list-units failed (exit" << p.exitCode() << ")";
         return QStringList();
     }
     return WakePolicy::armedTimerBases(QString::fromUtf8(p.readAllStandardOutput()));
@@ -164,8 +159,8 @@ void WakeManager::onProcessFinished(int exitCode, QProcess::ExitStatus status)
     emit wakeStateChanged();
 }
 
-bool WakeManager::runSynchronous(const QString &program, const QStringList &args,
-                                 int timeoutMs, QString *error, QString *output)
+bool WakeManager::runSynchronous(const QString &program, const QStringList &args, int timeoutMs,
+                                 QString *error, QString *output)
 {
     QProcess p;
     p.start(program, args);
@@ -200,10 +195,11 @@ WakeManager::HelperResult WakeManager::scheduleViaHelper(uint seconds, QString *
     // never hand the privileged service an out-of-range value.
     if (!WakePolicy::isValidWakeDelay(seconds)) {
         if (message)
-            *message = QStringLiteral("internal error: %1 s is outside the allowed range [%2, %3] s")
-                           .arg(seconds)
-                           .arg(WakePolicy::kMinWakeSeconds)
-                           .arg(WakePolicy::kMaxWakeSeconds);
+            *message =
+                QStringLiteral("internal error: %1 s is outside the allowed range [%2, %3] s")
+                    .arg(seconds)
+                    .arg(WakePolicy::kMinWakeSeconds)
+                    .arg(WakePolicy::kMaxWakeSeconds);
         qWarning() << "[WakeManager] scheduleViaHelper refused out-of-range value:" << seconds;
         return HelperResult::Declined;
     }
@@ -216,8 +212,8 @@ WakeManager::HelperResult WakeManager::scheduleViaHelper(uint seconds, QString *
         const QDBusError err = iface.lastError();
         if (message)
             *message = err.name() + QStringLiteral(": ") + err.message();
-        qWarning() << "[WakeManager] D-Bus helper interface invalid:"
-                   << err.name() << "-" << err.message();
+        qWarning() << "[WakeManager] D-Bus helper interface invalid:" << err.name() << "-"
+                   << err.message();
         return HelperResult::Unavailable;
     }
 
@@ -229,18 +225,16 @@ WakeManager::HelperResult WakeManager::scheduleViaHelper(uint seconds, QString *
     QDBusMessage msg = QDBusMessage::createMethodCall(
         QString::fromLatin1(WakePolicy::kHelperService),
         QString::fromLatin1(WakePolicy::kHelperPath),
-        QString::fromLatin1(WakePolicy::kHelperInterface),
-        QStringLiteral("ScheduleWake"));
+        QString::fromLatin1(WakePolicy::kHelperInterface), QStringLiteral("ScheduleWake"));
     msg << QVariant::fromValue(seconds);
-    const QDBusMessage raw =
-        iface.connection().call(msg, QDBus::Block, kHelperCallTimeoutMs);
+    const QDBusMessage raw = iface.connection().call(msg, QDBus::Block, kHelperCallTimeoutMs);
 
     if (raw.type() == QDBusMessage::ErrorMessage) {
         const QString errText = raw.errorName() + QStringLiteral(": ") + raw.errorMessage();
         if (message)
             *message = errText;
-        if (raw.errorName() == QLatin1String("org.freedesktop.DBus.Error.ServiceUnknown")
-            || raw.errorName() == QLatin1String("org.freedesktop.DBus.Error.AccessDenied")) {
+        if (raw.errorName() == QLatin1String("org.freedesktop.DBus.Error.ServiceUnknown") ||
+            raw.errorName() == QLatin1String("org.freedesktop.DBus.Error.AccessDenied")) {
             // The two cases the task calls out explicitly: helper not
             // installed/activated, or the bus/polkit denied the call.
             qWarning() << "[WakeManager] D-Bus helper unavailable:" << errText;
@@ -273,14 +267,13 @@ bool WakeManager::cancelViaHelper(QString *message)
     QDBusMessage msg = QDBusMessage::createMethodCall(
         QString::fromLatin1(WakePolicy::kHelperService),
         QString::fromLatin1(WakePolicy::kHelperPath),
-        QString::fromLatin1(WakePolicy::kHelperInterface),
-        QStringLiteral("CancelWake"));
+        QString::fromLatin1(WakePolicy::kHelperInterface), QStringLiteral("CancelWake"));
     const QDBusMessage raw = iface.connection().call(msg, QDBus::Block, kHelperCallTimeoutMs);
     if (raw.type() == QDBusMessage::ErrorMessage) {
         if (message)
             *message = raw.errorName() + QStringLiteral(": ") + raw.errorMessage();
-        qWarning() << "[WakeManager] D-Bus helper cancel failed:"
-                   << raw.errorName() << "-" << raw.errorMessage();
+        qWarning() << "[WakeManager] D-Bus helper cancel failed:" << raw.errorName() << "-"
+                   << raw.errorMessage();
         return false;
     }
 
@@ -297,8 +290,8 @@ RtcCapabilities WakeManager::inspectRtc() const
     RtcCapabilities caps;
 
     QDir sysCls("/sys/class/rtc");
-    const QStringList names = sysCls.entryList(QStringList() << "rtc*",
-                                               QDir::Dirs | QDir::NoDotAndDotDot);
+    const QStringList names =
+        sysCls.entryList(QStringList() << "rtc*", QDir::Dirs | QDir::NoDotAndDotDot);
     if (names.isEmpty()) {
         caps.error = "no RTC devices found in /sys/class/rtc";
         qWarning() << "[WakeManager] RTC capability: " << caps.error;
@@ -331,15 +324,13 @@ RtcCapabilities WakeManager::inspectRtc() const
     caps.device = QFileInfo::exists(devPath) ? devPath : QString();
 
     QString err;
-    caps.poweroffWakeSupported = runSynchronous("which", QStringList() << "rtcwake",
-                                                2000, &err);
+    caps.poweroffWakeSupported = runSynchronous("which", QStringList() << "rtcwake", 2000, &err);
     if (!caps.poweroffWakeSupported) {
         qWarning() << "[WakeManager] rtcwake binary not found:" << err;
     }
 
     qInfo() << "[WakeManager] RTC device:"
-            << (caps.device.isEmpty() ? QString("auto") : caps.device)
-            << "| sysfs:" << sysfsPath
+            << (caps.device.isEmpty() ? QString("auto") : caps.device) << "| sysfs:" << sysfsPath
             << "| wakealarm:" << (caps.wakeAlarmSupported ? "yes" : "no")
             << "| rtcwake:" << (caps.poweroffWakeSupported ? "yes" : "no")
             << "| NOTE: firmware S5-wake from power-off cannot be verified from userspace";
@@ -378,8 +369,7 @@ bool WakeManager::programWakeAlarm(qint64 epochUtc, QString *error)
     // Best-effort RTC<->system clock sync so the RTC alarm lands on the wall
     // time the user chose even if the clock drifted. Non-fatal on failure.
     QString syncErr;
-    if (!runSynchronous("hwclock", QStringList() << "--systohc", 15000, &syncErr)
-        && !isRoot()) {
+    if (!runSynchronous("hwclock", QStringList() << "--systohc", 15000, &syncErr) && !isRoot()) {
         qWarning() << "[WakeManager] hwclock sync failed (non-fatal):" << syncErr;
     }
 
@@ -418,8 +408,8 @@ bool WakeManager::programWakeAlarm(qint64 epochUtc, QString *error)
                << "rtcwake:" << helperMsg;
     m_helperOwnedWake = false;
 
-    qInfo() << "[WakeManager] Programming RTC wake alarm:" << epochUtc
-            << "(" << QDateTime::fromSecsSinceEpoch(epochUtc).toUTC().toString(Qt::ISODate) << " UTC )";
+    qInfo() << "[WakeManager] Programming RTC wake alarm:" << epochUtc << "("
+            << QDateTime::fromSecsSinceEpoch(epochUtc).toUTC().toString(Qt::ISODate) << " UTC )";
 
     QStringList args = QStringList() << "-m" << "no" << "-t" << QString::number(epochUtc);
     if (!caps.device.isEmpty())
@@ -505,11 +495,12 @@ bool WakeManager::verifyWakeAlarm(qint64 expectedUtc, QString *error) const
 
     const qint64 delta = qAbs(actual - expectedUtc);
     const bool match = delta <= WakePolicy::RTC_ALARM_TOLERANCE_SECONDS;
-    qInfo() << "[WakeManager] RTC wake alarm verified: expected" << expectedUtc
-            << "actual" << actual << (match ? "OK" : "MISMATCH");
+    qInfo() << "[WakeManager] RTC wake alarm verified: expected" << expectedUtc << "actual"
+            << actual << (match ? "OK" : "MISMATCH");
     if (!match) {
         if (error)
-            *error = QString("RTC alarm mismatch: expected %1, got %2").arg(expectedUtc).arg(actual);
+            *error =
+                QString("RTC alarm mismatch: expected %1, got %2").arg(expectedUtc).arg(actual);
         qWarning() << "[WakeManager] ERROR:" << *error;
         return false;
     }
@@ -586,8 +577,8 @@ bool WakeManager::clearWakeAlarm(QString *error)
     const RtcCapabilities caps = inspectRtc();
     if (!caps.wakeAlarmSupported) {
         if (error)
-            *error = caps.error.isEmpty() ? QStringLiteral("RTC wake alarm not supported")
-                                          : caps.error;
+            *error =
+                caps.error.isEmpty() ? QStringLiteral("RTC wake alarm not supported") : caps.error;
         qWarning() << "[WakeManager] ERROR: cannot clear wake alarm:" << *error;
         return false;
     }
@@ -604,8 +595,7 @@ bool WakeManager::clearWakeAlarm(QString *error)
         return true;
     }
     QString err;
-    if (!runSynchronous("rtcwake", QStringList() << "-m" << "no" << "-t" << "0",
-                        20000, &err)) {
+    if (!runSynchronous("rtcwake", QStringList() << "-m" << "no" << "-t" << "0", 20000, &err)) {
         if (error)
             *error = err;
         return false;
@@ -624,8 +614,8 @@ bool WakeManager::requestPowerOff(QString *error)
     if (runSynchronous("systemctl", QStringList() << "poweroff", 30000, &logindErr))
         return true;
     if (error)
-        *error = QStringLiteral("poweroff request failed (logind/polkit denied): %1")
-                     .arg(logindErr);
+        *error =
+            QStringLiteral("poweroff request failed (logind/polkit denied): %1").arg(logindErr);
     qWarning() << "[WakeManager] ERROR: poweroff request failed:" << (error ? *error : QString());
     return false;
 }
@@ -677,12 +667,10 @@ void WakeManager::cancelTestWake()
     // F6: a failed cancel must not drop ownership — unless systemd proves the
     // wake is already gone, in which case reporting "idle" is the truth.
     if (helperWakeStillArmed()) {
-        qWarning() << "[WakeManager] Test wake cancel failed; wake still armed:"
-                   << msg;
+        qWarning() << "[WakeManager] Test wake cancel failed; wake still armed:" << msg;
         return;
     }
-    qWarning() << "[WakeManager] Test wake cancel failed but no Lumalarm timer is armed:"
-               << msg;
+    qWarning() << "[WakeManager] Test wake cancel failed but no Lumalarm timer is armed:" << msg;
     m_helperOwnedWake = false;
     m_state = QStringLiteral("idle");
     emit wakeStateChanged();

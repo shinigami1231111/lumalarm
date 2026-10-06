@@ -1,15 +1,15 @@
 #ifndef SCHEDULER_H
 #define SCHEDULER_H
 
-#include <QObject>
-#include <QTimer>
-#include <QTime>
-#include <QDateTime>
-#include <QHash>
-#include <QString>
 #include "managers/AlarmManager.h"
 #include "wake/SchedulerState.h"
 #include "wake/WakeManager.h"
+#include <QDateTime>
+#include <QHash>
+#include <QObject>
+#include <QString>
+#include <QTime>
+#include <QTimer>
 
 class Scheduler : public QObject
 {
@@ -90,9 +90,9 @@ private:
     QHash<QString, QDateTime> m_lastTriggeredTime;
     SchedulerStateStore m_store;
     PendingWake m_pending;
-    int m_lastCountdownSecs = -1;   // previous tick's countdown; -1 = unknown
-    int m_wakeReverifyTicks = 0;    // ticks since the last armed-wake re-check
-    QString m_wakeState;   // "idle", "arming", "armed", "failed"
+    int m_lastCountdownSecs = -1; // previous tick's countdown; -1 = unknown
+    int m_wakeReverifyTicks = 0;  // ticks since the last armed-wake re-check
+    QString m_wakeState;          // "idle", "arming", "armed", "failed"
     QString m_lastError;
 };
 

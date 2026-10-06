@@ -3,15 +3,10 @@
 #include <QDebug>
 #include <QUuid>
 
-Scheduler::Scheduler(AlarmManager *manager, WakeManager *wake,
-                     const QString &stateFilePath, QObject *parent)
-    : QObject(parent)
-    , m_manager(manager)
-    , m_wake(wake)
-    , m_checkTimer(new QTimer(this))
-    , m_lastCheckTime(QDateTime::currentDateTime())
-    , m_store(stateFilePath)
-    , m_wakeState("idle")
+Scheduler::Scheduler(AlarmManager *manager, WakeManager *wake, const QString &stateFilePath,
+                     QObject *parent)
+    : QObject(parent), m_manager(manager), m_wake(wake), m_checkTimer(new QTimer(this)),
+      m_lastCheckTime(QDateTime::currentDateTime()), m_store(stateFilePath), m_wakeState("idle")
 {
     m_pending = m_store.pending();
 
@@ -33,11 +28,15 @@ QDateTime Scheduler::computeNextOccurrence(const Alarm &a, const QDateTime &from
     QTime alarmTime(a.hour, a.minute, 0);
     QDateTime now = from.isValid() ? from : QDateTime::currentDateTime();
     int currentDay = now.date().dayOfWeek() - 1;
-    if (currentDay < 0) currentDay = 6;
+    if (currentDay < 0)
+        currentDay = 6;
 
     bool hasDays = false;
     for (int d = 0; d < 7; ++d) {
-        if (a.days[d]) { hasDays = true; break; }
+        if (a.days[d]) {
+            hasDays = true;
+            break;
+        }
     }
 
     if (!hasDays) {
@@ -49,9 +48,11 @@ QDateTime Scheduler::computeNextOccurrence(const Alarm &a, const QDateTime &from
 
     for (int dayOffset = 0; dayOffset < 7; ++dayOffset) {
         int checkDay = (currentDay + dayOffset) % 7;
-        if (!a.days[checkDay]) continue;
+        if (!a.days[checkDay])
+            continue;
         QDateTime checkDt(now.date().addDays(dayOffset), alarmTime);
-        if (checkDt <= now) continue;
+        if (checkDt <= now)
+            continue;
         return checkDt;
     }
 
@@ -88,20 +89,25 @@ int Scheduler::secondsUntilNextAlarm() const
     QDateTime now = QDateTime::currentDateTime();
     QTime currentTime = now.time();
     int currentDay = now.date().dayOfWeek() - 1;
-    if (currentDay < 0) currentDay = 6;
+    if (currentDay < 0)
+        currentDay = 6;
 
     int bestDiff = -1;
 
     const QVector<Alarm> alarms = m_manager->alarmList();
     for (int i = 0; i < alarms.size(); ++i) {
         const Alarm &a = alarms[i];
-        if (!a.enabled) continue;
+        if (!a.enabled)
+            continue;
 
         QTime alarmTime(a.hour, a.minute, 0);
 
         bool hasDays = false;
         for (int d = 0; d < 7; ++d) {
-            if (a.days[d]) { hasDays = true; break; }
+            if (a.days[d]) {
+                hasDays = true;
+                break;
+            }
         }
 
         if (!hasDays) {
@@ -116,10 +122,12 @@ int Scheduler::secondsUntilNextAlarm() const
 
         for (int dayOffset = 0; dayOffset < 7; ++dayOffset) {
             int checkDay = (currentDay + dayOffset) % 7;
-            if (!a.days[checkDay]) continue;
+            if (!a.days[checkDay])
+                continue;
 
             QDateTime checkDt(now.date().addDays(dayOffset), alarmTime);
-            if (checkDt <= now) continue;
+            if (checkDt <= now)
+                continue;
 
             int diff = static_cast<int>(now.secsTo(checkDt));
             if (bestDiff < 0 || diff < bestDiff)
@@ -154,11 +162,11 @@ void Scheduler::consumePending(const QString &reason)
 {
     if (!m_pending.valid)
         return;
-    qInfo() << "[Scheduler] Consuming occurrence" << m_pending.occurrenceId
-            << "(" << reason << ")";
+    qInfo() << "[Scheduler] Consuming occurrence" << m_pending.occurrenceId << "(" << reason << ")";
     m_pending.state = "consumed";
     if (!persistPending())
-        qWarning() << "[Scheduler] ERROR: could not persist consumed state (next boot may re-evaluate)";
+        qWarning()
+            << "[Scheduler] ERROR: could not persist consumed state (next boot may re-evaluate)";
     m_wakeState = "idle";
     m_lastError.clear();
     emit wakeStateChanged();
@@ -187,10 +195,15 @@ void Scheduler::armWake()
     const QVector<Alarm> alarms = m_manager->alarmList();
     for (int i = 0; i < alarms.size(); ++i) {
         const Alarm &a = alarms[i];
-        if (!a.enabled) continue;
+        if (!a.enabled)
+            continue;
         const qint64 occ = computeNextOccurrenceUtc(a);
-        if (occ <= 0) continue;
-        if (best < 0 || occ < best) { best = occ; bestIndex = i; }
+        if (occ <= 0)
+            continue;
+        if (best < 0 || occ < best) {
+            best = occ;
+            bestIndex = i;
+        }
     }
 
     if (bestIndex < 0) {
@@ -201,8 +214,8 @@ void Scheduler::armWake()
     }
 
     const Alarm &a = alarms[bestIndex];
-    qInfo() << "[Scheduler] Calculated occurrence: alarm" << a.id
-            << "local" << QDateTime::fromSecsSinceEpoch(best).toLocalTime().toString(Qt::ISODate);
+    qInfo() << "[Scheduler] Calculated occurrence: alarm" << a.id << "local"
+            << QDateTime::fromSecsSinceEpoch(best).toLocalTime().toString(Qt::ISODate);
     qInfo() << "[Scheduler] UTC timestamp:" << best;
 
     // 2. Persist the occurrence BEFORE touching the RTC. If anything after
@@ -220,8 +233,8 @@ void Scheduler::armWake()
         setWakeState("failed");
         return;
     }
-    qInfo() << "[Scheduler] Persisted occurrence:" << m_pending.occurrenceId
-            << "alarm" << m_pending.alarmId << "utc" << m_pending.scheduledUtc;
+    qInfo() << "[Scheduler] Persisted occurrence:" << m_pending.occurrenceId << "alarm"
+            << m_pending.alarmId << "utc" << m_pending.scheduledUtc;
 
     // 3. Verify RTC capability.
     const RtcCapabilities caps = m_wake->inspectRtc();
@@ -265,8 +278,8 @@ void Scheduler::armWake()
     }
 
     setWakeState("armed");
-    qInfo() << "[Scheduler] RTC wake armed: occurrence" << m_pending.occurrenceId
-            << "utc" << m_pending.scheduledUtc;
+    qInfo() << "[Scheduler] RTC wake armed: occurrence" << m_pending.occurrenceId << "utc"
+            << m_pending.scheduledUtc;
 }
 
 void Scheduler::powerOffMachine()
@@ -293,11 +306,10 @@ void Scheduler::powerOffMachine()
     if (!m_wake->verifyWakeAlarm(m_pending.scheduledUtc, &verifyErr)) {
         m_pending.state = QStringLiteral("failed");
         persistPending();
-        setWakeState(QStringLiteral("failed"),
-                     tr("Cannot power off: the scheduled wake is no longer in place: %1")
-                         .arg(verifyErr));
-        qWarning() << "[Scheduler] ERROR: poweroff refused — scheduled wake is gone:"
-                   << verifyErr;
+        setWakeState(
+            QStringLiteral("failed"),
+            tr("Cannot power off: the scheduled wake is no longer in place: %1").arg(verifyErr));
+        qWarning() << "[Scheduler] ERROR: poweroff refused — scheduled wake is gone:" << verifyErr;
         return;
     }
 
@@ -319,7 +331,8 @@ void Scheduler::recoverAfterBoot()
         // from a crashed session).
         const qint64 stale = m_wake->readWakeAlarmValue();
         if (stale > 0 && stale < QDateTime::currentSecsSinceEpoch()) {
-            qWarning() << "[Scheduler] Stale RTC alarm" << stale << "without pending state; clearing";
+            qWarning() << "[Scheduler] Stale RTC alarm" << stale
+                       << "without pending state; clearing";
             QString err;
             if (!m_wake->clearWakeAlarm(&err))
                 qWarning() << "[Scheduler] Could not clear stale RTC alarm:" << err;
@@ -354,8 +367,10 @@ void Scheduler::recoverAfterBoot()
     // Keep it armed; the RTC alarm remains set.
     if (nowUtc + WakePolicy::RTC_ALARM_TOLERANCE_SECONDS < m_pending.scheduledUtc) {
         setWakeState("armed");
-        qInfo() << "[Scheduler] Booted before scheduled time; wake remains armed for"
-                << QDateTime::fromSecsSinceEpoch(m_pending.scheduledUtc).toUTC().toString(Qt::ISODate) << "UTC";
+        qInfo()
+            << "[Scheduler] Booted before scheduled time; wake remains armed for"
+            << QDateTime::fromSecsSinceEpoch(m_pending.scheduledUtc).toUTC().toString(Qt::ISODate)
+            << "UTC";
         return;
     }
 
@@ -364,8 +379,7 @@ void Scheduler::recoverAfterBoot()
     const int idx = m_manager->indexOfId(m_pending.alarmId);
     const bool alarmGone = idx < 0 || !m_manager->alarmList()[idx].enabled;
 
-    qInfo() << "[Scheduler] Boot recovery: scheduled"
-            << m_pending.scheduledUtc << "now" << nowUtc
+    qInfo() << "[Scheduler] Boot recovery: scheduled" << m_pending.scheduledUtc << "now" << nowUtc
             << "→" << wakeResultToString(r) << "late" << lateSeconds << "s";
 
     if (r == WakeResult::OnTime || r == WakeResult::Late || r == WakeResult::VeryLate) {
@@ -380,8 +394,8 @@ void Scheduler::recoverAfterBoot()
         // evaluation (or a restart) is a no-op.
         m_lastTriggeredTime[m_pending.alarmId] = QDateTime::fromSecsSinceEpoch(nowUtc);
         emit alarmTriggered(idx);
-        qInfo() << "[Scheduler] Recovered" << wakeResultToString(r)
-                << "wake (late" << lateSeconds << "s) — alarm triggered";
+        qInfo() << "[Scheduler] Recovered" << wakeResultToString(r) << "wake (late" << lateSeconds
+                << "s) — alarm triggered";
         consumePending("boot recovery");
         return;
     }
@@ -409,8 +423,8 @@ void Scheduler::onAlarmsChanged()
     if (m_pending.valid && m_pending.state == "verified") {
         const int idx = m_manager->indexOfId(m_pending.alarmId);
         if (idx < 0 || !m_manager->alarmList()[idx].enabled) {
-            qWarning() << "[Scheduler] Pending wake" << m_pending.occurrenceId
-                       << "for alarm" << m_pending.alarmId
+            qWarning() << "[Scheduler] Pending wake" << m_pending.occurrenceId << "for alarm"
+                       << m_pending.alarmId
                        << "deleted or disabled while scheduled — will not trigger on boot";
         }
     }
@@ -435,9 +449,8 @@ QString Scheduler::nextAlarmLabel() const
     }
     if (!best.isValid())
         return QStringLiteral("Alarm");
-    return name.isEmpty()
-               ? QStringLiteral("Alarm %1").arg(best.toString(QStringLiteral("HH:mm")))
-               : name;
+    return name.isEmpty() ? QStringLiteral("Alarm %1").arg(best.toString(QStringLiteral("HH:mm")))
+                          : name;
 }
 
 void Scheduler::onCheckTimer()
@@ -465,9 +478,8 @@ void Scheduler::onCheckTimer()
     // keeps advertising "Armed ... power off to wake the machine" over a wake
     // that no longer exists, with the power-off button still enabled. Re-check
     // on a slow cadence so "armed" always means a wake really is scheduled.
-    if (m_wakeState == QLatin1String("armed") && m_pending.valid
-        && m_pending.state == QLatin1String("verified")
-        && secs > kWakeReverifyHorizonSeconds) {
+    if (m_wakeState == QLatin1String("armed") && m_pending.valid &&
+        m_pending.state == QLatin1String("verified") && secs > kWakeReverifyHorizonSeconds) {
         if (++m_wakeReverifyTicks >= kWakeReverifyIntervalTicks) {
             m_wakeReverifyTicks = 0;
             QString verr;
@@ -489,10 +501,10 @@ void Scheduler::onCheckTimer()
     // alarm scheduled at all -> -1) counts as "outside the window", so an
     // alarm that is already inside it when ticking starts still notifies
     // exactly once instead of being swallowed.
-    const int prevCountdown = (m_lastCountdownSecs > 0) ? m_lastCountdownSecs
-                                                        : kUpcomingThresholdSeconds + 1;
-    if (secs > 0 && secs <= kUpcomingThresholdSeconds
-        && prevCountdown > kUpcomingThresholdSeconds) {
+    const int prevCountdown =
+        (m_lastCountdownSecs > 0) ? m_lastCountdownSecs : kUpcomingThresholdSeconds + 1;
+    if (secs > 0 && secs <= kUpcomingThresholdSeconds &&
+        prevCountdown > kUpcomingThresholdSeconds) {
         emit alarmApproaching(nextAlarmLabel(), secs / 60);
     }
     m_lastCountdownSecs = secs;
@@ -500,16 +512,16 @@ void Scheduler::onCheckTimer()
     const QVector<Alarm> alarms = m_manager->alarmList();
     for (int i = 0; i < alarms.size(); ++i) {
         const Alarm &a = alarms[i];
-        if (!a.enabled) continue;
+        if (!a.enabled)
+            continue;
 
         // --- Overdue detection ---
         QDateTime lastTriggered = m_lastTriggeredTime.value(a.id);
         QDateTime refTime = prevCheck.isValid() ? prevCheck : now;
         QDateTime scheduledTime = computeNextOccurrence(a, refTime);
 
-        if (scheduledTime.isValid() && scheduledTime <= now
-            && scheduledTime > refTime
-            && (!lastTriggered.isValid() || scheduledTime > lastTriggered)) {
+        if (scheduledTime.isValid() && scheduledTime <= now && scheduledTime > refTime &&
+            (!lastTriggered.isValid() || scheduledTime > lastTriggered)) {
             m_lastTriggeredTime[a.id] = now;
             emit alarmTriggered(i);
             if (m_pending.valid && m_pending.state == "verified" && m_pending.alarmId == a.id)
@@ -524,10 +536,14 @@ void Scheduler::onCheckTimer()
 
             bool hasDays = false;
             for (int d = 0; d < 7; ++d) {
-                if (a.days[d]) { hasDays = true; break; }
+                if (a.days[d]) {
+                    hasDays = true;
+                    break;
+                }
             }
             int currentDay = now.date().dayOfWeek() - 1;
-            if (currentDay < 0) currentDay = 6;
+            if (currentDay < 0)
+                currentDay = 6;
             if (hasDays && !a.days[currentDay])
                 continue;
 
