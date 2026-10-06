@@ -63,6 +63,13 @@ private slots:
     void onCheckTimer();
     void onAlarmsChanged();
 
+public:
+    // Re-check cadence for an armed claim, in 1 Hz ticker ticks, and the
+    // horizon inside which re-checking is suspended. Public because the tests
+    // drive exactly this path and must not encode a second copy of the number.
+    static constexpr int kWakeReverifyIntervalTicks = 10;
+    static constexpr int kWakeReverifyHorizonSeconds = 120;
+
 private:
     // Window in which alarmApproaching() fires, in seconds.
     static constexpr int kUpcomingThresholdSeconds = 600;
@@ -84,6 +91,7 @@ private:
     SchedulerStateStore m_store;
     PendingWake m_pending;
     int m_lastCountdownSecs = -1;   // previous tick's countdown; -1 = unknown
+    int m_wakeReverifyTicks = 0;    // ticks since the last armed-wake re-check
     QString m_wakeState;   // "idle", "arming", "armed", "failed"
     QString m_lastError;
 };

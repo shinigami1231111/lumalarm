@@ -33,6 +33,8 @@ private slots:
     void persistenceFailureRefusesPoweroff();
     void duplicateRecoveryIsNoOp();
     void rtcFailureRefusesPoweroff();
+    void poweroffRefusesWhenScheduledWakeIsGone();
+    void armedStateDropsWhenScheduledWakeDisappears();
 
 private:
     static Alarm makeAlarm(const QString &id, int hour, int minute);
@@ -306,6 +308,83 @@ void TestSchedulerLogic::rtcFailureRefusesPoweroff()
     QCOMPARE(s.wakeState(), QString("idle"));
     QVERIFY(!s.lastError().isEmpty());
     QVERIFY(s.lastError().contains("not armed"));
+}
+
+// A persisted "verified" occurrence records what was true at arm time. The wake
+// underneath can be gone by the time the user acts — Settings' "Arm test alarm"
+// replaces it, "Cancel test alarm" removes it, a test wake expires, a reboot
+// drops the transient systemd timer — and nothing here scheduled a wake at all.
+void TestSchedulerLogic::poweroffRefusesWhenScheduledWakeIsGone()
+{
+    const QString path = storePath("poweroffgone");
+    QFile::remove(path);
+    QFile::remove(path + ".bak");
+
+    AlarmManager am;
+    const QTime inThreeHours = QTime::currentTime().addSecs(3 * 3600);
+    const Alarm a = makeAlarm("poweroff-gone", inThreeHours.hour(), inThreeHours.minute());
+    am.setAlarms(QVector<Alarm>() << a);
+
+    PendingWake w;
+    w.valid = true;
+    w.alarmId = a.id;
+    w.occurrenceId = "occ-poweroff-gone";
+    w.scheduledUtc = QDateTime::currentSecsSinceEpoch() + 3 * 3600;
+    w.state = "verified";
+    {
+        SchedulerStateStore seed(path);
+        QVERIFY(seed.persist(w));
+    }
+
+    WakeManager wm;
+    Scheduler s(&am, &wm, path);
+    QTest::qWait(300); // deferred recovery -> "armed"
+    QCOMPARE(s.wakeState(), QString("armed"));
+
+    s.powerOffMachine(); // live re-check finds no wake in place
+    QCOMPARE(s.wakeState(), QString("failed"));
+    QVERIFY2(s.lastError().contains("no longer in place"),
+             qPrintable(s.lastError()));
+    QVERIFY(s.lastError().contains("Cannot power off"));
+    QFile::remove(path);
+}
+
+// Same starting state, but no one presses anything: the ticker itself has to
+// notice the advertised wake is gone, instead of leaving "Armed" — and the
+// enabled Power Off & Wake button — up indefinitely.
+void TestSchedulerLogic::armedStateDropsWhenScheduledWakeDisappears()
+{
+    const QString path = storePath("armeddrops");
+    QFile::remove(path);
+    QFile::remove(path + ".bak");
+
+    AlarmManager am;
+    const QTime inThreeHours = QTime::currentTime().addSecs(3 * 3600);
+    const Alarm a = makeAlarm("armed-drops", inThreeHours.hour(), inThreeHours.minute());
+    am.setAlarms(QVector<Alarm>() << a);
+
+    PendingWake w;
+    w.valid = true;
+    w.alarmId = a.id;
+    w.occurrenceId = "occ-armed-drops";
+    w.scheduledUtc = QDateTime::currentSecsSinceEpoch() + 3 * 3600;
+    w.state = "verified";
+    {
+        SchedulerStateStore seed(path);
+        QVERIFY(seed.persist(w));
+    }
+
+    WakeManager wm;
+    Scheduler s(&am, &wm, path);
+    QTest::qWait(300);
+    QCOMPARE(s.wakeState(), QString("armed"));
+
+    // First tick lands ~1 s after construction, so allow the interval plus slack.
+    QTRY_COMPARE_WITH_TIMEOUT(s.wakeState(), QString("failed"),
+                              1000 * (Scheduler::kWakeReverifyIntervalTicks + 5));
+    QVERIFY2(s.lastError().contains("no longer in place"),
+             qPrintable(s.lastError()));
+    QFile::remove(path);
 }
 
 QTEST_GUILESS_MAIN(TestSchedulerLogic)

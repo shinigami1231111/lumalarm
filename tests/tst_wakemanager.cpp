@@ -118,6 +118,7 @@ private slots:
     void programWakeAlarmRejectsInvalidDelays_data();
     void programWakeAlarmRejectsInvalidDelays();
     void programWakeAlarmAcceptsValidBoundary();
+    void programWakeAlarmReportsHelperDecline();
 
     // F6 — ownership survives a failed cancellation.
     void failedCancelKeepsHelperOwnership();
@@ -319,6 +320,34 @@ void TestWakeManager::programWakeAlarmAcceptsValidBoundary()
     QCOMPARE(wm.scheduleCalls, 1);
     QVERIFY(wm.scheduledSeconds.last() >= 60 && wm.scheduledSeconds.last() <= 86400);
     QVERIFY(wm.helperOwnsWake());
+}
+
+// ── STG-1: a helper refusal must be the error that reaches the UI ────────────
+// Regression guard for the real desktop finding: the unprivileged rtcwake
+// fallback used to run after the helper had explicitly refused, so an
+// authorization timeout was reported to the user as "rtcwake: /dev/rtc0:
+// Permission denied" — a hardware-looking error for a polkit failure. The
+// layer that actually failed has to remain visible.
+void TestWakeManager::programWakeAlarmReportsHelperDecline()
+{
+    // programWakeAlarm() runs a best-effort `hwclock --systohc` before it ever
+    // reaches the helper, which WOULD write the hardware clock as root.
+    if (geteuid() == 0)
+        QSKIP("running as root: programWakeAlarm() would run hwclock --systohc "
+              "before reaching the helper");
+
+    FakeWakeManager wm;
+    wm.scheduleSucceeds = false;
+    QString error;
+    const qint64 epoch = QDateTime::currentSecsSinceEpoch() + 3600;
+
+    QVERIFY(!wm.programWakeAlarm(epoch, &error));
+    QCOMPARE(wm.scheduleCalls, 1);
+    // The helper's own answer survives verbatim. If the fallback had run, the
+    // error would have been replaced by an rtcwake message instead.
+    QVERIFY2(error.contains(QStringLiteral("denied")), qPrintable(error));
+    QVERIFY2(!error.contains(QStringLiteral("rtcwake")), qPrintable(error));
+    QVERIFY(!wm.helperOwnsWake());
 }
 
 // ── F6: ownership must survive a failed cancellation ─────────────────────────

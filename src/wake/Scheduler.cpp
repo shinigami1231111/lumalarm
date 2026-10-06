@@ -282,6 +282,25 @@ void Scheduler::powerOffMachine()
     }
 
     qInfo() << "[Scheduler] Poweroff requested (occurrence" << m_pending.occurrenceId << ")";
+
+    // Live re-check: the gate above only proves the claim recorded at arm
+    // time. The wake underneath it can be gone by now — a test-wake
+    // replacement or cancel, an expired test wake, an externally stopped
+    // timer, a reboot — and powering off without a scheduled wake would leave
+    // the machine off with nothing to bring it back. Refuse unless a wake is
+    // demonstrably in place at this instant.
+    QString verifyErr;
+    if (!m_wake->verifyWakeAlarm(m_pending.scheduledUtc, &verifyErr)) {
+        m_pending.state = QStringLiteral("failed");
+        persistPending();
+        setWakeState(QStringLiteral("failed"),
+                     tr("Cannot power off: the scheduled wake is no longer in place: %1")
+                         .arg(verifyErr));
+        qWarning() << "[Scheduler] ERROR: poweroff refused — scheduled wake is gone:"
+                   << verifyErr;
+        return;
+    }
+
     QString err;
     if (!m_wake->requestPowerOff(&err)) {
         m_lastError = err;
@@ -437,6 +456,32 @@ void Scheduler::onCheckTimer()
 
     int secs = secondsUntilNextAlarm();
     emit countdownUpdated(secs);
+
+    // --- STG-1 truthfulness: an armed claim must stay true ------------------
+    // m_wakeState is written once, at arm time, but the wake underneath it can
+    // disappear without this object ever being told: Settings' "Arm test alarm"
+    // replaces it, "Cancel test alarm" removes it, a test wake simply expires,
+    // and a reboot drops the transient systemd timer. Left unexamined the UI
+    // keeps advertising "Armed ... power off to wake the machine" over a wake
+    // that no longer exists, with the power-off button still enabled. Re-check
+    // on a slow cadence so "armed" always means a wake really is scheduled.
+    if (m_wakeState == QLatin1String("armed") && m_pending.valid
+        && m_pending.state == QLatin1String("verified")
+        && secs > kWakeReverifyHorizonSeconds) {
+        if (++m_wakeReverifyTicks >= kWakeReverifyIntervalTicks) {
+            m_wakeReverifyTicks = 0;
+            QString verr;
+            if (!m_wake->verifyWakeAlarm(m_pending.scheduledUtc, &verr)) {
+                m_pending.state = QStringLiteral("failed");
+                persistPending();
+                setWakeState(QStringLiteral("failed"),
+                             tr("The scheduled wake is no longer in place: %1").arg(verr));
+                qWarning() << "[Scheduler] armed wake is no longer in place:" << verr;
+            }
+        }
+    } else {
+        m_wakeReverifyTicks = 0;
+    }
 
     // --- Upcoming-alarm notification threshold (STG-5.3) ---
     // Fires once, on the EDGE of the countdown crossing into the 10-minute

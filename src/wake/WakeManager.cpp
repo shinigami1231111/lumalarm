@@ -385,17 +385,36 @@ bool WakeManager::programWakeAlarm(qint64 epochUtc, QString *error)
 
     // Preferred: privileged D-Bus helper. Its API takes a relative delay, so
     // convert the absolute epoch (already validated above). When the helper is
-    // unavailable or declines, the direct rtcwake path below stays in charge —
-    // unprivileged, so it fails honestly instead of escalating (STG-1.5).
+    // unavailable, the direct rtcwake path below stays in charge — unprivileged,
+    // so it fails honestly instead of escalating (STG-1.5).
     const qint64 deltaSeconds = requestedDelta;
     QString helperMsg;
-    if (scheduleViaHelper(static_cast<uint>(deltaSeconds), &helperMsg)
-        == HelperResult::Scheduled) {
+    const HelperResult helperResult =
+        scheduleViaHelper(static_cast<uint>(deltaSeconds), &helperMsg);
+    if (helperResult == HelperResult::Scheduled) {
         qInfo() << "[WakeManager] Using D-Bus helper for wake in" << deltaSeconds << "s";
         m_helperOwnedWake = true;
         return true;
     }
-    qWarning() << "[WakeManager] D-Bus helper unavailable/declined, falling back to direct"
+    if (helperResult == HelperResult::Declined) {
+        // The helper is installed and answered — it refused (polkit denied or
+        // timed out, or its own policy rejected the request). An unprivileged
+        // rtcwake cannot succeed where the privileged helper was refused, and
+        // running it anyway used to overwrite the real reason with a misleading
+        // "Permission denied" on /dev/rtc0, hiding the layer that actually
+        // failed from both the user and the next person debugging this. Report
+        // the helper's answer verbatim; the fallback below stays reserved for a
+        // helper that is genuinely absent.
+        m_helperOwnedWake = false;
+        const QString reason = helperMsg.isEmpty()
+                                   ? QStringLiteral("the wake helper declined the request")
+                                   : helperMsg;
+        if (error)
+            *error = reason;
+        qWarning() << "[WakeManager] ERROR: wake helper declined:" << reason;
+        return false;
+    }
+    qWarning() << "[WakeManager] D-Bus helper unavailable, falling back to direct"
                << "rtcwake:" << helperMsg;
     m_helperOwnedWake = false;
 
