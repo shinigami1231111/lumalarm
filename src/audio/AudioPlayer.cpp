@@ -1,14 +1,12 @@
 #include "audio/AudioPlayer.h"
 #include "managers/TonePaths.h"
-#include <QUrl>
-#include <QMediaDevices>
 #include <QAudioDevice>
+#include <QMediaDevices>
+#include <QUrl>
 
 AudioPlayer::AudioPlayer(QObject *parent)
-    : QObject(parent)
-    , m_player(new QMediaPlayer(this))
-    , m_audioOutput(new QAudioOutput(this))
-    , m_fadeTimer(new QTimer(this))
+    : QObject(parent), m_player(new QMediaPlayer(this)), m_audioOutput(new QAudioOutput(this)),
+      m_fadeTimer(new QTimer(this))
 {
     m_player->setAudioOutput(m_audioOutput);
 
@@ -78,8 +76,7 @@ void AudioPlayer::reinitializeAudio()
     auto *oldOut = m_audioOutput;
     m_audioOutput = new QAudioOutput(this);
     m_player->setAudioOutput(m_audioOutput);
-    m_audioOutput->setVolume(
-        static_cast<float>(oldOut ? oldOut->volume() : (m_volume / 100.0)));
+    m_audioOutput->setVolume(static_cast<float>(oldOut ? oldOut->volume() : (m_volume / 100.0)));
     if (oldOut) {
         oldOut->deleteLater();
     }

@@ -6,11 +6,7 @@
 #include <QDBusReply>
 #include <QVariantMap>
 
-Notifier::Notifier(bool enabled, QObject *parent)
-    : QObject(parent)
-    , m_enabled(enabled)
-{
-}
+Notifier::Notifier(bool enabled, QObject *parent) : QObject(parent), m_enabled(enabled) {}
 
 bool Notifier::isEnabled() const
 {
@@ -37,8 +33,8 @@ bool Notifier::deliver(const QString &title, const QString &body, int timeoutMs)
     if (!iface.isValid()) {
         const QDBusError err = iface.lastError();
         if (!m_warnedUnavailable) {
-            qWarning() << "[Notifier] notification daemon unreachable:" << err.name()
-                       << "-" << err.message();
+            qWarning() << "[Notifier] notification daemon unreachable:" << err.name() << "-"
+                       << err.message();
             m_warnedUnavailable = true;
         }
         return false;
@@ -49,19 +45,16 @@ bool Notifier::deliver(const QString &title, const QString &body, int timeoutMs)
     //          as actions, a{sv} hints, i expire_timeout) -> (u id)
     // expire_timeout -1 = server default; anything <= 0 from a caller means
     // "use the default" (0 would otherwise mean "never expire").
-    const QDBusMessage raw = iface.call(QStringLiteral("Notify"),
-                                        QStringLiteral("Lumalarm"),
+    const QDBusMessage raw = iface.call(QStringLiteral("Notify"), QStringLiteral("Lumalarm"),
                                         uint(0),                    // replaces_id
-                                        QStringLiteral("lumalarm"),  // app_icon
-                                        title,
-                                        body,
-                                        QStringList(),              // actions
-                                        QVariantMap(),              // hints
+                                        QStringLiteral("lumalarm"), // app_icon
+                                        title, body,
+                                        QStringList(), // actions
+                                        QVariantMap(), // hints
                                         timeoutMs <= 0 ? -1 : timeoutMs);
     if (raw.type() == QDBusMessage::ErrorMessage) {
         if (!m_warnedUnavailable) {
-            qWarning() << "[Notifier] Notify rejected:" << raw.errorName()
-                       << raw.errorMessage();
+            qWarning() << "[Notifier] Notify rejected:" << raw.errorName() << raw.errorMessage();
             m_warnedUnavailable = true;
         }
         return false;
@@ -98,6 +91,5 @@ void Notifier::notifyWakeFired()
 
 void Notifier::notifyTestWakeArmed(int seconds)
 {
-    deliver(tr("Test alarm armed"),
-            tr("This machine will try to wake in %1 s").arg(seconds), 6000);
+    deliver(tr("Test alarm armed"), tr("This machine will try to wake in %1 s").arg(seconds), 6000);
 }

@@ -9,14 +9,14 @@
 // must NOT be conflated: RTC exists / wakealarm interface exists / rtcwake
 // tool exists / firmware will actually wake from the requested power state.
 struct RtcCapabilities {
-    bool available = false;            // some RTC device exists
-    bool wakeAlarmSupported = false;   // /sys/class/rtc/rtcN/wakealarm exists
-    bool poweroffWakeSupported = false;// rtcwake present; S5 wake itself is
-                                       // firmware-dependent and is verified by
-                                       // programming + reading back the alarm
-    QString device;                    // e.g. "/dev/rtc0" (empty = let rtcwake autodetect)
-    QString sysfsPath;                 // e.g. "/sys/class/rtc/rtc0"
-    QString error;                     // why capability is missing, if any
+    bool available = false;             // some RTC device exists
+    bool wakeAlarmSupported = false;    // /sys/class/rtc/rtcN/wakealarm exists
+    bool poweroffWakeSupported = false; // rtcwake present; S5 wake itself is
+                                        // firmware-dependent and is verified by
+                                        // programming + reading back the alarm
+    QString device;                     // e.g. "/dev/rtc0" (empty = let rtcwake autodetect)
+    QString sysfsPath;                  // e.g. "/sys/class/rtc/rtc0"
+    QString error;                      // why capability is missing, if any
 };
 
 class WakeManager : public QObject
@@ -150,8 +150,8 @@ private:
     // kTestWakeMaxSeconds, so its window is a strict subset of the boundary.
     static constexpr int kTestWakeMaxSeconds = 3600;
 
-    static bool runSynchronous(const QString &program, const QStringList &args,
-                               int timeoutMs, QString *error, QString *output = nullptr);
+    static bool runSynchronous(const QString &program, const QStringList &args, int timeoutMs,
+                               QString *error, QString *output = nullptr);
 
     // Base names of armed lumalarm-wake-*.timer units, straight from systemd.
     static QStringList armedWakeTimerBases();
@@ -160,9 +160,9 @@ private:
     // escalation); -1 when unreadable or empty.
     static qint64 readWakeAlarmFile(const QString &sysfsPath);
 
-    bool m_helperOwnedWake = false;   // helper owns the currently programmed wake
+    bool m_helperOwnedWake = false; // helper owns the currently programmed wake
     QProcess *m_process;
-    QString m_state;   // "idle", "arming", "armed", "failed"
+    QString m_state; // "idle", "arming", "armed", "failed"
     QString m_lastError;
 };
 

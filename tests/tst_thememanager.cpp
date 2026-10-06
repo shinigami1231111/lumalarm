@@ -1,7 +1,7 @@
-#include <QtTest>
+#include <QFile>
 #include <QSignalSpy>
 #include <QStandardPaths>
-#include <QFile>
+#include <QtTest>
 
 #include "managers/ThemeManager.h"
 
@@ -98,9 +98,8 @@ void TestThemeManager::everyListedPresetApplies()
 
 void TestThemeManager::removeThemeFile()
 {
-    const QString path =
-        QStandardPaths::writableLocation(QStandardPaths::ConfigLocation)
-        + QStringLiteral("/lumalarm/theme.conf");
+    const QString path = QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) +
+                         QStringLiteral("/lumalarm/theme.conf");
     QFile::remove(path);
 }
 

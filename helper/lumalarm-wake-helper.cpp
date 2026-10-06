@@ -46,7 +46,7 @@
 #include "wake/WakeSecurity.h"
 
 namespace {
-constexpr int kSystemdRunMinVersion = 254;   // WakeSystem= transient timers
+constexpr int kSystemdRunMinVersion = 254; // WakeSystem= transient timers
 
 // Upper bound on one pkcheck run. Generous because --allow-user-interaction
 // may hold the call open while a human answers the polkit dialog; bounded so
@@ -58,15 +58,15 @@ constexpr int kPkcheckTimeoutMs = 60000;
 // systemctl --version, parsed once: first line is "systemd <major> (...)".
 int systemdMajorVersion()
 {
-    static int cached = -1;   // -1 unknown, 0 unreadable
+    static int cached = -1; // -1 unknown, 0 unreadable
     if (cached >= 0)
         return cached;
 
     cached = 0;
     QProcess p;
     p.start(QStringLiteral("systemctl"), QStringList() << QStringLiteral("--version"));
-    if (p.waitForStarted(3000) && p.waitForFinished(3000)
-        && p.exitStatus() == QProcess::NormalExit && p.exitCode() == 0) {
+    if (p.waitForStarted(3000) && p.waitForFinished(3000) &&
+        p.exitStatus() == QProcess::NormalExit && p.exitCode() == 0) {
         const QString firstLine =
             QString::fromUtf8(p.readAllStandardOutput()).section(QLatin1Char('\n'), 0, 0);
         const QStringList parts = firstLine.split(QLatin1Char(' '), Qt::SkipEmptyParts);
@@ -97,10 +97,7 @@ class WakeHelper : public QObject, protected QDBusContext
     Q_CLASSINFO("D-Bus Interface", "org.lumalarm.Helper")
 
 public:
-    explicit WakeHelper(QObject *parent = nullptr)
-        : QObject(parent)
-    {
-    }
+    explicit WakeHelper(QObject *parent = nullptr) : QObject(parent) {}
 
 public slots:
     // Out-args follow Qt's D-Bus convention (verified against the
@@ -121,8 +118,8 @@ private:
     // unavailable or errors).
     bool authorize(uint uid, QString *reason) const;
 
-    bool runCommand(const QString &program, const QStringList &args,
-                    QString *error, int timeoutMs = 20000) const;
+    bool runCommand(const QString &program, const QStringList &args, QString *error,
+                    int timeoutMs = 20000) const;
 
     // Base names (no .timer) of every armed lumalarm-wake-*.timer in systemd,
     // enumerated fresh on every call — never from this process's memory.
@@ -138,11 +135,11 @@ private:
     // timer is really gone afterwards.
     bool stopTimer(const QString &unitBase, QString *error);
 
-    QString m_state = QStringLiteral("idle");  // "idle" | "scheduled" | "error"
+    QString m_state = QStringLiteral("idle"); // "idle" | "scheduled" | "error"
     QString m_lastError;
-    QString m_unitName;      // transient timer unit base name, systemd path
+    QString m_unitName; // transient timer unit base name, systemd path
     bool m_usedRtcwake = false;
-    uint m_seconds = 0;      // accepted request, echoed by GetStatus
+    uint m_seconds = 0; // accepted request, echoed by GetStatus
 };
 
 uint WakeHelper::callerUid() const
@@ -184,7 +181,7 @@ QStringList WakeHelper::armedTimerBasesFromSystemd() const
         QStringLiteral("%1*.timer").arg(QLatin1String(WakePolicy::kTimerPrefix)),
     };
     QProcess p;
-    p.start(QStringLiteral("systemctl"), args);   // argument list — never a shell
+    p.start(QStringLiteral("systemctl"), args); // argument list — never a shell
     if (!p.waitForStarted(3000) || !p.waitForFinished(5000))
         return QStringList();
     if (p.exitStatus() != QProcess::NormalExit || p.exitCode() != 0)
@@ -257,19 +254,20 @@ bool WakeHelper::stopTimer(const QString &unitBase, QString *error)
     // lumalarm-wake-<uuid>` resolves to <base>.service, "succeeds" (the
     // inactive service stops fine) and leaves the timer armed.
     if (!runCommand(QStringLiteral("systemctl"),
-                    QStringList() << QStringLiteral("stop")
-                                  << unitBase + QStringLiteral(".timer"), error))
+                    QStringList() << QStringLiteral("stop") << unitBase + QStringLiteral(".timer"),
+                    error))
         return false;
 
     // Best-effort cleanup of the leftover service unit and any failed-unit
     // state; not fatal if they are already gone.
     runCommand(QStringLiteral("systemctl"),
-               QStringList() << QStringLiteral("stop")
-                             << unitBase + QStringLiteral(".service"), nullptr);
+               QStringList() << QStringLiteral("stop") << unitBase + QStringLiteral(".service"),
+               nullptr);
     runCommand(QStringLiteral("systemctl"),
                QStringList() << QStringLiteral("reset-failed")
                              << unitBase + QStringLiteral(".timer")
-                             << unitBase + QStringLiteral(".service"), nullptr);
+                             << unitBase + QStringLiteral(".service"),
+               nullptr);
     return true;
 }
 
@@ -306,8 +304,8 @@ bool WakeHelper::authorize(uint uid, QString *reason) const
     p.start(QStringLiteral("pkcheck"), WakePolicy::pkcheckArguments(busName, pid));
     if (!p.waitForStarted(5000)) {
         if (reason)
-            *reason = QStringLiteral("not authorized: pkcheck unavailable: %1")
-                          .arg(p.errorString());
+            *reason =
+                QStringLiteral("not authorized: pkcheck unavailable: %1").arg(p.errorString());
         return false;
     }
     if (!p.waitForFinished(kPkcheckTimeoutMs)) {
@@ -330,11 +328,11 @@ bool WakeHelper::authorize(uint uid, QString *reason) const
     return false;
 }
 
-bool WakeHelper::runCommand(const QString &program, const QStringList &args,
-                             QString *error, int timeoutMs) const
+bool WakeHelper::runCommand(const QString &program, const QStringList &args, QString *error,
+                            int timeoutMs) const
 {
     QProcess p;
-    p.start(program, args);   // explicit argument list — never a shell
+    p.start(program, args); // explicit argument list — never a shell
     if (!p.waitForStarted(5000)) {
         if (error)
             *error = QStringLiteral("failed to start %1: %2").arg(program, p.errorString());
@@ -392,14 +390,13 @@ bool WakeHelper::ScheduleWake(uint seconds, QString &message)
         const QStringList existing = armedTimerBasesFromSystemd();
         for (const QString &base : existing) {
             QString stopErr;
-            stopTimer(base, &stopErr);   // failure is detected by the re-check below
+            stopTimer(base, &stopErr); // failure is detected by the re-check below
         }
         if (!armedTimerBasesFromSystemd().isEmpty()) {
             m_state = QStringLiteral("error");
             m_lastError = QStringLiteral("could not disarm the previous Lumalarm wake");
             message = m_lastError;
-            qWarning() << "[wake-helper] ScheduleWake: uid" << uid
-                       << "-> REJECTED:" << message;
+            qWarning() << "[wake-helper] ScheduleWake: uid" << uid << "-> REJECTED:" << message;
             return false;
         }
 
@@ -419,9 +416,7 @@ bool WakeHelper::ScheduleWake(uint seconds, QString &message)
             // lives in systemd, so GetStatus() can still report the real
             // number after this process is gone (STG-1.4).
             QStringLiteral("--description=%1").arg(WakePolicy::timerLabel(seconds)),
-            QStringLiteral("--unit=%1").arg(unit),
-            QStringLiteral("/bin/true")
-        };
+            QStringLiteral("--unit=%1").arg(unit), QStringLiteral("/bin/true")};
         if (runCommand(QStringLiteral("systemd-run"), args, &err)) {
             m_state = QStringLiteral("scheduled");
             m_unitName = unit;
@@ -512,9 +507,8 @@ bool WakeHelper::CancelWake(QString &message)
         m_lastError.clear();
         m_seconds = 0;
         message = QStringLiteral("cancelled");
-        qInfo() << "[wake-helper] CancelWake: uid" << uid
-                << "-> accepted (systemd timer" << (bases.size() > 1 ? QStringLiteral("s") : QString())
-                << "stopped)";
+        qInfo() << "[wake-helper] CancelWake: uid" << uid << "-> accepted (systemd timer"
+                << (bases.size() > 1 ? QStringLiteral("s") : QString()) << "stopped)";
         return true;
     }
 
@@ -522,8 +516,7 @@ bool WakeHelper::CancelWake(QString &message)
     if (m_usedRtcwake) {
         QString err;
         if (!runCommand(QStringLiteral("rtcwake"),
-                        QStringList() << QStringLiteral("-m") << QStringLiteral("disable"),
-                        &err)) {
+                        QStringList() << QStringLiteral("-m") << QStringLiteral("disable"), &err)) {
             m_state = QStringLiteral("error");
             m_lastError = err;
             message = err;
@@ -561,8 +554,8 @@ QString WakeHelper::GetStatus()
     const uint uid = callerUid();
     if (m_state == QLatin1String("scheduled")) {
         const QString status = m_seconds > 0
-            ? QStringLiteral("scheduled:") + QString::number(m_seconds)
-            : QStringLiteral("scheduled");
+                                   ? QStringLiteral("scheduled:") + QString::number(m_seconds)
+                                   : QStringLiteral("scheduled");
         qInfo() << "[wake-helper] GetStatus: uid" << uid << "->" << status;
         return status;
     }
@@ -574,9 +567,8 @@ QString WakeHelper::GetStatus()
     // diagnostics. What is NOT public is the free-form error detail: only the
     // state word crosses the bus to an unauthenticated caller, and the full
     // text stays in the root-only journal.
-    const QString status = m_state == QLatin1String("error")
-        ? QStringLiteral("error")
-        : QStringLiteral("idle");
+    const QString status =
+        m_state == QLatin1String("error") ? QStringLiteral("error") : QStringLiteral("idle");
     qInfo() << "[wake-helper] GetStatus: uid" << uid << "->" << status;
     return status;
 }
@@ -600,7 +592,7 @@ int main(int argc, char **argv)
         return 1;
     }
     bus.registerObject(QString::fromLatin1(WakePolicy::kHelperPath), &helper,
-                        QDBusConnection::ExportAllSlots);
+                       QDBusConnection::ExportAllSlots);
 
     qInfo() << "[wake-helper] org.lumalarm.Helper ready on the system bus";
     return app.exec();

@@ -1,5 +1,5 @@
-#include <QtTest>
 #include <QDBusConnection>
+#include <QtTest>
 
 #include "ui/Notifier.h"
 

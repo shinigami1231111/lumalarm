@@ -27,7 +27,10 @@ public:
     QString selectedId;
 
     // Rule 1: row click selects by alarm id.
-    void rowClicked(const QString &alarmId) { selectedId = alarmId; }
+    void rowClicked(const QString &alarmId)
+    {
+        selectedId = alarmId;
+    }
 
     // Rule 2: a removal never touches selectedId (mirrors main.qml, which
     // only forwards the index to alarmManager.removeAlarm()).
@@ -68,7 +71,7 @@ void TestSelectionBehavior::rowClickSelectsById()
     QCOMPARE(model.rowCount(), 3);
 
     SelectionState sel;
-    QVERIFY(!sel.anyRowHighlighted(model));   // nothing selected initially
+    QVERIFY(!sel.anyRowHighlighted(model)); // nothing selected initially
 
     sel.rowClicked("id-a");
     QCOMPARE(sel.selectedId, QString("id-a"));
@@ -96,7 +99,7 @@ void TestSelectionBehavior::removingNonSelectedRowPreservesSelection()
     QCOMPARE(sel.selectedId, QString("id-a"));
     QCOMPARE(model.rowCount(), 2);
     QVERIFY(model.indexOfId("id-b") == -1);
-    QCOMPARE(model.indexOfId("id-a"), 0);   // A is still the first row
+    QCOMPARE(model.indexOfId("id-a"), 0); // A is still the first row
     QVERIFY(sel.anyRowHighlighted(model));
     QCOMPARE(model.at(0).name, QString("A"));
 }

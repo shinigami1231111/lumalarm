@@ -6,9 +6,7 @@
 #include <QDebug>
 
 NightMode::NightMode(ConfigManager *config, Scheduler *scheduler, QObject *parent)
-    : QObject(parent)
-    , m_config(config)
-    , m_scheduler(scheduler)
+    : QObject(parent), m_config(config), m_scheduler(scheduler)
 {
     // Dependencies are passed explicitly; never rediscovered through parent().
     if (!m_config || !m_scheduler)

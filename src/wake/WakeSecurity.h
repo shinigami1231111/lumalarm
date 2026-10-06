@@ -51,8 +51,8 @@ inline bool isValidWakeMode(const QString &mode)
 }
 
 // ── D-Bus contract (STG-1.1) ─────────────────────────────────────────────────
-inline const char *const kHelperService   = "org.lumalarm.Helper";
-inline const char *const kHelperPath      = "/org/lumalarm/Helper";
+inline const char *const kHelperService = "org.lumalarm.Helper";
+inline const char *const kHelperPath = "/org/lumalarm/Helper";
 inline const char *const kHelperInterface = "org.lumalarm.Helper";
 
 // ── Polkit (STG-1.2) ─────────────────────────────────────────────────────────
@@ -71,8 +71,7 @@ inline const char *const kPolkitActionId = "org.lumalarm.schedule.wake";
 inline QStringList pkcheckArguments(const QString &busName, uint pid)
 {
     QStringList args;
-    args << QStringLiteral("--action-id")
-         << QString::fromLatin1(kPolkitActionId);
+    args << QStringLiteral("--action-id") << QString::fromLatin1(kPolkitActionId);
     if (!busName.isEmpty())
         args << QStringLiteral("--system-bus-name") << busName;
     else
@@ -118,11 +117,9 @@ inline bool secondsFromTimerLabel(const QString &description, qint64 *seconds)
 inline QStringList armedTimerBases(const QString &listUnitsOutput)
 {
     QStringList bases;
-    const QStringList lines =
-        listUnitsOutput.split(QLatin1Char('\n'), Qt::SkipEmptyParts);
+    const QStringList lines = listUnitsOutput.split(QLatin1Char('\n'), Qt::SkipEmptyParts);
     for (const QString &line : lines) {
-        const QStringList cols =
-            line.simplified().split(QLatin1Char(' '), Qt::SkipEmptyParts);
+        const QStringList cols = line.simplified().split(QLatin1Char(' '), Qt::SkipEmptyParts);
         if (cols.size() < 4)
             continue;
         const QString &unit = cols.at(0);

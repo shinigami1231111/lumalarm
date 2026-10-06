@@ -121,7 +121,7 @@ void TestAlarmModel::dataReturnsCorrectValueForEachRole()
     AlarmModel model;
     Alarm a = makeAlarm(6, 42, false, "Work");
     a.id = "fixed-id";
-    a.days = { true, false, true, false, false, true, false };
+    a.days = {true, false, true, false, false, true, false};
     a.wakeMode = "rtc";
     a.autoStopDuration = 60;
     a.enableSound = false;
@@ -160,11 +160,9 @@ void TestAlarmModel::dataReturnsCorrectValueForEachRole()
 
     // roleNames expose what the QML delegate declares as required properties.
     const QHash<int, QByteArray> roles = model.roleNames();
-    const QList<QByteArray> expected{
-        "alarmId", "hour", "minute", "alarmEnabled", "name", "days",
-        "wakeMode", "autoStopDuration", "enableSound", "enableCommand",
-        "command", "soundFile"
-    };
+    const QList<QByteArray> expected{"alarmId",     "hour",          "minute",   "alarmEnabled",
+                                     "name",        "days",          "wakeMode", "autoStopDuration",
+                                     "enableSound", "enableCommand", "command",  "soundFile"};
     for (const QByteArray &roleName : expected)
         QVERIFY2(roles.values().contains(roleName), roleName.constData());
 }
@@ -179,10 +177,18 @@ void TestAlarmModel::sortingMatchesOldDisplayOrder()
 
     // Old refreshSortedAlarms(): enabled first, then time-of-day ascending.
     QCOMPARE(model.rowCount(), 4);
-    QCOMPARE(model.at(0).hour, 6);  QCOMPARE(model.at(0).minute, 0);   QVERIFY(model.at(0).enabled);
-    QCOMPARE(model.at(1).hour, 7);  QCOMPARE(model.at(1).minute, 15);  QVERIFY(model.at(1).enabled);
-    QCOMPARE(model.at(2).hour, 9);  QCOMPARE(model.at(2).minute, 0);   QVERIFY(model.at(2).enabled);
-    QCOMPARE(model.at(3).hour, 6);  QCOMPARE(model.at(3).minute, 30);  QVERIFY(!model.at(3).enabled);
+    QCOMPARE(model.at(0).hour, 6);
+    QCOMPARE(model.at(0).minute, 0);
+    QVERIFY(model.at(0).enabled);
+    QCOMPARE(model.at(1).hour, 7);
+    QCOMPARE(model.at(1).minute, 15);
+    QVERIFY(model.at(1).enabled);
+    QCOMPARE(model.at(2).hour, 9);
+    QCOMPARE(model.at(2).minute, 0);
+    QVERIFY(model.at(2).enabled);
+    QCOMPARE(model.at(3).hour, 6);
+    QCOMPARE(model.at(3).minute, 30);
+    QVERIFY(!model.at(3).enabled);
 }
 
 void TestAlarmModel::tieOrderIsStableAcrossToggles()
@@ -227,7 +233,7 @@ void TestAlarmModel::setEnabledNotifiesOnlyEnabledRole()
     // Single alarm: no reorder possible.
     QCOMPARE(moved.count(), 0);
 
-    model.setEnabled(5, true);   // invalid row: no-op
+    model.setEnabled(5, true); // invalid row: no-op
     QCOMPARE(dataChanged.count(), 1);
 }
 
@@ -252,8 +258,8 @@ void TestAlarmModel::resetFromListReloadsAllRows()
     QCOMPARE(model.at(0).name, QString("loaded-2"));
     QCOMPARE(model.at(1).name, QString("loaded-1"));
     QVERIFY(!model.at(1).enabled);
-    QCOMPARE(countChanged.count(), 0);   // 2 -> 2, count unchanged
-    QVERIFY(changed.count() >= 1);       // AlarmManager persists on this
+    QCOMPARE(countChanged.count(), 0); // 2 -> 2, count unchanged
+    QVERIFY(changed.count() >= 1);     // AlarmManager persists on this
 
     model.resetFromList({});
     QCOMPARE(model.rowCount(), 0);
@@ -283,7 +289,7 @@ void TestAlarmModel::getReturnsSameMapShapeAsOldAlarmsProperty()
 {
     AlarmModel model;
     Alarm a = makeAlarm(7, 30, true, "Shape");
-    a.days = { true, true, false, false, false, false, false };
+    a.days = {true, true, false, false, false, false, false};
     model.addAlarm(a);
 
     const QVariant value = model.get(0);
@@ -294,9 +300,8 @@ void TestAlarmModel::getReturnsSameMapShapeAsOldAlarmsProperty()
     // Same keys the old Alarm::toVariantMap()/alarmManager.alarms produced —
     // AlarmEditor.loadAlarm() and main.qml's onAlarmTriggered() rely on them.
     const QStringList expectedKeys{
-        "id", "hour", "minute", "days", "wakeMode", "autoStopDuration",
-        "enableSound", "enableCommand", "command", "enabled", "soundFile", "name"
-    };
+        "id",          "hour",          "minute",  "days",    "wakeMode",  "autoStopDuration",
+        "enableSound", "enableCommand", "command", "enabled", "soundFile", "name"};
     for (const QString &key : expectedKeys)
         QVERIFY2(map.contains(key), qPrintable("missing key: " + key));
 

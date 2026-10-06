@@ -1,11 +1,11 @@
-#include <QtTest>
-#include <QSignalSpy>
-#include <QStandardPaths>
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
+#include <QSignalSpy>
+#include <QStandardPaths>
 #include <QTemporaryDir>
 #include <QUrl>
+#include <QtTest>
 
 #include "managers/ConfigManager.h"
 #include "managers/TonePaths.h"
@@ -80,8 +80,8 @@ private:
 
 QString TestConfigManager::settingsFilePath()
 {
-    return QStandardPaths::writableLocation(QStandardPaths::ConfigLocation)
-           + QStringLiteral("/lumalarm/settings.ini");
+    return QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) +
+           QStringLiteral("/lumalarm/settings.ini");
 }
 
 QString TestConfigManager::systemTonesDirPath() const
@@ -219,7 +219,7 @@ void TestConfigManager::availableTonesCoversEveryAdvertisedFormat()
     // README documents. Adding a sixth to one side without the other is the
     // bug that let .aac import and then vanish from the list.
     const QStringList expected = {
-        QStringLiteral("a.wav"),  QStringLiteral("b.mp3"),  QStringLiteral("c.ogg"),
+        QStringLiteral("a.wav"),  QStringLiteral("b.mp3"), QStringLiteral("c.ogg"),
         QStringLiteral("d.flac"), QStringLiteral("e.aac"),
     };
     for (const QString &name : expected)
@@ -256,17 +256,18 @@ void TestConfigManager::mixedCaseExtensionsImportAndAppearInDiscovery()
     QVERIFY(writeFile(sourceDir.path() + QStringLiteral("/Other.Mp3"), "RIFF"));
     QVERIFY(writeFile(cm.tonesDirectory() + QStringLiteral("/Dropped.FLAC"), "RIFF"));
 
-    QCOMPARE(cm.copyToTones(QUrl::fromLocalFile(sourceDir.path()
-                                                 + QStringLiteral("/MyTone.WAV")).toString()),
+    QCOMPARE(cm.copyToTones(
+                 QUrl::fromLocalFile(sourceDir.path() + QStringLiteral("/MyTone.WAV")).toString()),
              QStringLiteral("MyTone.WAV"));
     QCOMPARE(cm.toneError(), QString());
-    QCOMPARE(cm.copyToTones(QUrl::fromLocalFile(sourceDir.path()
-                                                 + QStringLiteral("/Other.Mp3")).toString()),
+    QCOMPARE(cm.copyToTones(
+                 QUrl::fromLocalFile(sourceDir.path() + QStringLiteral("/Other.Mp3")).toString()),
              QStringLiteral("Other.Mp3"));
     QCOMPARE(cm.toneError(), QString());
 
     const QStringList tones = cm.availableTones();
-    QVERIFY2(tones.contains(QStringLiteral("MyTone.WAV")), qPrintable(tones.join(QLatin1Char(','))));
+    QVERIFY2(tones.contains(QStringLiteral("MyTone.WAV")),
+             qPrintable(tones.join(QLatin1Char(','))));
     QVERIFY2(tones.contains(QStringLiteral("Other.Mp3")), qPrintable(tones.join(QLatin1Char(','))));
     QVERIFY2(tones.contains(QStringLiteral("Dropped.FLAC")),
              "a file already sitting in the tones folder must be discovered");
@@ -285,9 +286,9 @@ void TestConfigManager::copyToTonesImportsFromUrlWithSpacesAndUnicode()
     // Space, '#', '%' and Arabic: every character the old hand-rolled
     // file:// strip got wrong, in one file name. The Arabic word is spelled
     // as UTF-8 hex here so the source file stays pure ASCII.
-    const QString name = QStringLiteral("my tone #1 100% ")
-                         + QString::fromUtf8(QByteArray::fromHex("d8aad986d8a8d98ad987"))
-                         + QStringLiteral(".wav");
+    const QString name = QStringLiteral("my tone #1 100% ") +
+                         QString::fromUtf8(QByteArray::fromHex("d8aad986d8a8d98ad987")) +
+                         QStringLiteral(".wav");
     const QString source = sourceDir.path() + QLatin1Char('/') + name;
     QVERIFY(writeFile(source, "RIFF-CONTENT"));
     QSignalSpy spy(&cm, &ConfigManager::configChanged);
@@ -336,8 +337,8 @@ void TestConfigManager::copyToTonesRejectsBadInput()
     // Unsupported extension: rejected before anything is copied, so it can
     // never sit undiscovered in the tones folder.
     QVERIFY(writeFile(sourceDir.path() + QStringLiteral("/notes.txt"), "text"));
-    QCOMPARE(cm.copyToTones(QUrl::fromLocalFile(sourceDir.path()
-                                                 + QStringLiteral("/notes.txt")).toString()),
+    QCOMPARE(cm.copyToTones(
+                 QUrl::fromLocalFile(sourceDir.path() + QStringLiteral("/notes.txt")).toString()),
              QString());
     QCOMPARE(cm.toneError(), QStringLiteral("unsupported"));
     QVERIFY(!QFile::exists(cm.tonesDirectory() + QStringLiteral("/notes.txt")));
@@ -353,8 +354,8 @@ void TestConfigManager::copyToTonesRejectsBadInput()
 
     // A later success clears the recorded failure.
     QVERIFY(writeFile(sourceDir.path() + QStringLiteral("/good.wav"), "RIFF"));
-    QCOMPARE(cm.copyToTones(QUrl::fromLocalFile(sourceDir.path()
-                                                 + QStringLiteral("/good.wav")).toString()),
+    QCOMPARE(cm.copyToTones(
+                 QUrl::fromLocalFile(sourceDir.path() + QStringLiteral("/good.wav")).toString()),
              QStringLiteral("good.wav"));
     QCOMPARE(cm.toneError(), QString());
     QVERIFY(cm.toneErrorMessage().isEmpty());
@@ -485,9 +486,8 @@ void TestConfigManager::testWakeDurationDefaultsAndClamps()
 
 void TestConfigManager::cleanupTones()
 {
-    const QString tonesDir =
-        QStandardPaths::writableLocation(QStandardPaths::ConfigLocation)
-        + QStringLiteral("/lumalarm/tones");
+    const QString tonesDir = QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) +
+                             QStringLiteral("/lumalarm/tones");
     QDir dir(tonesDir);
     if (dir.exists())
         dir.removeRecursively();

@@ -30,7 +30,7 @@ public:
         AlarmIdRole = Qt::UserRole + 1,
         HourRole,
         MinuteRole,
-        AlarmEnabledRole,   // NOT named "enabled": would collide with Item.enabled
+        AlarmEnabledRole, // NOT named "enabled": would collide with Item.enabled
         NameRole,
         DaysRole,
         WakeModeRole,
@@ -56,7 +56,7 @@ public:
     void removeAlarm(int row);
     void updateAlarm(int row, const Alarm &alarm);
     void setEnabled(int row, bool enabled);
-    void resetFromList(const QVector<Alarm> &alarms);   // used on load
+    void resetFromList(const QVector<Alarm> &alarms); // used on load
 
     // Convenience accessors (C++ and QML — get() keeps the QVariantMap shape
     // the old alarmManager.alarms entries had).
@@ -73,7 +73,7 @@ signals:
 private:
     struct Entry {
         Alarm alarm;
-        int seq = 0;    // insertion order — stable-sort tie breaker (old behavior)
+        int seq = 0; // insertion order — stable-sort tie breaker (old behavior)
     };
 
     // Sort key: enabled first, then time-of-day, then insertion sequence —

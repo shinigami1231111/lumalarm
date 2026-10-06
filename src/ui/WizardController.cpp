@@ -1,8 +1,8 @@
 #include "ui/WizardController.h"
 
+#include "audio/AudioPlayer.h"
 #include "managers/ConfigManager.h"
 #include "wake/WakeManager.h"
-#include "audio/AudioPlayer.h"
 
 #include <QDebug>
 #include <QFile>
@@ -23,14 +23,9 @@ const char *kNotificationsPath = "/org/freedesktop/Notifications";
 const char *kNotificationsInterface = "org.freedesktop.Notifications";
 } // namespace
 
-WizardController::WizardController(ConfigManager *config,
-                                   WakeManager *wake,
-                                   AudioPlayer *audio,
+WizardController::WizardController(ConfigManager *config, WakeManager *wake, AudioPlayer *audio,
                                    QObject *parent)
-    : QObject(parent)
-    , m_config(config)
-    , m_wake(wake)
-    , m_audio(audio)
+    : QObject(parent), m_config(config), m_wake(wake), m_audio(audio)
 {
     // Dependencies are passed explicitly; never rediscovered through parent().
     if (!m_config || !m_wake || !m_audio)
@@ -125,7 +120,7 @@ void WizardController::next()
     if (!canGoNext())
         return;
     if (m_currentStep >= kStepCount - 1)
-        return;                       // step 5 is the last one; Next is not offered
+        return; // step 5 is the last one; Next is not offered
     setCurrentStep(m_currentStep + 1);
 
     // Re-probe the session bus when the notification page becomes current so
@@ -181,7 +176,7 @@ void WizardController::reset()
     m_wakeProbeSkipped = false;
     m_wakeStatus.clear();
     emit wakeStatusChanged();
-    emit currentStepChanged();        // canGoNext() gate changed with the probes
+    emit currentStepChanged(); // canGoNext() gate changed with the probes
     setCurrentStep(Welcome);
     probeNotifications();
 }
@@ -199,9 +194,8 @@ bool WizardController::testWake()
         m_wakeProbePassed = true;
     }
 
-    const QString status = armed
-        ? tr("Wake test succeeded — this machine can wake up.")
-        : tr("Wake test failed: %1").arg(m_wake->lastError());
+    const QString status = armed ? tr("Wake test succeeded — this machine can wake up.")
+                                 : tr("Wake test failed: %1").arg(m_wake->lastError());
     if (m_wakeStatus != status) {
         m_wakeStatus = status;
         emit wakeStatusChanged();
@@ -209,7 +203,7 @@ bool WizardController::testWake()
     // Compare the wake-page gate itself, not canGoNext() — the caller may be on
     // any page when the probe runs.
     if ((m_wakeProbePassed || m_wakeProbeSkipped) != unlockedBefore)
-        emit currentStepChanged();    // Next button gate just opened
+        emit currentStepChanged(); // Next button gate just opened
     return armed;
 }
 
@@ -225,9 +219,7 @@ bool WizardController::testNotification()
 {
     // Per-call interface (never cached), exactly like src/ui/Notifier: a dead
     // or absent daemon must not leave a stale connection behind.
-    QDBusInterface iface(kNotificationsService,
-                         kNotificationsPath,
-                         kNotificationsInterface,
+    QDBusInterface iface(kNotificationsService, kNotificationsPath, kNotificationsInterface,
                          QDBusConnection::sessionBus());
     if (!iface.isValid()) {
         if (m_notificationsAvailable) {
@@ -238,16 +230,15 @@ bool WizardController::testNotification()
     }
 
     // Harmless notification: no urgency, no actions, auto-expire.
-    QDBusReply<quint32> reply = iface.call(
-        QStringLiteral("Notify"),
-        QStringLiteral("Lumalarm"),      // app_name
-        quint32(0),                      // replaces_id
-        QStringLiteral("alarm"),         // app_icon
-        tr("Lumalarm is ready"),               // summary
-        tr("Notifications are working."),      // body
-        QStringList(),                   // actions (as)
-        QVariantMap(),                   // hints (a{sv})
-        8000);                           // expire_timeout (ms)
+    QDBusReply<quint32> reply = iface.call(QStringLiteral("Notify"),
+                                           QStringLiteral("Lumalarm"),       // app_name
+                                           quint32(0),                       // replaces_id
+                                           QStringLiteral("alarm"),          // app_icon
+                                           tr("Lumalarm is ready"),          // summary
+                                           tr("Notifications are working."), // body
+                                           QStringList(),                    // actions (as)
+                                           QVariantMap(),                    // hints (a{sv})
+                                           8000);                            // expire_timeout (ms)
 
     if (!reply.isValid())
         return false;
@@ -268,7 +259,7 @@ QVariantList WizardController::availableSounds() const
     out.reserve(tones.size());
     for (const QString &tone : tones) {
         QVariantMap entry;
-        entry.insert(QStringLiteral("id"), tone);      // what alarms store
+        entry.insert(QStringLiteral("id"), tone); // what alarms store
         entry.insert(QStringLiteral("label"), tone);
         out.append(entry);
     }
@@ -341,8 +332,8 @@ void WizardController::probeNotifications()
     const QDBusConnection bus = QDBusConnection::sessionBus();
     bool available = false;
     if (bus.isConnected() && bus.interface())
-        available = bus.interface()->isServiceRegistered(
-            QString::fromLatin1(kNotificationsService));
+        available =
+            bus.interface()->isServiceRegistered(QString::fromLatin1(kNotificationsService));
     if (m_notificationsAvailable == available)
         return;
     m_notificationsAvailable = available;

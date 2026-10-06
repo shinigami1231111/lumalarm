@@ -1,72 +1,63 @@
 #include "managers/ThemeManager.h"
 
-#include <QStandardPaths>
 #include <QDir>
 #include <QFile>
-#include <QTextStream>
+#include <QFont>
+#include <QFontDatabase>
 #include <QJsonDocument>
 #include <QJsonObject>
-#include <QFontDatabase>
-#include <QFont>
+#include <QStandardPaths>
+#include <QTextStream>
 
 namespace {
-    const char *const KEY_BG = "background_color";
-    const char *const KEY_ACCENT = "accent_color";
-    const char *const KEY_TEXT1 = "text_primary";
-    const char *const KEY_TEXT2 = "text_secondary";
-    const char *const KEY_BORDER = "border_color";
-    const char *const KEY_BLUR_R = "blur_radius";
-    const char *const KEY_BLUR_M = "blur_mode";
-    const char *const KEY_FONT = "font_family";
-    const char *const KEY_RADIUS = "corner_radius";
-    const char *const KEY_BG_PRESET = "background_preset";
-    const char *const KEY_BTN_MIN = "show_minimize_button";
-    const char *const KEY_BTN_MAX = "show_maximize_button";
-    const char *const KEY_BTN_CLOSE = "show_close_button";
-    const char *const KEY_TRAY = "show_tray_icon";
-    const char *const KEY_PRESET = "current_preset";
+const char *const KEY_BG = "background_color";
+const char *const KEY_ACCENT = "accent_color";
+const char *const KEY_TEXT1 = "text_primary";
+const char *const KEY_TEXT2 = "text_secondary";
+const char *const KEY_BORDER = "border_color";
+const char *const KEY_BLUR_R = "blur_radius";
+const char *const KEY_BLUR_M = "blur_mode";
+const char *const KEY_FONT = "font_family";
+const char *const KEY_RADIUS = "corner_radius";
+const char *const KEY_BG_PRESET = "background_preset";
+const char *const KEY_BTN_MIN = "show_minimize_button";
+const char *const KEY_BTN_MAX = "show_maximize_button";
+const char *const KEY_BTN_CLOSE = "show_close_button";
+const char *const KEY_TRAY = "show_tray_icon";
+const char *const KEY_PRESET = "current_preset";
 
-    QString defaultOf(const QString &key)
-    {
-        static const QMap<QString, QString> d = {
-            {KEY_BG, "#0d0d1a"},
-            {KEY_ACCENT, "#3d7fff"},
-            {KEY_TEXT1, "#ffffff"},
-            {KEY_TEXT2, "#808090"},
-            {KEY_BORDER, "#3d7fff"},
-            {KEY_BLUR_R, "20"},
-            {KEY_BLUR_M, "compositor"},
-            {KEY_FONT, ""},
-            {KEY_RADIUS, "22"},
-            {KEY_BG_PRESET, "Dark Glass"},
-            {KEY_BTN_MIN, "true"},
-            {KEY_BTN_MAX, "true"},
-            {KEY_BTN_CLOSE, "true"},
-            {KEY_TRAY, "true"},
-            {KEY_PRESET, ""}
-        };
-        return d.value(key, "");
-    }
-
-    // Built-in palettes. Backgrounds are dark with modest opacity so the
-    // compositor blur shows through; values are "#rrggbb".
-    struct Palette { QString bg, accent, text1, text2, border; };
-    QMap<QString, Palette> palettes()
-    {
-        QMap<QString, Palette> p;
-        p["Catppuccin Mocha"] = {"#1e1e2e", "#cba6f7", "#cdd6f4", "#a6adc8", "#cba6f7"};
-        p["Nord"]             = {"#2e3440", "#88c0d0", "#eceff4", "#d8dee9", "#88c0d0"};
-        p["Gruvbox Dark"]     = {"#282828", "#fabd2f", "#ebdbb2", "#a89984", "#fabd2f"};
-        p["Rose Pine"]        = {"#191724", "#ebbcba", "#e0def4", "#908caa", "#ebbcba"};
-        p["Tokyo Night"]      = {"#1a1b26", "#7aa2f7", "#c0caf5", "#565f89", "#7aa2f7"};
-        return p;
-    }
+QString defaultOf(const QString &key)
+{
+    static const QMap<QString, QString> d = {
+        {KEY_BG, "#0d0d1a"},           {KEY_ACCENT, "#3d7fff"}, {KEY_TEXT1, "#ffffff"},
+        {KEY_TEXT2, "#808090"},        {KEY_BORDER, "#3d7fff"}, {KEY_BLUR_R, "20"},
+        {KEY_BLUR_M, "compositor"},    {KEY_FONT, ""},          {KEY_RADIUS, "22"},
+        {KEY_BG_PRESET, "Dark Glass"}, {KEY_BTN_MIN, "true"},   {KEY_BTN_MAX, "true"},
+        {KEY_BTN_CLOSE, "true"},       {KEY_TRAY, "true"},      {KEY_PRESET, ""}};
+    return d.value(key, "");
 }
 
-ThemeManager::ThemeManager(QObject *parent)
-    : QObject(parent)
+// Built-in palettes. Backgrounds are dark with modest opacity so the
+// compositor blur shows through; values are "#rrggbb".
+struct Palette {
+    QString bg, accent, text1, text2, border;
+};
+QMap<QString, Palette> palettes()
 {
-    QString configDir = QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + "/lumalarm";
+    QMap<QString, Palette> p;
+    p["Catppuccin Mocha"] = {"#1e1e2e", "#cba6f7", "#cdd6f4", "#a6adc8", "#cba6f7"};
+    p["Nord"] = {"#2e3440", "#88c0d0", "#eceff4", "#d8dee9", "#88c0d0"};
+    p["Gruvbox Dark"] = {"#282828", "#fabd2f", "#ebdbb2", "#a89984", "#fabd2f"};
+    p["Rose Pine"] = {"#191724", "#ebbcba", "#e0def4", "#908caa", "#ebbcba"};
+    p["Tokyo Night"] = {"#1a1b26", "#7aa2f7", "#c0caf5", "#565f89", "#7aa2f7"};
+    return p;
+}
+} // namespace
+
+ThemeManager::ThemeManager(QObject *parent) : QObject(parent)
+{
+    QString configDir =
+        QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + "/lumalarm";
     QDir().mkpath(configDir);
     m_filePath = configDir + "/theme.conf";
 
@@ -87,10 +78,9 @@ void ThemeManager::ensureFile()
 {
     if (!QFile::exists(m_filePath)) {
         // Seed with defaults.
-        for (const QString &k : {KEY_BG, KEY_ACCENT, KEY_TEXT1, KEY_TEXT2,
-                                  KEY_BORDER, KEY_BLUR_R, KEY_BLUR_M,
-                                  KEY_FONT, KEY_RADIUS, KEY_BG_PRESET,
-                                  KEY_BTN_MIN, KEY_BTN_MAX, KEY_BTN_CLOSE, KEY_TRAY, KEY_PRESET})
+        for (const QString &k : {KEY_BG, KEY_ACCENT, KEY_TEXT1, KEY_TEXT2, KEY_BORDER, KEY_BLUR_R,
+                                 KEY_BLUR_M, KEY_FONT, KEY_RADIUS, KEY_BG_PRESET, KEY_BTN_MIN,
+                                 KEY_BTN_MAX, KEY_BTN_CLOSE, KEY_TRAY, KEY_PRESET})
             m_theme[k] = defaultOf(k);
         writeToDisk();
     }
@@ -116,10 +106,9 @@ void ThemeManager::loadFromDisk()
         f.close();
     }
     // Fill any missing keys with defaults.
-    for (const QString &k : {KEY_BG, KEY_ACCENT, KEY_TEXT1, KEY_TEXT2,
-                             KEY_BORDER, KEY_BLUR_R, KEY_BLUR_M,
-                             KEY_FONT, KEY_RADIUS, KEY_BG_PRESET,
-                             KEY_BTN_MIN, KEY_BTN_MAX, KEY_BTN_CLOSE, KEY_TRAY, KEY_PRESET})
+    for (const QString &k :
+         {KEY_BG, KEY_ACCENT, KEY_TEXT1, KEY_TEXT2, KEY_BORDER, KEY_BLUR_R, KEY_BLUR_M, KEY_FONT,
+          KEY_RADIUS, KEY_BG_PRESET, KEY_BTN_MIN, KEY_BTN_MAX, KEY_BTN_CLOSE, KEY_TRAY, KEY_PRESET})
         if (!m_theme.contains(k) || m_theme[k].isEmpty())
             m_theme[k] = defaultOf(k);
 
@@ -136,7 +125,8 @@ void ThemeManager::writeToDisk()
         return;
     QTextStream out(&f);
     out << "# Lumalarm theme — edit by hand or via Settings. Changes apply live.\n";
-    out << "# Blur mode: compositor (let Hyprland/Sway blur the desktop behind) or app (internal blur).\n";
+    out << "# Blur mode: compositor (let Hyprland/Sway blur the desktop behind) or app (internal "
+           "blur).\n";
     out << KEY_BG << "=" << m_theme.value(KEY_BG) << "\n";
     out << KEY_ACCENT << "=" << m_theme.value(KEY_ACCENT) << "\n";
     out << KEY_TEXT1 << "=" << m_theme.value(KEY_TEXT1) << "\n";
@@ -168,25 +158,64 @@ QString ThemeManager::value(const QString &key, const QString &fallback) const
     return m_theme.value(key, fallback);
 }
 
-QString ThemeManager::configPath() const { return m_filePath; }
+QString ThemeManager::configPath() const
+{
+    return m_filePath;
+}
 
-QString ThemeManager::background_color() const { return value(KEY_BG, defaultOf(KEY_BG)); }
-void ThemeManager::set_background_color(const QString &v) { setValue(KEY_BG, v); }
+QString ThemeManager::background_color() const
+{
+    return value(KEY_BG, defaultOf(KEY_BG));
+}
+void ThemeManager::set_background_color(const QString &v)
+{
+    setValue(KEY_BG, v);
+}
 
-QString ThemeManager::accent_color() const { return value(KEY_ACCENT, defaultOf(KEY_ACCENT)); }
-void ThemeManager::set_accent_color(const QString &v) { setValue(KEY_ACCENT, v); }
+QString ThemeManager::accent_color() const
+{
+    return value(KEY_ACCENT, defaultOf(KEY_ACCENT));
+}
+void ThemeManager::set_accent_color(const QString &v)
+{
+    setValue(KEY_ACCENT, v);
+}
 
-QString ThemeManager::text_primary() const { return value(KEY_TEXT1, defaultOf(KEY_TEXT1)); }
-void ThemeManager::set_text_primary(const QString &v) { setValue(KEY_TEXT1, v); }
+QString ThemeManager::text_primary() const
+{
+    return value(KEY_TEXT1, defaultOf(KEY_TEXT1));
+}
+void ThemeManager::set_text_primary(const QString &v)
+{
+    setValue(KEY_TEXT1, v);
+}
 
-QString ThemeManager::text_secondary() const { return value(KEY_TEXT2, defaultOf(KEY_TEXT2)); }
-void ThemeManager::set_text_secondary(const QString &v) { setValue(KEY_TEXT2, v); }
+QString ThemeManager::text_secondary() const
+{
+    return value(KEY_TEXT2, defaultOf(KEY_TEXT2));
+}
+void ThemeManager::set_text_secondary(const QString &v)
+{
+    setValue(KEY_TEXT2, v);
+}
 
-QString ThemeManager::border_color() const { return value(KEY_BORDER, defaultOf(KEY_BORDER)); }
-void ThemeManager::set_border_color(const QString &v) { setValue(KEY_BORDER, v); }
+QString ThemeManager::border_color() const
+{
+    return value(KEY_BORDER, defaultOf(KEY_BORDER));
+}
+void ThemeManager::set_border_color(const QString &v)
+{
+    setValue(KEY_BORDER, v);
+}
 
-int ThemeManager::blur_radius() const { return value(KEY_BLUR_R, defaultOf(KEY_BLUR_R)).toInt(); }
-void ThemeManager::set_blur_radius(int v) { setValue(KEY_BLUR_R, QString::number(v)); }
+int ThemeManager::blur_radius() const
+{
+    return value(KEY_BLUR_R, defaultOf(KEY_BLUR_R)).toInt();
+}
+void ThemeManager::set_blur_radius(int v)
+{
+    setValue(KEY_BLUR_R, QString::number(v));
+}
 
 QString ThemeManager::blur_mode() const
 {
@@ -198,11 +227,23 @@ void ThemeManager::set_blur_mode(const QString &v)
     setValue(KEY_BLUR_M, (v.toLower() == "app") ? "app" : "compositor");
 }
 
-QString ThemeManager::font_family() const { return value(KEY_FONT, defaultOf(KEY_FONT)); }
-void ThemeManager::set_font_family(const QString &v) { setValue(KEY_FONT, v); }
+QString ThemeManager::font_family() const
+{
+    return value(KEY_FONT, defaultOf(KEY_FONT));
+}
+void ThemeManager::set_font_family(const QString &v)
+{
+    setValue(KEY_FONT, v);
+}
 
-int ThemeManager::corner_radius() const { return value(KEY_RADIUS, defaultOf(KEY_RADIUS)).toInt(); }
-void ThemeManager::set_corner_radius(int v) { setValue(KEY_RADIUS, QString::number(qMax(0, v))); }
+int ThemeManager::corner_radius() const
+{
+    return value(KEY_RADIUS, defaultOf(KEY_RADIUS)).toInt();
+}
+void ThemeManager::set_corner_radius(int v)
+{
+    setValue(KEY_RADIUS, QString::number(qMax(0, v)));
+}
 
 QColor ThemeManager::backgroundWithAlpha() const
 {
@@ -279,15 +320,21 @@ bool ThemeManager::importFromPywal()
     QString bg = col("background");
     QString fg = col("foreground");
     QString accent = col("color4"); // use a pleasant color4 as accent
-    if (accent.isEmpty()) accent = col("color1");
+    if (accent.isEmpty())
+        accent = col("color1");
     QString text2 = col("color8");
 
     QMap<QString, QString> updates;
-    if (!bg.isEmpty()) updates[KEY_BG] = bg;
-    if (!fg.isEmpty()) updates[KEY_TEXT1] = fg;
-    if (!accent.isEmpty()) updates[KEY_ACCENT] = accent;
-    if (!accent.isEmpty()) updates[KEY_BORDER] = accent;
-    if (!text2.isEmpty()) updates[KEY_TEXT2] = text2;
+    if (!bg.isEmpty())
+        updates[KEY_BG] = bg;
+    if (!fg.isEmpty())
+        updates[KEY_TEXT1] = fg;
+    if (!accent.isEmpty())
+        updates[KEY_ACCENT] = accent;
+    if (!accent.isEmpty())
+        updates[KEY_BORDER] = accent;
+    if (!text2.isEmpty())
+        updates[KEY_TEXT2] = text2;
 
     if (updates.isEmpty())
         return false;
@@ -305,20 +352,56 @@ void ThemeManager::reload()
     loadFromDisk();
 }
 
-QString ThemeManager::background_preset() const { return value(KEY_BG_PRESET, defaultOf(KEY_BG_PRESET)); }
-void ThemeManager::set_background_preset(const QString &v) { setValue(KEY_BG_PRESET, v); }
+QString ThemeManager::background_preset() const
+{
+    return value(KEY_BG_PRESET, defaultOf(KEY_BG_PRESET));
+}
+void ThemeManager::set_background_preset(const QString &v)
+{
+    setValue(KEY_BG_PRESET, v);
+}
 
-bool ThemeManager::show_minimize_button() const { return value(KEY_BTN_MIN, defaultOf(KEY_BTN_MIN)) == "true"; }
-void ThemeManager::set_show_minimize_button(bool v) { setValue(KEY_BTN_MIN, v ? "true" : "false"); }
+bool ThemeManager::show_minimize_button() const
+{
+    return value(KEY_BTN_MIN, defaultOf(KEY_BTN_MIN)) == "true";
+}
+void ThemeManager::set_show_minimize_button(bool v)
+{
+    setValue(KEY_BTN_MIN, v ? "true" : "false");
+}
 
-bool ThemeManager::show_maximize_button() const { return value(KEY_BTN_MAX, defaultOf(KEY_BTN_MAX)) == "true"; }
-void ThemeManager::set_show_maximize_button(bool v) { setValue(KEY_BTN_MAX, v ? "true" : "false"); }
+bool ThemeManager::show_maximize_button() const
+{
+    return value(KEY_BTN_MAX, defaultOf(KEY_BTN_MAX)) == "true";
+}
+void ThemeManager::set_show_maximize_button(bool v)
+{
+    setValue(KEY_BTN_MAX, v ? "true" : "false");
+}
 
-bool ThemeManager::show_close_button() const { return value(KEY_BTN_CLOSE, defaultOf(KEY_BTN_CLOSE)) == "true"; }
-void ThemeManager::set_show_close_button(bool v) { setValue(KEY_BTN_CLOSE, v ? "true" : "false"); }
+bool ThemeManager::show_close_button() const
+{
+    return value(KEY_BTN_CLOSE, defaultOf(KEY_BTN_CLOSE)) == "true";
+}
+void ThemeManager::set_show_close_button(bool v)
+{
+    setValue(KEY_BTN_CLOSE, v ? "true" : "false");
+}
 
-bool ThemeManager::show_tray_icon() const { return value(KEY_TRAY, defaultOf(KEY_TRAY)) == "true"; }
-void ThemeManager::set_show_tray_icon(bool v) { setValue(KEY_TRAY, v ? "true" : "false"); }
+bool ThemeManager::show_tray_icon() const
+{
+    return value(KEY_TRAY, defaultOf(KEY_TRAY)) == "true";
+}
+void ThemeManager::set_show_tray_icon(bool v)
+{
+    setValue(KEY_TRAY, v ? "true" : "false");
+}
 
-QString ThemeManager::current_preset() const { return value(KEY_PRESET, defaultOf(KEY_PRESET)); }
-void ThemeManager::set_current_preset(const QString &v) { setValue(KEY_PRESET, v); }
+QString ThemeManager::current_preset() const
+{
+    return value(KEY_PRESET, defaultOf(KEY_PRESET));
+}
+void ThemeManager::set_current_preset(const QString &v)
+{
+    setValue(KEY_PRESET, v);
+}

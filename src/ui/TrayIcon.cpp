@@ -10,10 +10,8 @@
 #include <QMenu>
 
 TrayIcon::TrayIcon(AlarmModel *model, Scheduler *scheduler, QObject *parent)
-    : QObject(parent)
-    , m_tray(new QSystemTrayIcon(QIcon(QStringLiteral(":/icon.svg")), this))
-    , m_model(model)
-    , m_scheduler(scheduler)
+    : QObject(parent), m_tray(new QSystemTrayIcon(QIcon(QStringLiteral(":/icon.svg")), this)),
+      m_model(model), m_scheduler(scheduler)
 {
     QMenu *menu = new QMenu;
     QAction *open = menu->addAction(tr("Open Lumalarm"));
@@ -26,19 +24,18 @@ TrayIcon::TrayIcon(AlarmModel *model, Scheduler *scheduler, QObject *parent)
     connect(quit, &QAction::triggered, this, &TrayIcon::quitRequested);
     connect(m_tray, &QSystemTrayIcon::activated, this,
             [this](QSystemTrayIcon::ActivationReason reason) {
-        if (reason == QSystemTrayIcon::Trigger || reason == QSystemTrayIcon::DoubleClick)
-            emit showWindowRequested();
-    });
+                if (reason == QSystemTrayIcon::Trigger || reason == QSystemTrayIcon::DoubleClick)
+                    emit showWindowRequested();
+            });
 
     // Any change to the alarm list can change which alarm is next.
     if (m_model) {
         connect(m_model, &QAbstractItemModel::rowsInserted, this, [this]() { refresh(); });
         connect(m_model, &QAbstractItemModel::rowsRemoved, this, [this]() { refresh(); });
         connect(m_model, &QAbstractItemModel::modelReset, this, [this]() { refresh(); });
-        connect(m_model, &QAbstractItemModel::dataChanged, this,
-                [this](const QModelIndex &, const QModelIndex &, const QVector<int> &) {
-            refresh();
-        });
+        connect(
+            m_model, &QAbstractItemModel::dataChanged, this,
+            [this](const QModelIndex &, const QModelIndex &, const QVector<int> &) { refresh(); });
     }
     // Arming or clearing a wake changes what the tooltip should say.
     if (m_scheduler) {
@@ -101,8 +98,8 @@ QString TrayIcon::buildTooltip() const
     // secondsUntilNextAlarm() returns whole seconds, so now+secs lands up to 59 s
     // before the actual occurrence (23:58:59 for a 23:59 alarm). Add 59 s before
     // formatting so truncating to "HH:mm" recovers the intended minute.
-    const QString time = QDateTime::currentDateTime().addSecs(secs + 59).toString(
-        QStringLiteral("HH:mm"));
+    const QString time =
+        QDateTime::currentDateTime().addSecs(secs + 59).toString(QStringLiteral("HH:mm"));
     if (m_scheduler->wakeState() == QLatin1String("armed"))
         return tr("Next alarm: %1 (in %2 min)").arg(time).arg(secs / 60);
     return tr("Next alarm: %1").arg(time);

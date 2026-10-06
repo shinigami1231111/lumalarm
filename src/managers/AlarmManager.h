@@ -4,18 +4,18 @@
 #include "models/Alarm.h"
 #include "models/AlarmModel.h"
 
-#include <QObject>
-#include <QVector>
-#include <QVariantMap>
+#include <QDir>
+#include <QFile>
+#include <QHash>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
-#include <QFile>
-#include <QDir>
-#include <QStandardPaths>
-#include <QHash>
-#include <QUuid>
+#include <QObject>
 #include <QSaveFile>
+#include <QStandardPaths>
+#include <QUuid>
+#include <QVariantMap>
+#include <QVector>
 
 // Owns the alarm storage and persistence (alarms.json).
 //

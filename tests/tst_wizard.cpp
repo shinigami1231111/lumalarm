@@ -1,18 +1,18 @@
-#include <QtTest>
+#include <QDir>
+#include <QFile>
+#include <QSettings>
 #include <QSignalSpy>
 #include <QStandardPaths>
-#include <QSettings>
-#include <QFile>
-#include <QDir>
+#include <QtTest>
 
 #include <QDBusConnection>
 #include <QDBusConnectionInterface>
 
-#include "managers/ConfigManager.h"
-#include "managers/AlarmManager.h"
-#include "wake/WakeManager.h"
 #include "audio/AudioPlayer.h"
+#include "managers/AlarmManager.h"
+#include "managers/ConfigManager.h"
 #include "ui/WizardController.h"
+#include "wake/WakeManager.h"
 
 // ============================================================================
 // Unit tests for WizardController (src/ui/) — the STG-5.5 first-run wizard.
@@ -37,7 +37,10 @@ public:
     bool probeResult = false;
 
 protected:
-    bool armProbeWake() override { return probeResult; }
+    bool armProbeWake() override
+    {
+        return probeResult;
+    }
 };
 
 const char *kNotificationsService = "org.freedesktop.Notifications";
@@ -45,15 +48,15 @@ const char *kNotificationsService = "org.freedesktop.Notifications";
 bool notificationDaemonPresent()
 {
     const QDBusConnection bus = QDBusConnection::sessionBus();
-    return bus.isConnected() && bus.interface()
-        && bus.interface()->isServiceRegistered(QLatin1String(kNotificationsService));
+    return bus.isConnected() && bus.interface() &&
+           bus.interface()->isServiceRegistered(QLatin1String(kNotificationsService));
 }
 
 // Profile paths the wizard is expected to leave alone.
 QString profileDir()
 {
-    return QStandardPaths::writableLocation(QStandardPaths::ConfigLocation)
-           + QStringLiteral("/lumalarm");
+    return QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) +
+           QStringLiteral("/lumalarm");
 }
 
 QString alarmsPath()
@@ -217,7 +220,7 @@ void TestWizard::skipPersistsAndEmitsExactlyOnce()
     QCOMPARE(m_config->wizardCompleted(), true);
 
     w.skip();
-    QCOMPARE(spy.count(), 1);           // guard: no duplicate emission
+    QCOMPARE(spy.count(), 1); // guard: no duplicate emission
 }
 
 void TestWizard::finishPersistsAndEmitsExactlyOnce()
@@ -283,8 +286,7 @@ void TestWizard::genuineFreshProfileOpensWizard()
     // Put an instance back before asserting anything — cleanup() needs one.
     m_config = new ConfigManager(this);
 
-    QVERIFY2(reportedFirstRun,
-             "a brand-new profile must report wizardCompleted()==false");
+    QVERIFY2(reportedFirstRun, "a brand-new profile must report wizardCompleted()==false");
     QVERIFY2(overlayVisible, "a brand-new profile must show the wizard overlay");
     QCOMPARE(landingStep, 0);
 }
@@ -305,8 +307,7 @@ void TestWizard::establishedProfileIsNotPromptedAgain()
 
     QVERIFY2(established.wizardCompleted(),
              "an upgrade must not report an existing profile as a first run");
-    QVERIFY2(w.wizardCompleted(),
-             "the overlay must stay hidden for an existing profile");
+    QVERIFY2(w.wizardCompleted(), "the overlay must stay hidden for an existing profile");
 }
 
 void TestWizard::completedWizardDoesNotReopen()
@@ -334,11 +335,11 @@ void TestWizard::forceShowOverridesPersistedFlag()
     m_config->setWizardCompleted(true);
 
     ProbeableWizard w(m_config, m_wake, m_audio);
-    QVERIFY(w.wizardCompleted());       // nothing forced yet
+    QVERIFY(w.wizardCompleted()); // nothing forced yet
 
     w.setForceShow(true);
-    QCOMPARE(w.wizardCompleted(), false);   // --show-wizard wins ...
-    QCOMPARE(m_config->wizardCompleted(), true);   // ... but the disk key is untouched
+    QCOMPARE(w.wizardCompleted(), false);        // --show-wizard wins ...
+    QCOMPARE(m_config->wizardCompleted(), true); // ... but the disk key is untouched
 
     // An explicit finish ends the override and persists normally.
     QSignalSpy spy(&w, &WizardController::wizardCompletedChanged);
@@ -350,17 +351,17 @@ void TestWizard::forceShowOverridesPersistedFlag()
 void TestWizard::languageSelectionUpdatesConfiguration()
 {
     ProbeableWizard w(m_config, m_wake, m_audio);
-    w.setLanguage(QString());               // deterministic starting point
+    w.setLanguage(QString()); // deterministic starting point
 
     QSignalSpy spy(&w, &WizardController::languageChanged);
     QCOMPARE(spy.count(), 0);
 
     w.setLanguage(QStringLiteral("ar"));
     QCOMPARE(w.language(), QStringLiteral("ar"));
-    QCOMPARE(m_config->language(), QStringLiteral("ar"));   // one shared key
+    QCOMPARE(m_config->language(), QStringLiteral("ar")); // one shared key
     QCOMPARE(spy.count(), 1);
 
-    w.setLanguage(QStringLiteral("ar"));                     // unchanged -> silent
+    w.setLanguage(QStringLiteral("ar")); // unchanged -> silent
     QCOMPARE(spy.count(), 1);
 
     w.setLanguage(QStringLiteral("en"));
@@ -368,7 +369,7 @@ void TestWizard::languageSelectionUpdatesConfiguration()
     QCOMPARE(m_config->language(), QStringLiteral("en"));
     QCOMPARE(spy.count(), 2);
 
-    w.setLanguage(QString());               // back to "follow the system locale"
+    w.setLanguage(QString()); // back to "follow the system locale"
     QCOMPARE(spy.count(), 3);
     QVERIFY(m_config->language().isEmpty());
 }
@@ -389,7 +390,7 @@ void TestWizard::testWakeSuccessUnlocksNext()
     const bool outcome = page.testWake();
 
     QCOMPARE(outcome, true);
-    QCOMPARE(page.canGoNext(), true);          // gate opened
+    QCOMPARE(page.canGoNext(), true); // gate opened
     QVERIFY(stepSpy.count() >= 1);
     QVERIFY(statusSpy.count() >= 1);
     QVERIFY(page.wakeStatus().contains(QStringLiteral("succeeded")));
@@ -410,8 +411,8 @@ void TestWizard::testWakeFailureLeavesNextLocked()
     const bool outcome = page.testWake();
 
     QCOMPARE(outcome, false);
-    QCOMPARE(page.canGoNext(), false);        // still locked
-    QCOMPARE(stepSpy.count(), 0);             // gate did not open
+    QCOMPARE(page.canGoNext(), false); // still locked
+    QCOMPARE(stepSpy.count(), 0);      // gate did not open
     QVERIFY(page.wakeStatus().contains(QStringLiteral("failed")));
 }
 
@@ -441,7 +442,8 @@ void TestWizard::availableSoundsAreEnumerated()
 
     bool found = false;
     for (const QVariant &entry : sounds)
-        if (entry.toMap().value(QStringLiteral("id")).toString() == QLatin1String("wizard-test-tone.wav"))
+        if (entry.toMap().value(QStringLiteral("id")).toString() ==
+            QLatin1String("wizard-test-tone.wav"))
             found = true;
     QVERIFY2(found, "seeded tone missing from availableSounds()");
 }
@@ -450,7 +452,7 @@ void TestWizard::defaultSoundRoundTrips()
 {
     ProbeableWizard w(m_config, m_wake, m_audio);
     const QString before = w.defaultSound();
-    QVERIFY(!before.isEmpty());          // default = first available tone
+    QVERIFY(!before.isEmpty()); // default = first available tone
 
     QSignalSpy spy(&w, &WizardController::defaultSoundChanged);
     w.setDefaultSound(QStringLiteral("other-tone.mp3"));
@@ -526,7 +528,7 @@ void TestWizard::wizardRunNeverTouchesAlarms()
 
         ProbeableWizard w(m_config, m_wake, m_audio);
         w.probeResult = true;
-        w.testWake();                     // STG-5.1 test mode, no alarm by design
+        w.testWake(); // STG-5.1 test mode, no alarm by design
         w.finish();
 
         countAfter = alarms.alarmList().size();
@@ -544,8 +546,7 @@ void TestWizard::wizardRunNeverTouchesAlarms()
 
     QVERIFY2(countBefore >= 1, "the seeded alarm never made it into the store");
     QCOMPARE(countAfter, countBefore);
-    QVERIFY2(storeUnchanged,
-             "a wizard run must not add to or rewrite the alarm store");
+    QVERIFY2(storeUnchanged, "a wizard run must not add to or rewrite the alarm store");
 }
 
 QTEST_GUILESS_MAIN(TestWizard)

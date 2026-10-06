@@ -1,9 +1,9 @@
-#include <QtTest>
 #include <QCoreApplication>
 #include <QFile>
 #include <QQmlComponent>
 #include <QQmlEngine>
 #include <QTranslator>
+#include <QtTest>
 
 #include "managers/ConfigManager.h"
 
@@ -60,8 +60,8 @@ class FakeTranslator : public QTranslator
 public:
     using QTranslator::QTranslator;
 
-    QString translate(const char *context, const char *sourceText,
-                      const char *disambiguation, int n) const override
+    QString translate(const char *context, const char *sourceText, const char *disambiguation,
+                      int n) const override
     {
         Q_UNUSED(context)
         Q_UNUSED(disambiguation)
@@ -109,8 +109,7 @@ void TstI18n::sourceFallbackWithoutTranslator()
     // No translator is installed in this process, so every lookup must come
     // back byte-identical to the source. This is what a machine without
     // Qt Linguist (and the CI image) actually renders.
-    QCOMPARE(QCoreApplication::translate("SettingsPage", "Settings"),
-             QStringLiteral("Settings"));
+    QCOMPARE(QCoreApplication::translate("SettingsPage", "Settings"), QStringLiteral("Settings"));
     QCOMPARE(QCoreApplication::translate("WizardController", "Wake test failed: %1"),
              QStringLiteral("Wake test failed: %1"));
 }
@@ -146,23 +145,19 @@ void TstI18n::arabicCatalogTranslatesKnownStrings()
 
     // The placeholder must survive .arg() exactly as authored, otherwise the
     // runtime message loses the reason/duration it is supposed to report.
-    const QString failed = QCoreApplication::translate("WizardController",
-                                                       "Wake test failed: %1")
+    const QString failed = QCoreApplication::translate("WizardController", "Wake test failed: %1")
                                .arg(QStringLiteral("boom"));
-    QVERIFY2(failed.contains(QStringLiteral("boom")),
-             "translation dropped the %1 placeholder");
+    QVERIFY2(failed.contains(QStringLiteral("boom")), "translation dropped the %1 placeholder");
     QVERIFY2(containsArabic(failed), "Wake test failed is not Arabic");
 
     // Leading/trailing spaces are significant: the UI concatenates these
     // fragments around a countdown, so trimming them corrupts the output.
     const QString hourSuffix = QCoreApplication::translate("main", "h ");
-    QVERIFY2(hourSuffix.endsWith(QLatin1Char(' ')),
-             "trailing space dropped from 'h '");
+    QVERIFY2(hourSuffix.endsWith(QLatin1Char(' ')), "trailing space dropped from 'h '");
     QVERIFY2(hourSuffix != QStringLiteral("h "), "'h ' was left untranslated");
 
     const QString minutePrefix = QCoreApplication::translate("SettingsPage", " min");
-    QVERIFY2(minutePrefix.startsWith(QLatin1Char(' ')),
-             "leading space dropped from ' min'");
+    QVERIFY2(minutePrefix.startsWith(QLatin1Char(' ')), "leading space dropped from ' min'");
     QVERIFY2(minutePrefix != QStringLiteral(" min"), "' min' was left untranslated");
 
     // Unknown text still falls back to the source instead of an empty label.
@@ -208,13 +203,13 @@ void TstI18n::languageSettingRoundTrips()
     // test binaries and may already hold a value, so seed a known state
     // instead of assuming a pristine profile.
     config.setLanguage(QString());
-    QVERIFY(config.language().isEmpty());   // "" == follow the system locale
+    QVERIFY(config.language().isEmpty()); // "" == follow the system locale
 
     config.setLanguage(QStringLiteral("ar"));
     QCOMPARE(config.language(), QStringLiteral("ar"));
 
     QSignalSpy changed(&config, &ConfigManager::languageChanged);
-    config.setLanguage(QStringLiteral("ar"));   // no change -> no signal
+    config.setLanguage(QStringLiteral("ar")); // no change -> no signal
     QCOMPARE(changed.count(), 0);
     config.setLanguage(QStringLiteral("en"));
     QCOMPARE(changed.count(), 1);

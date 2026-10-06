@@ -1,13 +1,13 @@
 #ifndef CONFIGMANAGER_H
 #define CONFIGMANAGER_H
 
-#include <QObject>
-#include <QSettings>
-#include <QString>
-#include <QStringList>
-#include <QStandardPaths>
 #include <QDir>
 #include <QFile>
+#include <QObject>
+#include <QSettings>
+#include <QStandardPaths>
+#include <QString>
+#include <QStringList>
 #include <QUrl>
 
 class ThemeManager;
@@ -15,8 +15,10 @@ class ThemeManager;
 class ConfigManager : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QString defaultWakeMode READ defaultWakeMode WRITE setDefaultWakeMode NOTIFY configChanged)
-    Q_PROPERTY(QString timePickerMode READ timePickerMode WRITE setTimePickerMode NOTIFY configChanged)
+    Q_PROPERTY(
+        QString defaultWakeMode READ defaultWakeMode WRITE setDefaultWakeMode NOTIFY configChanged)
+    Q_PROPERTY(
+        QString timePickerMode READ timePickerMode WRITE setTimePickerMode NOTIFY configChanged)
     Q_PROPERTY(QString tonesDirectory READ tonesDirectory NOTIFY configChanged)
     // Package-installed, read-only tone folder (the first existing XDG data
     // location carrying lumalarm/tones — /usr/share/lumalarm/tones on an Arch
@@ -34,23 +36,33 @@ class ConfigManager : public QObject
     Q_PROPERTY(QString themeBg READ themeBg WRITE setThemeBg NOTIFY configChanged)
     Q_PROPERTY(QString themeAccent READ themeAccent WRITE setThemeAccent NOTIFY configChanged)
     Q_PROPERTY(double themeOpacity READ themeOpacity WRITE setThemeOpacity NOTIFY configChanged)
-    Q_PROPERTY(QString themeTextPrimary READ themeTextPrimary WRITE setThemeTextPrimary NOTIFY configChanged)
-    Q_PROPERTY(QString themeTextSecondary READ themeTextSecondary WRITE setThemeTextSecondary NOTIFY configChanged)
-    Q_PROPERTY(bool stopwatchShowMs READ stopwatchShowMs WRITE setStopwatchShowMs NOTIFY configChanged)
+    Q_PROPERTY(QString themeTextPrimary READ themeTextPrimary WRITE setThemeTextPrimary NOTIFY
+                   configChanged)
+    Q_PROPERTY(QString themeTextSecondary READ themeTextSecondary WRITE setThemeTextSecondary NOTIFY
+                   configChanged)
+    Q_PROPERTY(
+        bool stopwatchShowMs READ stopwatchShowMs WRITE setStopwatchShowMs NOTIFY configChanged)
     // Duration (seconds) offered by the Settings page "Test alarm" card and
     // passed to WakeManager::armTestWake(). Clamped to [60, 3600].
-    Q_PROPERTY(int testWakeDuration READ testWakeDuration WRITE setTestWakeDuration NOTIFY configChanged)
+    Q_PROPERTY(
+        int testWakeDuration READ testWakeDuration WRITE setTestWakeDuration NOTIFY configChanged)
     // Desktop notifications (freedesktop protocol). On by default.
-    Q_PROPERTY(bool notificationsEnabled READ notificationsEnabled WRITE setNotificationsEnabled NOTIFY configChanged)
+    Q_PROPERTY(bool notificationsEnabled READ notificationsEnabled WRITE setNotificationsEnabled
+                   NOTIFY configChanged)
     // System tray icon visibility. Defaults to the pre-existing theme.conf
     // setting (show_tray_icon) so upgrading users keep their choice.
-    Q_PROPERTY(bool trayIconEnabled READ trayIconEnabled WRITE setTrayIconEnabled NOTIFY configChanged)
+    Q_PROPERTY(
+        bool trayIconEnabled READ trayIconEnabled WRITE setTrayIconEnabled NOTIFY configChanged)
     // Night mode: dim the window before an alarm. Defaults are 0 / 30 min / 0.4.
-    Q_PROPERTY(bool nightModeEnabled READ nightModeEnabled WRITE setNightModeEnabled NOTIFY configChanged)
-    Q_PROPERTY(int nightModeMinutesBefore READ nightModeMinutesBefore WRITE setNightModeMinutesBefore NOTIFY configChanged)
-    Q_PROPERTY(double nightModeOpacity READ nightModeOpacity WRITE setNightModeOpacity NOTIFY configChanged)
+    Q_PROPERTY(
+        bool nightModeEnabled READ nightModeEnabled WRITE setNightModeEnabled NOTIFY configChanged)
+    Q_PROPERTY(int nightModeMinutesBefore READ nightModeMinutesBefore WRITE
+                   setNightModeMinutesBefore NOTIFY configChanged)
+    Q_PROPERTY(double nightModeOpacity READ nightModeOpacity WRITE setNightModeOpacity NOTIFY
+                   configChanged)
     // First-run wizard (STG-5.5): true once the user finished or skipped it.
-    Q_PROPERTY(bool wizardCompleted READ wizardCompleted WRITE setWizardCompleted NOTIFY configChanged)
+    Q_PROPERTY(
+        bool wizardCompleted READ wizardCompleted WRITE setWizardCompleted NOTIFY configChanged)
     // UI language (STG-5.2). Empty = follow the system locale; otherwise a Qt
     // locale name ("en", "ar") that matches translations/lumalarm_<lang>.ts.
     // NOTIFY stays configChanged like every other property here; languageChanged

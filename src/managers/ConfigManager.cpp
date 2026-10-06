@@ -1,8 +1,8 @@
 #include "managers/ConfigManager.h"
 #include "managers/ThemeManager.h"
 #include "managers/TonePaths.h"
-#include <QFileInfoList>
 #include <QFileInfo>
+#include <QFileInfoList>
 
 namespace {
 // QML hands a url over as a JavaScript string in QUrl::PrettyDecoded form:
@@ -25,8 +25,7 @@ QString localPathFromUrlString(const QString &source)
 }
 } // namespace
 
-ConfigManager::ConfigManager(QObject *parent)
-    : QObject(parent)
+ConfigManager::ConfigManager(QObject *parent) : QObject(parent)
 {
     migrateOldConfig();
 
@@ -40,8 +39,8 @@ ConfigManager::ConfigManager(QObject *parent)
     // alarms.json is deliberately NOT part of the test: main() constructs
     // AlarmManager before ConfigManager, and AlarmManager::loadFromFile()
     // creates the file on a brand-new profile.
-    m_firstRunProfile = !QFileInfo::exists(m_configDir + "/settings.ini")
-                        && !QFileInfo::exists(m_configDir + "/theme.conf");
+    m_firstRunProfile = !QFileInfo::exists(m_configDir + "/settings.ini") &&
+                        !QFileInfo::exists(m_configDir + "/theme.conf");
 
     QDir().mkpath(m_configDir);
 
@@ -58,7 +57,8 @@ ConfigManager::ConfigManager(QObject *parent)
 void ConfigManager::migrateOldConfig()
 {
     QString newDir = QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + "/lumalarm";
-    QString oldDir = QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + "/glass-alarm";
+    QString oldDir =
+        QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + "/glass-alarm";
 
     if (QDir(oldDir).exists() && !QDir(newDir).exists()) {
         QDir().rename(oldDir, newDir);
@@ -110,9 +110,8 @@ QStringList ConfigManager::availableTones() const
     // sound combo boxes keep a single predictable order.
     const QStringList dirs = TonePaths::searchDirectories();
     for (const QString &dir : dirs) {
-        const QFileInfoList files = QDir(dir).entryInfoList(TonePaths::nameFilters(),
-                                                            QDir::Files | QDir::Readable,
-                                                            QDir::Name);
+        const QFileInfoList files = QDir(dir).entryInfoList(
+            TonePaths::nameFilters(), QDir::Files | QDir::Readable, QDir::Name);
         for (const QFileInfo &fi : files) {
             if (!tones.contains(fi.fileName()))
                 tones.append(fi.fileName());
@@ -211,8 +210,8 @@ bool ConfigManager::deleteTone(const QString &fileName)
 {
     setToneError(QString());
 
-    if (fileName.isEmpty() || fileName.contains(QLatin1Char('/'))
-        || fileName.contains(QLatin1Char('\\'))) {
+    if (fileName.isEmpty() || fileName.contains(QLatin1Char('/')) ||
+        fileName.contains(QLatin1Char('\\'))) {
         setToneError(QStringLiteral("invalid-path"));
         return false;
     }
@@ -367,8 +366,7 @@ void ConfigManager::setNotificationsEnabled(bool enabled)
 
 bool ConfigManager::trayIconEnabled() const
 {
-    return m_settings->value(QStringLiteral("trayIconEnabled"),
-                             m_theme->show_tray_icon()).toBool();
+    return m_settings->value(QStringLiteral("trayIconEnabled"), m_theme->show_tray_icon()).toBool();
 }
 
 void ConfigManager::setTrayIconEnabled(bool enabled)
@@ -397,15 +395,15 @@ int ConfigManager::nightModeMinutesBefore() const
 
 void ConfigManager::setNightModeMinutesBefore(int minutes)
 {
-    m_settings->setValue(QStringLiteral("nightMode/minutesBefore"),
-                         qBound(1, minutes, 180));
+    m_settings->setValue(QStringLiteral("nightMode/minutesBefore"), qBound(1, minutes, 180));
     emit configChanged();
 }
 
 double ConfigManager::nightModeOpacity() const
 {
     // Valid range 0.0..1.0; anything else in the file falls back to 0.4.
-    const double opacity = m_settings->value(QStringLiteral("nightMode/dimOpacity"), 0.4).toDouble();
+    const double opacity =
+        m_settings->value(QStringLiteral("nightMode/dimOpacity"), 0.4).toDouble();
     return (opacity >= 0.0 && opacity <= 1.0) ? opacity : 0.4;
 }
 

@@ -35,11 +35,16 @@ WakeResult classifyWake(qint64 scheduledUtc, qint64 nowUtc, qint64 *lateSeconds)
 QString wakeResultToString(WakeResult r)
 {
     switch (r) {
-    case WakeResult::OnTime:   return "OnTime";
-    case WakeResult::Late:     return "Late";
-    case WakeResult::VeryLate: return "VeryLate";
-    case WakeResult::Missed:   return "Missed";
-    case WakeResult::Unknown:  return "Unknown";
+    case WakeResult::OnTime:
+        return "OnTime";
+    case WakeResult::Late:
+        return "Late";
+    case WakeResult::VeryLate:
+        return "VeryLate";
+    case WakeResult::Missed:
+        return "Missed";
+    case WakeResult::Unknown:
+        return "Unknown";
     }
     return "Unknown";
 }
@@ -69,7 +74,10 @@ qint64 computeNextOccurrenceUtc(const Alarm &a, const QDateTime &now, QTimeZone 
 
     bool hasDays = false;
     for (int d = 0; d < 7; ++d) {
-        if (a.days[d]) { hasDays = true; break; }
+        if (a.days[d]) {
+            hasDays = true;
+            break;
+        }
     }
 
     if (!hasDays) {
@@ -82,9 +90,11 @@ qint64 computeNextOccurrenceUtc(const Alarm &a, const QDateTime &now, QTimeZone 
     const int currentDay = n.date().dayOfWeek() - 1; // Monday = 0
     for (int dayOffset = 0; dayOffset < 7; ++dayOffset) {
         const int checkDay = (currentDay + dayOffset) % 7;
-        if (!a.days[checkDay]) continue;
+        if (!a.days[checkDay])
+            continue;
         const qint64 occ = occurrenceUtcAt(n.date().addDays(dayOffset));
-        if (occ <= baseEpoch) continue;
+        if (occ <= baseEpoch)
+            continue;
         return occ;
     }
 
@@ -110,8 +120,7 @@ void PendingWake::fromJson(const QJsonObject &o)
     valid = !alarmId.isEmpty() && scheduledUtc > 0;
 }
 
-SchedulerStateStore::SchedulerStateStore(const QString &filePath)
-    : m_filePath(filePath)
+SchedulerStateStore::SchedulerStateStore(const QString &filePath) : m_filePath(filePath)
 {
     if (m_filePath.isEmpty()) {
         const QString configDir =
@@ -166,7 +175,8 @@ bool SchedulerStateStore::persist(const PendingWake &w, QString *error)
 
     file.write(data);
     if (!file.commit()) {
-        qWarning() << "[SchedulerState] ERROR: failed to commit" << m_filePath << file.errorString();
+        qWarning() << "[SchedulerState] ERROR: failed to commit" << m_filePath
+                   << file.errorString();
         if (error)
             *error = "failed to commit scheduler state: " + file.errorString();
         return false;

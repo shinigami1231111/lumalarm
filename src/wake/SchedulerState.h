@@ -1,39 +1,39 @@
 #ifndef SCHEDULERSTATE_H
 #define SCHEDULERSTATE_H
 
+#include "managers/AlarmManager.h"
 #include <QDateTime>
 #include <QJsonObject>
 #include <QString>
 #include <QTimeZone>
-#include "managers/AlarmManager.h"
 
 // ── Wake-recovery policy ─────────────────────────────────────────────────────
 // Every timing window used to classify a boot relative to a scheduled wake
 // lives here, in one place, with the reasoning for each value. No scattered
 // magic numbers anywhere else in the scheduler.
 namespace WakePolicy {
-    // Boot within this window after the scheduled time is the expected case:
-    // the machine was woken by RTC, Linux spent a few tens of seconds booting,
-    // and the alarm must ring. This is the "boot took 37 seconds" case.
-    constexpr qint64 ON_TIME_JITTER_SECONDS = 30;
+// Boot within this window after the scheduled time is the expected case:
+// the machine was woken by RTC, Linux spent a few tens of seconds booting,
+// and the alarm must ring. This is the "boot took 37 seconds" case.
+constexpr qint64 ON_TIME_JITTER_SECONDS = 30;
 
-    // Beyond the jitter window but still within this window is an expected
-    // wake that was delivered late (firmware/platform drift, slow resume,
-    // suspend interplay). The user asked for the alarm → ring it.
-    constexpr qint64 LATE_GRACE_SECONDS = 5 * 60;
+// Beyond the jitter window but still within this window is an expected
+// wake that was delivered late (firmware/platform drift, slow resume,
+// suspend interplay). The user asked for the alarm → ring it.
+constexpr qint64 LATE_GRACE_SECONDS = 5 * 60;
 
-    // Wakes beyond the late window but within this window are "very late":
-    // still clearly left over from a real scheduled wake (e.g. poweroff+RTC
-    // fired while the machine was off, boot took an hour). Ring it.
-    constexpr qint64 RECOVERABLE_WINDOW_SECONDS = 24 * 3600;
+// Wakes beyond the late window but within this window are "very late":
+// still clearly left over from a real scheduled wake (e.g. poweroff+RTC
+// fired while the machine was off, boot took an hour). Ring it.
+constexpr qint64 RECOVERABLE_WINDOW_SECONDS = 24 * 3600;
 
-    // Beyond the recoverable window the occurrence is treated as missed and
-    // consumed without ringing.
+// Beyond the recoverable window the occurrence is treated as missed and
+// consumed without ringing.
 
-    // Tolerance when comparing the RTC alarm state against the programmed
-    // absolute timestamp (RTC hardware may round/clamp to whole seconds).
-    constexpr qint64 RTC_ALARM_TOLERANCE_SECONDS = 5;
-}
+// Tolerance when comparing the RTC alarm state against the programmed
+// absolute timestamp (RTC hardware may round/clamp to whole seconds).
+constexpr qint64 RTC_ALARM_TOLERANCE_SECONDS = 5;
+} // namespace WakePolicy
 
 // Classification of a boot relative to a scheduled wake occurrence.
 enum class WakeResult { OnTime, Late, VeryLate, Missed, Unknown };
@@ -53,8 +53,7 @@ QString wakeResultToString(WakeResult r);
 // (skipped by a DST spring-forward), the occurrence is shifted forward by one
 // hour — the alarm still rings at the next real point in time.
 // Returns 0 when no occurrence exists within the next 7 days.
-qint64 computeNextOccurrenceUtc(const Alarm &a,
-                                const QDateTime &now = QDateTime(),
+qint64 computeNextOccurrenceUtc(const Alarm &a, const QDateTime &now = QDateTime(),
                                 QTimeZone tz = QTimeZone::systemTimeZone());
 
 // Persisted pending-wake record. This is the exact occurrence that survives
@@ -62,8 +61,8 @@ qint64 computeNextOccurrenceUtc(const Alarm &a,
 struct PendingWake {
     bool valid = false;
     QString alarmId;
-    QString occurrenceId;   // unique per occurrence; identity = alarmId + occurrenceId
-    qint64 scheduledUtc = 0; // absolute CLOCK_REALTIME seconds since epoch
+    QString occurrenceId;        // unique per occurrence; identity = alarmId + occurrenceId
+    qint64 scheduledUtc = 0;     // absolute CLOCK_REALTIME seconds since epoch
     QString state = "scheduled"; // scheduled | verified | consumed | failed
 
     QJsonObject toJson() const;
@@ -79,13 +78,19 @@ public:
     // allowed for tests).
     explicit SchedulerStateStore(const QString &filePath = QString());
 
-    const PendingWake &pending() const { return m_pending; }
+    const PendingWake &pending() const
+    {
+        return m_pending;
+    }
 
     // Atomic write. Returns false (with `error` filled) on failure; the
     // previous on-disk state is left untouched.
     bool persist(const PendingWake &w, QString *error = nullptr);
 
-    QString filePath() const { return m_filePath; }
+    QString filePath() const
+    {
+        return m_filePath;
+    }
 
 private:
     void load();

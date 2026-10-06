@@ -1,33 +1,33 @@
 #include <QApplication>
+#include <QDir>
+#include <QFile>
+#include <QFont>
+#include <QFontDatabase>
+#include <QFontInfo>
+#include <QIcon>
+#include <QLocale>
+#include <QLockFile>
+#include <QProcess>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 #include <QQuickStyle>
 #include <QQuickWindow>
-#include <QSurfaceFormat>
-#include <QDir>
-#include <QFile>
-#include <QProcess>
 #include <QStandardPaths>
+#include <QSurfaceFormat>
 #include <QTimer>
-#include <QIcon>
-#include <QFont>
-#include <QFontDatabase>
-#include <QFontInfo>
-#include <QLockFile>
-#include <QLocale>
 #include <QTranslator>
 
-#include "managers/AlarmManager.h"
 #include "audio/AudioPlayer.h"
-#include "wake/Scheduler.h"
-#include "wake/WakeManager.h"
+#include "managers/AlarmManager.h"
 #include "managers/ConfigManager.h"
 #include "managers/ThemeManager.h"
 #include "ui/BlurManager.h"
+#include "ui/NightMode.h"
 #include "ui/Notifier.h"
 #include "ui/TrayIcon.h"
-#include "ui/NightMode.h"
 #include "ui/WizardController.h"
+#include "wake/Scheduler.h"
+#include "wake/WakeManager.h"
 
 int main(int argc, char *argv[])
 {
@@ -45,8 +45,8 @@ int main(int argc, char *argv[])
     // Single-instance protection: prevent a second Lumalarm process from
     // running concurrently. Two instances would both poll alarms, both fire
     // sounds, and both write to the same config files causing corruption.
-    QString lockPath = QStandardPaths::writableLocation(QStandardPaths::ConfigLocation)
-                       + "/lumalarm/lumalarm.lock";
+    QString lockPath = QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) +
+                       "/lumalarm/lumalarm.lock";
     QDir().mkpath(QFileInfo(lockPath).absolutePath());
     QLockFile lockFile(lockPath);
     lockFile.setStaleLockTime(0); // never auto-steal; stale locks require manual removal
@@ -104,17 +104,17 @@ int main(int argc, char *argv[])
             effective = QLocale::system().name();
 
         app.removeTranslator(&translator);
-        const bool loaded = !effective.isEmpty()
-            && translator.load(QLocale(effective), QStringLiteral("lumalarm"),
-                               QStringLiteral("_"), QStringLiteral(":/i18n"));
+        const bool loaded =
+            !effective.isEmpty() && translator.load(QLocale(effective), QStringLiteral("lumalarm"),
+                                                    QStringLiteral("_"), QStringLiteral(":/i18n"));
         if (loaded)
             app.installTranslator(&translator);
 
         // RTL follows the *loaded* catalog, never the raw setting: a system
         // locale without a catalog must stay left-to-right.
         const Qt::LayoutDirection want =
-            (loaded && QLocale(effective).textDirection() == Qt::RightToLeft)
-                ? Qt::RightToLeft : Qt::LeftToRight;
+            (loaded && QLocale(effective).textDirection() == Qt::RightToLeft) ? Qt::RightToLeft
+                                                                              : Qt::LeftToRight;
         app.setLayoutDirection(want);
     };
     applyLanguage(configManager.language());
@@ -126,7 +126,8 @@ int main(int argc, char *argv[])
     // When an alarm triggers: play audio, run command, show overlay
     QObject::connect(&scheduler, &Scheduler::alarmTriggered, [&](int index) {
         const auto alarms = alarmManager.alarmList();
-        if (index < 0 || index >= alarms.size()) return;
+        if (index < 0 || index >= alarms.size())
+            return;
 
         const Alarm &a = alarms[index];
 
@@ -156,30 +157,29 @@ int main(int argc, char *argv[])
         // Capture alarmId by value so the lambda can check if this is still
         // the current alarm — prevents a stale timer from stopping a newer one.
         QString alarmId = a.id;
-        QTimer::singleShot(a.autoStopDuration * 1000, [&audioPlayer, &currentRingingAlarmId, alarmId]() {
-            if (currentRingingAlarmId == alarmId && audioPlayer.isPlaying()) {
-                audioPlayer.stop();
-            }
-        });
+        QTimer::singleShot(a.autoStopDuration * 1000,
+                           [&audioPlayer, &currentRingingAlarmId, alarmId]() {
+                               if (currentRingingAlarmId == alarmId && audioPlayer.isPlaying()) {
+                                   audioPlayer.stop();
+                               }
+                           });
     });
 
     // Reinitialize audio on system resume (fixes PipeWire/PulseAudio after suspend)
-    QObject::connect(&scheduler, &Scheduler::systemResumed, [&audioPlayer]() {
-        audioPlayer.reinitializeAudio();
-    });
+    QObject::connect(&scheduler, &Scheduler::systemResumed,
+                     [&audioPlayer]() { audioPlayer.reinitializeAudio(); });
 
     // Notifications: upcoming-alarm threshold, alarm fired, test wake armed.
-    QObject::connect(&scheduler, &Scheduler::alarmApproaching,
-                     &notifier, &Notifier::notifyAlarmUpcoming);
-    QObject::connect(&scheduler, &Scheduler::alarmTriggered,
-                     &notifier, &Notifier::notifyWakeFired);
-    QObject::connect(&wakeManager, &WakeManager::testWakeArmed,
-                     &notifier, &Notifier::notifyTestWakeArmed);
+    QObject::connect(&scheduler, &Scheduler::alarmApproaching, &notifier,
+                     &Notifier::notifyAlarmUpcoming);
+    QObject::connect(&scheduler, &Scheduler::alarmTriggered, &notifier, &Notifier::notifyWakeFired);
+    QObject::connect(&wakeManager, &WakeManager::testWakeArmed, &notifier,
+                     &Notifier::notifyTestWakeArmed);
     // configChanged is the NOTIFY for notificationsEnabled, so re-read it there.
-    QObject::connect(&configManager, &ConfigManager::configChanged,
-                     &notifier, [&notifier, &configManager]() {
-        notifier.setEnabled(configManager.notificationsEnabled());
-    });
+    QObject::connect(&configManager, &ConfigManager::configChanged, &notifier,
+                     [&notifier, &configManager]() {
+                         notifier.setEnabled(configManager.notificationsEnabled());
+                     });
 
     QQmlApplicationEngine engine;
     engine.rootContext()->setContextProperty("alarmManager", &alarmManager);
@@ -200,11 +200,8 @@ int main(int argc, char *argv[])
     });
 
     QObject::connect(
-        &engine,
-        &QQmlApplicationEngine::objectCreationFailed,
-        &app,
-        []() { QCoreApplication::exit(-1); },
-        Qt::QueuedConnection);
+        &engine, &QQmlApplicationEngine::objectCreationFailed, &app,
+        []() { QCoreApplication::exit(-1); }, Qt::QueuedConnection);
 
     // QML module resources live under :/qt/qml/<URI>/ (Qt policy QTP0001, NEW
     // since Qt 6.5 — applied via qt_standard_project_setup(REQUIRES 6.5)).
@@ -213,7 +210,7 @@ int main(int argc, char *argv[])
     // Set window icon after QML window is created
     QQuickWindow *mainWin = nullptr;
     if (!engine.rootObjects().isEmpty()) {
-        mainWin = qobject_cast<QQuickWindow*>(engine.rootObjects().first());
+        mainWin = qobject_cast<QQuickWindow *>(engine.rootObjects().first());
         if (mainWin) {
             mainWin->setIcon(QIcon(":/icon.svg"));
 
@@ -224,7 +221,8 @@ int main(int argc, char *argv[])
             };
             // Apply once shown, on every resize, and when blur mode changes.
             QObject::connect(mainWin, &QWindow::visibleChanged, [&](bool vis) {
-                if (vis) applyBlur();
+                if (vis)
+                    applyBlur();
             });
             QObject::connect(mainWin, &QWindow::xChanged, applyBlur);
             QObject::connect(mainWin, &QWindow::yChanged, applyBlur);
@@ -251,9 +249,7 @@ int main(int argc, char *argv[])
     QObject::connect(&tray, &TrayIcon::showWindowRequested, &app, showWindowFromTray);
     QObject::connect(&tray, &TrayIcon::quitRequested, &app, &QCoreApplication::quit);
 
-    auto updateTrayVisibility = [&]() {
-        tray.setVisible(configManager.trayIconEnabled());
-    };
+    auto updateTrayVisibility = [&]() { tray.setVisible(configManager.trayIconEnabled()); };
     updateTrayVisibility();
     QObject::connect(&configManager, &ConfigManager::configChanged, &app, updateTrayVisibility);
 
@@ -268,7 +264,10 @@ int main(int argc, char *argv[])
             bool available = db.families().contains(family, Qt::CaseInsensitive);
             if (!available) {
                 for (const QString &fam : db.families()) {
-                    if (fam.contains(family, Qt::CaseInsensitive)) { available = true; break; }
+                    if (fam.contains(family, Qt::CaseInsensitive)) {
+                        available = true;
+                        break;
+                    }
                 }
             }
             if (available) {

@@ -1,9 +1,9 @@
-#include <QtTest>
-#include <QFile>
 #include <QDir>
 #include <QDirIterator>
+#include <QFile>
 #include <QFileInfo>
 #include <QRegularExpression>
+#include <QtTest>
 
 #include <utility> // std::as_const
 
@@ -59,9 +59,9 @@ private slots:
     void mainQmlIsReadable();
     void segmentedControlIconsExistInResource();
     // STG-3.4 (Phase C):
-    void allQmlFilesFromCmakeListExistInResource(); // CMake QML_FILES <-> qrc
-    void qrcQmlLiteralsInSourcesResolve();          // stale literals in src/ + qml/
-    void iconReferencesInQmlResolve();              // literal + dynamic icon refs
+    void allQmlFilesFromCmakeListExistInResource();  // CMake QML_FILES <-> qrc
+    void qrcQmlLiteralsInSourcesResolve();           // stale literals in src/ + qml/
+    void iconReferencesInQmlResolve();               // literal + dynamic icon refs
     void importDialogFiltersMatchDiscoveryFormats(); // Issue #2: picker <-> discovery
 };
 
@@ -84,8 +84,7 @@ static QStringList sourceRootFiles(const QString &subDir, const QStringList &nam
     if (!dir.exists())
         return {};
     QStringList out;
-    QDirIterator it(dir.absolutePath(), nameFilters, QDir::Files,
-                    QDirIterator::Subdirectories);
+    QDirIterator it(dir.absolutePath(), nameFilters, QDir::Files, QDirIterator::Subdirectories);
     while (it.hasNext())
         out << it.next();
     out.sort();
@@ -151,9 +150,10 @@ void TestQmlResources::qtVersionSupports66Plus()
     if (QT_VERSION < QT_VERSION_CHECK(6, 6, 0))
         QSKIP("Qt 6.5 build: the 6.6+ support check only runs on Qt >= 6.6.");
 
-    QVERIFY2(QT_VERSION >= QT_VERSION_CHECK(6, 6, 0),
-             qPrintable(QStringLiteral("Qt %1 reported, 6.6+ expected")
-                            .arg(QString::fromLatin1(qVersion()))));
+    QVERIFY2(
+        QT_VERSION >= QT_VERSION_CHECK(6, 6, 0),
+        qPrintable(
+            QStringLiteral("Qt %1 reported, 6.6+ expected").arg(QString::fromLatin1(qVersion()))));
     qInfo() << "Qt" << qVersion() << "passes the Qt 6.6+ forward-compat check";
 }
 
@@ -171,8 +171,7 @@ void TestQmlResources::mainQmlIsReadable()
     QVERIFY(mainQml.open(QIODevice::ReadOnly));
     const QByteArray content = mainQml.readAll();
     QVERIFY2(!content.isEmpty(), "main.qml is embedded but empty");
-    QVERIFY2(content.contains("Window"),
-             "main.qml does not look like the Lumalarm root window");
+    QVERIFY2(content.contains("Window"), "main.qml does not look like the Lumalarm root window");
 }
 
 // SegmentedControl.qml loads its icons from the same module prefix
@@ -181,8 +180,7 @@ void TestQmlResources::segmentedControlIconsExistInResource()
 {
     const QStringList iconNames{"alarms", "timer", "stopwatch", "sounds", "settings"};
     for (const QString &name : iconNames) {
-        const QString path =
-            QStringLiteral(":/qt/qml/GlassAlarm/resources/icons/%1.svg").arg(name);
+        const QString path = QStringLiteral(":/qt/qml/GlassAlarm/resources/icons/%1.svg").arg(name);
         QVERIFY2(QFile::exists(path), qPrintable(QStringLiteral("missing: %1").arg(path)));
     }
 }
@@ -199,12 +197,12 @@ void TestQmlResources::allQmlFilesFromCmakeListExistInResource()
     // (a) mirror list -> embedded resource
     for (const QString &rel : kQmlFilesFromCmake) {
         const QString res = QStringLiteral(":/qt/qml/GlassAlarm/") + rel;
-        QVERIFY2(QFile::exists(res),
-                 qPrintable(QStringLiteral(
-                                "missing QML resource: %1 — QML_FILES in CMakeLists.txt and "
-                                "the mirror list in tst_qmlresources.cpp are out of sync, or "
-                                "the resource prefix regressed (QTP0001)")
-                                .arg(res)));
+        QVERIFY2(
+            QFile::exists(res),
+            qPrintable(QStringLiteral("missing QML resource: %1 — QML_FILES in CMakeLists.txt and "
+                                      "the mirror list in tst_qmlresources.cpp are out of sync, or "
+                                      "the resource prefix regressed (QTP0001)")
+                           .arg(res)));
     }
 
     // (b) embedded resource -> mirror list (reverse-drift check)
@@ -231,8 +229,8 @@ void TestQmlResources::allQmlFilesFromCmakeListExistInResource()
 // src/**/*.{cpp,h} and qml/**/*.qml must resolve (qrc:/ stripped).
 void TestQmlResources::qrcQmlLiteralsInSourcesResolve()
 {
-    const QStringList srcFiles = sourceRootFiles(QStringLiteral("src"),
-                                                 {QStringLiteral("*.cpp"), QStringLiteral("*.h")});
+    const QStringList srcFiles =
+        sourceRootFiles(QStringLiteral("src"), {QStringLiteral("*.cpp"), QStringLiteral("*.h")});
     const QStringList qmlFiles = sourceRootFiles(QStringLiteral("qml"), {QStringLiteral("*.qml")});
     if (srcFiles.isEmpty() || qmlFiles.isEmpty())
         QSKIP("source tree not available (tests/ not inside the build tree); "
@@ -253,10 +251,10 @@ void TestQmlResources::qrcQmlLiteralsInSourcesResolve()
             const QRegularExpressionMatch m = it.next();
             const QString res = QStringLiteral(":/qt/qml/GlassAlarm/") + m.captured(1);
             QVERIFY2(QFile::exists(res),
-                     qPrintable(QStringLiteral(
-                                    "stale qrc literal in %1 — \":/qt/qml/GlassAlarm/%2\" does "
-                                    "not resolve to an embedded resource")
-                                    .arg(f, m.captured(1))));
+                     qPrintable(
+                         QStringLiteral("stale qrc literal in %1 — \":/qt/qml/GlassAlarm/%2\" does "
+                                        "not resolve to an embedded resource")
+                             .arg(f, m.captured(1))));
             ++checked;
         }
     }
@@ -285,8 +283,7 @@ void TestQmlResources::iconReferencesInQmlResolve()
     bool sawAnyIconRef = false;
     for (const QString &f : std::as_const(qmlFiles)) {
         const QString content = readSourceFile(f);
-        QVERIFY2(!content.isEmpty(),
-                 qPrintable(QStringLiteral("cannot read QML file: %1").arg(f)));
+        QVERIFY2(!content.isEmpty(), qPrintable(QStringLiteral("cannot read QML file: %1").arg(f)));
         if (content.contains(QStringLiteral("resources/icons/")))
             sawAnyIconRef = true;
         auto it = litRe.globalMatch(content);
@@ -294,8 +291,7 @@ void TestQmlResources::iconReferencesInQmlResolve()
             const QString name = it.next().captured(1);
             const QString res = QStringLiteral(":/qt/qml/GlassAlarm/resources/icons/") + name;
             QVERIFY2(QFile::exists(res),
-                     qPrintable(QStringLiteral("missing icon referenced by %1: %2")
-                                    .arg(f, res)));
+                     qPrintable(QStringLiteral("missing icon referenced by %1: %2").arg(f, res)));
         }
     }
 
@@ -304,13 +300,14 @@ void TestQmlResources::iconReferencesInQmlResolve()
     // at least one icon.
     if (sawAnyIconRef) {
         const QString base = QStringLiteral(":/qt/qml/GlassAlarm/resources/icons");
-        QVERIFY2(QDir(base).exists(),
-                 qPrintable(QStringLiteral("icon base directory missing (QTP0001 prefix?): %1")
-                                .arg(base)));
+        QVERIFY2(
+            QDir(base).exists(),
+            qPrintable(
+                QStringLiteral("icon base directory missing (QTP0001 prefix?): %1").arg(base)));
         const QStringList svgs = QDir(base).entryList({QStringLiteral("*.svg")});
         QVERIFY2(!svgs.isEmpty(),
-                 qPrintable(QStringLiteral("no .svg files in dynamic icon base directory: %1")
-                                .arg(base)));
+                 qPrintable(
+                     QStringLiteral("no .svg files in dynamic icon base directory: %1").arg(base)));
     }
 }
 
@@ -322,8 +319,7 @@ void TestQmlResources::iconReferencesInQmlResolve()
 // that keeps the QML filter from drifting away from it.
 void TestQmlResources::importDialogFiltersMatchDiscoveryFormats()
 {
-    const QString soundManager =
-        sourceRoot() + QStringLiteral("/qml/overlays/SoundManager.qml");
+    const QString soundManager = sourceRoot() + QStringLiteral("/qml/overlays/SoundManager.qml");
     const QString qml = readSourceFile(soundManager);
     if (qml.isEmpty())
         QSKIP("source tree not available (tests/ not inside the build tree); "
@@ -331,9 +327,8 @@ void TestQmlResources::importDialogFiltersMatchDiscoveryFormats()
 
     const QRegularExpression lineRe(QStringLiteral("nameFilters\\s*:\\s*\\[.*\\]"));
     const QRegularExpressionMatch line = lineRe.match(qml);
-    QVERIFY2(line.hasMatch(),
-             "SoundManager.qml no longer declares FileDialog.nameFilters — "
-             "update this test alongside the import dialog");
+    QVERIFY2(line.hasMatch(), "SoundManager.qml no longer declares FileDialog.nameFilters — "
+                              "update this test alongside the import dialog");
 
     QStringList dialogGlobs;
     const QRegularExpression globRe(QStringLiteral(R"(\*\.[A-Za-z0-9]+)"));

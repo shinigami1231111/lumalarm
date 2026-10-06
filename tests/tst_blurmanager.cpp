@@ -1,5 +1,5 @@
-#include <QtTest>
 #include <QQuickWindow>
+#include <QtTest>
 
 #include "ui/BlurManager.h"
 

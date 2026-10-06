@@ -116,8 +116,14 @@ namespace {
 class SuppressPersist
 {
 public:
-    explicit SuppressPersist(bool &flag) : m_flag(flag) { m_flag = true; }
-    ~SuppressPersist() { m_flag = false; }
+    explicit SuppressPersist(bool &flag) : m_flag(flag)
+    {
+        m_flag = true;
+    }
+    ~SuppressPersist()
+    {
+        m_flag = false;
+    }
     SuppressPersist(const SuppressPersist &) = delete;
     SuppressPersist &operator=(const SuppressPersist &) = delete;
 
@@ -126,11 +132,10 @@ private:
 };
 } // namespace
 
-AlarmManager::AlarmManager(QObject *parent)
-    : QObject(parent)
-    , m_model(new AlarmModel(this))
+AlarmManager::AlarmManager(QObject *parent) : QObject(parent), m_model(new AlarmModel(this))
 {
-    QString configDir = QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + "/lumalarm";
+    QString configDir =
+        QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + "/lumalarm";
     QDir().mkpath(configDir);
     m_filePath = configDir + "/alarms.json";
 
@@ -201,7 +206,7 @@ void AlarmManager::setAlarmEnabled(const QString &id, bool enabled)
     // PendingWake.alarmId.
     const int row = m_model->indexOfId(id);
     if (row < 0)
-        return;   // unknown id — no-op, same guard style as removeAlarm()
+        return; // unknown id — no-op, same guard style as removeAlarm()
     m_model->setEnabled(row, enabled);
 }
 

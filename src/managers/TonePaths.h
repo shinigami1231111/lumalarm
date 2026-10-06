@@ -28,8 +28,8 @@ namespace TonePaths {
 // The folder the user imports into and deletes from.
 inline QString userDirectory()
 {
-    return QStandardPaths::writableLocation(QStandardPaths::ConfigLocation)
-           + QStringLiteral("/lumalarm/tones");
+    return QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) +
+           QStringLiteral("/lumalarm/tones");
 }
 
 // Package-installed, read-only tone folders that currently exist. The
@@ -39,7 +39,8 @@ inline QStringList systemDirectories()
 {
     QStringList out;
     const QString userHome = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation);
-    const QStringList bases = QStandardPaths::standardLocations(QStandardPaths::GenericDataLocation);
+    const QStringList bases =
+        QStandardPaths::standardLocations(QStandardPaths::GenericDataLocation);
     for (const QString &base : bases) {
         if (base == userHome)
             continue;
@@ -67,9 +68,8 @@ inline QStringList searchDirectories()
 // silently vanish from the list (the reported .aac case).
 inline QStringList supportedSuffixes()
 {
-    return {QStringLiteral("wav"), QStringLiteral("mp3"),
-            QStringLiteral("ogg"), QStringLiteral("flac"),
-            QStringLiteral("aac")};
+    return {QStringLiteral("wav"), QStringLiteral("mp3"), QStringLiteral("ogg"),
+            QStringLiteral("flac"), QStringLiteral("aac")};
 }
 
 inline bool isSupportedToneFile(const QString &fileName)

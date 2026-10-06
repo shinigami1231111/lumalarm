@@ -1,5 +1,5 @@
-#include <QtTest>
 #include <QSignalSpy>
+#include <QtTest>
 
 #include "audio/AudioPlayer.h"
 
@@ -69,7 +69,7 @@ void TestAudioPlayer::baseVolumeAndFadeDurationAreClamped()
 
     player.setFadeDuration(30);
     QCOMPARE(player.fadeDuration(), 30);
-    player.setFadeDuration(1);   // lower bound is 5s
+    player.setFadeDuration(1); // lower bound is 5s
     QCOMPARE(player.fadeDuration(), 5);
     player.setFadeDuration(9999); // upper bound is 60s
     QCOMPARE(player.fadeDuration(), 60);

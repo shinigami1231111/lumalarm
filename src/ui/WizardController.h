@@ -36,17 +36,17 @@ class WizardController : public QObject
     Q_PROPERTY(QString wakeStatus READ wakeStatus NOTIFY wakeStatusChanged)
     // Chosen tone for page 2 / the summary row on page 6. Notifying, so the
     // summary stays correct after the user changes it on an earlier page.
-    Q_PROPERTY(QString defaultSound READ defaultSound WRITE setDefaultSound NOTIFY defaultSoundChanged)
+    Q_PROPERTY(
+        QString defaultSound READ defaultSound WRITE setDefaultSound NOTIFY defaultSoundChanged)
     // Session-bus probe for org.freedesktop.Notifications (non-blocking, cached
     // per call site — QML re-reads it whenever the page becomes visible).
-    Q_PROPERTY(bool notificationsAvailable READ notificationsAvailable NOTIFY notificationProbeChanged)
+    Q_PROPERTY(
+        bool notificationsAvailable READ notificationsAvailable NOTIFY notificationProbeChanged)
 
 public:
     // Three non-owning dependencies; all MUST be non-null and outlive this
     // object (they are stack locals in main(), declared before it).
-    explicit WizardController(ConfigManager *config,
-                              WakeManager *wake,
-                              AudioPlayer *audio,
+    explicit WizardController(ConfigManager *config, WakeManager *wake, AudioPlayer *audio,
                               QObject *parent = nullptr);
 
     int currentStep() const;

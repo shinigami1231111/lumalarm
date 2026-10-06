@@ -1,10 +1,10 @@
-#include <QtTest>
+#include <QDateTime>
 #include <QSignalSpy>
 #include <QStandardPaths>
-#include <QDateTime>
+#include <QtTest>
 
-#include "managers/ConfigManager.h"
 #include "managers/AlarmManager.h"
+#include "managers/ConfigManager.h"
 #include "ui/NightMode.h"
 #include "wake/Scheduler.h"
 #include "wake/WakeManager.h"
@@ -148,7 +148,7 @@ void TestNightMode::stayingInsideTheWindowDoesNotReemit()
     for (int i = 0; i < 10; ++i)
         m_night->evaluate();
 
-    QCOMPARE(spy.count(), 0);   // no duplicates
+    QCOMPARE(spy.count(), 0); // no duplicates
     QCOMPARE(m_night->active(), true);
 }
 
@@ -181,7 +181,7 @@ void TestNightMode::disablingEnabledWhileActiveDeactivatesImmediately()
     QVERIFY(m_night->active());
 
     QSignalSpy spy(m_night, &NightMode::activeChanged);
-    m_night->setEnabled(false);   // no evaluate() call: must be immediate
+    m_night->setEnabled(false); // no evaluate() call: must be immediate
 
     QCOMPARE(spy.count(), 1);
     QCOMPARE(m_night->active(), false);
@@ -196,7 +196,7 @@ void TestNightMode::removingTheAlarmWhileActiveDeactivatesImmediately()
     QVERIFY(m_night->active());
 
     QSignalSpy spy(m_night, &NightMode::activeChanged);
-    m_alarms->setAlarms({});   // alarm deleted / disabled
+    m_alarms->setAlarms({}); // alarm deleted / disabled
     m_night->evaluate();
 
     QCOMPARE(spy.count(), 1);
@@ -205,9 +205,9 @@ void TestNightMode::removingTheAlarmWhileActiveDeactivatesImmediately()
 
 void TestNightMode::changingMinutesBeforeReEvaluates()
 {
-    scheduleAlarmIn(600);          // 10 minutes away
+    scheduleAlarmIn(600); // 10 minutes away
     m_config->setNightModeEnabled(true);
-    m_config->setNightModeMinutesBefore(1);   // window is 60 s → not inside yet
+    m_config->setNightModeMinutesBefore(1); // window is 60 s → not inside yet
     m_night->deactivate();
     m_night->evaluate();
     QCOMPARE(m_night->active(), false);
@@ -229,7 +229,7 @@ void TestNightMode::noAlarmScheduledNeverActivates()
     // No alarms at all: evaluate() must be a pure no-op even when enabled.
     m_alarms->setAlarms({});
     m_config->setNightModeEnabled(true);
-    m_config->setNightModeMinutesBefore(180);   // widest possible window
+    m_config->setNightModeMinutesBefore(180); // widest possible window
     m_night->deactivate();
 
     QSignalSpy spy(m_night, &NightMode::activeChanged);
@@ -275,16 +275,16 @@ void TestNightMode::settingsRoundTripAndClamp()
 
     m_config->setNightModeMinutesBefore(45);
     QCOMPARE(m_config->nightModeMinutesBefore(), 45);
-    m_config->setNightModeMinutesBefore(0);     // below range → clamped to 1
+    m_config->setNightModeMinutesBefore(0); // below range → clamped to 1
     QCOMPARE(m_config->nightModeMinutesBefore(), 1);
-    m_config->setNightModeMinutesBefore(9999);  // above range → clamped to 180
+    m_config->setNightModeMinutesBefore(9999); // above range → clamped to 180
     QCOMPARE(m_config->nightModeMinutesBefore(), 180);
 
     m_config->setNightModeOpacity(0.75);
     QCOMPARE(m_config->nightModeOpacity(), 0.75);
-    m_config->setNightModeOpacity(5.0);   // above range → clamped to 1.0
+    m_config->setNightModeOpacity(5.0); // above range → clamped to 1.0
     QCOMPARE(m_config->nightModeOpacity(), 1.0);
-    m_config->setNightModeOpacity(-1.0);  // below range → clamped to 0.0
+    m_config->setNightModeOpacity(-1.0); // below range → clamped to 0.0
     QCOMPARE(m_config->nightModeOpacity(), 0.0);
 
     // Round-trip through a fresh instance over the same file.

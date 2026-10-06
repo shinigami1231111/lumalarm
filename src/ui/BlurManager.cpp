@@ -5,10 +5,7 @@
 #include <KWindowInfo>
 #endif
 
-BlurManager::BlurManager(QObject *parent)
-    : QObject(parent)
-{
-}
+BlurManager::BlurManager(QObject *parent) : QObject(parent) {}
 
 void BlurManager::setBlurEnabled(QQuickWindow *window, bool enable)
 {

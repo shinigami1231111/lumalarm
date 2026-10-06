@@ -1,4 +1,3 @@
-#include <QtTest>
 #include <QDBusConnection>
 #include <QDBusInterface>
 #include <QDBusMessage>
@@ -13,6 +12,7 @@
 #include <QTemporaryDir>
 #include <QTextStream>
 #include <QUuid>
+#include <QtTest>
 
 #include <cstdint>
 #include <limits>
@@ -77,9 +77,8 @@ QStringList armedTimers()
 {
     QProcess p;
     p.start(QStringLiteral("systemctl"),
-            {QStringLiteral("list-units"), QStringLiteral("--all"),
-             QStringLiteral("--no-legend"), QStringLiteral("--plain"),
-             QStringLiteral("--full"),
+            {QStringLiteral("list-units"), QStringLiteral("--all"), QStringLiteral("--no-legend"),
+             QStringLiteral("--plain"), QStringLiteral("--full"),
              QStringLiteral("%1*.timer").arg(QLatin1String(WakePolicy::kTimerPrefix))});
     if (!p.waitForStarted(3000) || !p.waitForFinished(5000))
         return QStringList();
@@ -88,9 +87,8 @@ QStringList armedTimers()
     return WakePolicy::armedTimerBases(QString::fromUtf8(p.readAllStandardOutput()));
 }
 
-bool runCommand(const QString &program, const QStringList &args,
-                QString *output = nullptr, int timeoutMs = 60000,
-                int *exitCode = nullptr)
+bool runCommand(const QString &program, const QStringList &args, QString *output = nullptr,
+                int timeoutMs = 60000, int *exitCode = nullptr)
 {
     QProcess p;
     p.start(program, args);
@@ -104,8 +102,8 @@ bool runCommand(const QString &program, const QStringList &args,
     // Both streams: callers assert on replies (stdout) and on diagnostics
     // (stderr), and a D-Bus error would otherwise be invisible to them.
     if (output)
-        *output = QString::fromUtf8(p.readAllStandardOutput())
-            + QString::fromUtf8(p.readAllStandardError());
+        *output = QString::fromUtf8(p.readAllStandardOutput()) +
+                  QString::fromUtf8(p.readAllStandardError());
     if (exitCode)
         *exitCode = p.exitCode();
     return p.exitStatus() == QProcess::NormalExit;
@@ -168,38 +166,42 @@ void assertNoSudoersMechanism(const QString &file)
         const bool isComment = line.startsWith(QLatin1Char('#'));
 
         if (!isComment)
-            QVERIFY2(!line.contains(QStringLiteral("sudo ")),
-                     qPrintable(QStringLiteral("%1:%2 runs sudo: %3")
-                                    .arg(file).arg(i + 1).arg(line)));
+            QVERIFY2(
+                !line.contains(QStringLiteral("sudo ")),
+                qPrintable(QStringLiteral("%1:%2 runs sudo: %3").arg(file).arg(i + 1).arg(line)));
 
-        if (!line.contains(QStringLiteral("sudoers"))
-            && !line.contains(QStringLiteral("NOPASSWD")))
+        if (!line.contains(QStringLiteral("sudoers")) && !line.contains(QStringLiteral("NOPASSWD")))
             continue;
 
-        const bool isRemoval = line.startsWith(QStringLiteral("rm "))
-            && line.contains(QStringLiteral("/etc/sudoers"));
+        const bool isRemoval =
+            line.startsWith(QStringLiteral("rm ")) && line.contains(QStringLiteral("/etc/sudoers"));
         const bool isExistenceTest = line.contains(QStringLiteral("[ -e /etc/sudoers"));
         const bool isHelperFunction = line.contains(QStringLiteral("_remove_legacy_sudoers"));
-        const bool isPlainMessage = line.startsWith(QStringLiteral("echo "))
-            && !line.contains(QLatin1Char('>')) && !line.contains(QStringLiteral("tee"))
-            && !line.contains(QLatin1Char('|'));
+        const bool isPlainMessage =
+            line.startsWith(QStringLiteral("echo ")) && !line.contains(QLatin1Char('>')) &&
+            !line.contains(QStringLiteral("tee")) && !line.contains(QLatin1Char('|'));
 
         QVERIFY2(isComment || isRemoval || isExistenceTest || isHelperFunction || isPlainMessage,
                  qPrintable(QStringLiteral("%1:%2 sudoers reference is neither documentation "
                                            "nor a removal: %3")
-                                .arg(file).arg(i + 1).arg(line)));
+                                .arg(file)
+                                .arg(i + 1)
+                                .arg(line)));
 
         if (isComment || isPlainMessage)
             continue;
-        QVERIFY2(!line.contains(QStringLiteral("NOPASSWD")),
-                 qPrintable(QStringLiteral("%1:%2 writes a NOPASSWD rule: %3")
-                                .arg(file).arg(i + 1).arg(line)));
-        QVERIFY2(!line.contains(QStringLiteral("tee")),
-                 qPrintable(QStringLiteral("%1:%2 pipes into sudoers: %3")
-                                .arg(file).arg(i + 1).arg(line)));
-        QVERIFY2(!line.contains(QLatin1Char('>')),
-                 qPrintable(QStringLiteral("%1:%2 redirects into sudoers: %3")
-                                .arg(file).arg(i + 1).arg(line)));
+        QVERIFY2(
+            !line.contains(QStringLiteral("NOPASSWD")),
+            qPrintable(
+                QStringLiteral("%1:%2 writes a NOPASSWD rule: %3").arg(file).arg(i + 1).arg(line)));
+        QVERIFY2(
+            !line.contains(QStringLiteral("tee")),
+            qPrintable(
+                QStringLiteral("%1:%2 pipes into sudoers: %3").arg(file).arg(i + 1).arg(line)));
+        QVERIFY2(
+            !line.contains(QLatin1Char('>')),
+            qPrintable(
+                QStringLiteral("%1:%2 redirects into sudoers: %3").arg(file).arg(i + 1).arg(line)));
     }
 }
 
@@ -234,8 +236,8 @@ QString describeSubject(uint pid)
     }
     QFile session(QStringLiteral("/proc/%1/sessionid").arg(pid));
     if (session.open(QIODevice::ReadOnly))
-        detail += QStringLiteral(", sessionid=%1")
-                      .arg(QString::fromUtf8(session.readAll()).trimmed());
+        detail +=
+            QStringLiteral(", sessionid=%1").arg(QString::fromUtf8(session.readAll()).trimmed());
     return detail;
 }
 
@@ -244,14 +246,13 @@ QString describeSubject(uint pid)
 QDBusMessage helperCall(const QString &method, const QVariantList &args = {},
                         bool *transportOk = nullptr)
 {
-    QDBusMessage msg = QDBusMessage::createMethodCall(
-        QString::fromLatin1(kService), QString::fromLatin1(kPath),
-        QString::fromLatin1(kInterface), method);
+    QDBusMessage msg =
+        QDBusMessage::createMethodCall(QString::fromLatin1(kService), QString::fromLatin1(kPath),
+                                       QString::fromLatin1(kInterface), method);
     msg.setArguments(args);
     // Long enough to outlast the helper's interactive polkit window, so a
     // challenge can never be mistaken for "helper unavailable".
-    const QDBusMessage raw =
-        QDBusConnection::systemBus().call(msg, QDBus::Block, 120000);
+    const QDBusMessage raw = QDBusConnection::systemBus().call(msg, QDBus::Block, 120000);
     if (transportOk)
         *transportOk = raw.type() != QDBusMessage::ErrorMessage;
     return raw;
@@ -275,8 +276,7 @@ bool helperStatus(QString *status)
 bool helperSchedule(const QVariant &seconds, bool *success, QString *message)
 {
     bool ok = false;
-    const QDBusMessage raw = helperCall(
-        QStringLiteral("ScheduleWake"), {seconds}, &ok);
+    const QDBusMessage raw = helperCall(QStringLiteral("ScheduleWake"), {seconds}, &ok);
     if (!ok || raw.arguments().size() < 2)
         return false;
     if (success)
@@ -309,7 +309,7 @@ bool liveHelperReady(QString *why)
     }
     if (geteuid() != 0) {
         *why = QStringLiteral("not running as root: a live ScheduleWake would raise a polkit "
-                               "challenge dialog on the desktop mid-test-run");
+                              "challenge dialog on the desktop mid-test-run");
         return false;
     }
     if (!commandExists(QStringLiteral("systemctl"))) {
@@ -406,7 +406,7 @@ private slots:
     void polkitAuthorizesRootFastPath();
     void polkitRequiresAuthenticationForNonRootSubject();
     void polkitDeniesSessionLessUnprivilegedSubject();
-    void polkitChallengePathReachesTheAgent();   // opt-in, env-gated
+    void polkitChallengePathReachesTheAgent(); // opt-in, env-gated
 
     void pkgbuildInstallsNoSudoers();
     void pkgbuildLocalInstallsNoSudoers();
@@ -435,8 +435,8 @@ void TestStg1Security::sharedBoundaryIsTheSingleSourceOfTruth()
     QCOMPARE(WakePolicy::kMinWakeSeconds, 60);
     QCOMPARE(WakePolicy::kMaxWakeSeconds, 86400);
 
-    const QList<qint64> rejected{0, 1, 59, 86401, 100000, qint64(UINT32_MAX),
-                                 -1, -60, qint64(INT64_MIN)};
+    const QList<qint64> rejected{
+        0, 1, 59, 86401, 100000, qint64(UINT32_MAX), -1, -60, qint64(INT64_MIN)};
     for (const qint64 v : rejected)
         QVERIFY2(!WakePolicy::isValidWakeDelay(v),
                  qPrintable(QStringLiteral("%1 must be rejected").arg(v)));
@@ -488,8 +488,7 @@ void TestStg1Security::polkitActionIdMatchesThePolicyFile()
     const QString helper = readSourceFile(QStringLiteral("helper/lumalarm-wake-helper.cpp"));
     QVERIFY2(!helper.isEmpty(), "helper source unreadable");
     QVERIFY(helper.contains(QStringLiteral("WakePolicy::pkcheckArguments")));
-    QVERIFY2(!sourceCodeOnly(QStringLiteral("helper/lumalarm-wake-helper.cpp"))
-                  .contains(actionId),
+    QVERIFY2(!sourceCodeOnly(QStringLiteral("helper/lumalarm-wake-helper.cpp")).contains(actionId),
              "the helper must not hard-code its own copy of the polkit action id");
 }
 
@@ -518,7 +517,8 @@ void TestStg1Security::polkitAuthorizesRootFastPath()
     // interaction flag either.
     QString out;
     const int rc = runPkcheck(WakePolicy::pkcheckArguments(QString(), uint(getpid())), &out);
-    QVERIFY2(rc == 0, qPrintable(QStringLiteral("root was not authorized: rc=%1 %2").arg(rc).arg(out)));
+    QVERIFY2(rc == 0,
+             qPrintable(QStringLiteral("root was not authorized: rc=%1 %2").arg(rc).arg(out)));
 }
 
 void TestStg1Security::polkitRequiresAuthenticationForNonRootSubject()
@@ -540,46 +540,48 @@ void TestStg1Security::polkitRequiresAuthenticationForNonRootSubject()
     QString out;
     const int rc = runPkcheck(QStringList{QStringLiteral("--action-id"),
                                           QString::fromLatin1(WakePolicy::kPolkitActionId),
-                                          QStringLiteral("--process"),
-                                          QString::number(pid)}, &out);
+                                          QStringLiteral("--process"), QString::number(pid)},
+                              &out);
     if (rc == 0)
         QSKIP(qPrintable(QStringLiteral("pkcheck authorized non-root pid %1 without a "
                                         "challenge — a temporary authorization from "
                                         "auth_admin_keep may still be cached: %2")
-                             .arg(pid).arg(out.trimmed())));
+                             .arg(pid)
+                             .arg(out.trimmed())));
 
     QVERIFY2(rc == 1 || rc == 2 || rc == 127,
              qPrintable(QStringLiteral("unexpected pkcheck result %1 for non-root pid %2: %3")
-                            .arg(rc).arg(pid).arg(out.trimmed())));
+                            .arg(rc)
+                            .arg(pid)
+                            .arg(out.trimmed())));
 }
 
 void TestStg1Security::polkitDeniesSessionLessUnprivilegedSubject()
 {
     if (QStandardPaths::findExecutable(QStringLiteral("pkcheck")).isEmpty())
         QSKIP("pkcheck is not installed on this machine");
-    if (!commandExists(QStringLiteral("systemd-run")) || !commandExists(QStringLiteral("systemctl")))
+    if (!commandExists(QStringLiteral("systemd-run")) ||
+        !commandExists(QStringLiteral("systemctl")))
         QSKIP("systemd-run/systemctl unavailable — cannot build a session-less subject");
 
     // An unprivileged process started by PID 1 has no logind session, so
     // polkit evaluates it under allow_inactive=no and denies it immediately —
     // even with --allow-user-interaction. Deterministic: no dialog, no
     // dependence on the desktop's authentication agent.
-    const QString unit = QStringLiteral("stg1-probe-%1")
-        .arg(QUuid::createUuid().toString(QUuid::WithoutBraces));
+    const QString unit =
+        QStringLiteral("stg1-probe-%1").arg(QUuid::createUuid().toString(QUuid::WithoutBraces));
     const QString unitName = unit + QStringLiteral(".service");
 
     QString out;
     int rc = -1;
     const bool started = runCommand(QStringLiteral("systemd-run"),
-                                    {QStringLiteral("--unit=") + unit,
-                                     QStringLiteral("--collect"),
-                                     QStringLiteral("--uid=65534"),
-                                     QStringLiteral("--gid=65534"),
+                                    {QStringLiteral("--unit=") + unit, QStringLiteral("--collect"),
+                                     QStringLiteral("--uid=65534"), QStringLiteral("--gid=65534"),
                                      QStringLiteral("/bin/sleep"), QStringLiteral("90")},
                                     &out, 30000, &rc);
     if (!started || rc != 0)
-        QSKIP(qPrintable(QStringLiteral("could not start a session-less probe subject: %1")
-                             .arg(out.trimmed())));
+        QSKIP(qPrintable(
+            QStringLiteral("could not start a session-less probe subject: %1").arg(out.trimmed())));
 
     // Resolve the probe's pid, re-reading until systemd reports the
     // *unprivileged* main process that was actually exec'd. There is a window
@@ -590,13 +592,12 @@ void TestStg1Security::polkitDeniesSessionLessUnprivilegedSubject()
     for (int attempt = 0; attempt < 20 && probePid == 0; ++attempt) {
         QString pidOut;
         int pidRc = -1;
-        const bool havePid = runCommand(QStringLiteral("systemctl"),
-                                        {QStringLiteral("show"), unitName,
-                                         QStringLiteral("--property=User"),
-                                         QStringLiteral("--property=MainPID"),
-                                         QStringLiteral("--property=ActiveState"),
-                                         QStringLiteral("--property=Result")},
-                                        &pidOut, 15000, &pidRc);
+        const bool havePid = runCommand(
+            QStringLiteral("systemctl"),
+            {QStringLiteral("show"), unitName, QStringLiteral("--property=User"),
+             QStringLiteral("--property=MainPID"), QStringLiteral("--property=ActiveState"),
+             QStringLiteral("--property=Result")},
+            &pidOut, 15000, &pidRc);
         unitState = pidOut.simplified();
         static const QRegularExpression mainPidRe(QStringLiteral("MainPID=(\\d+)"));
         const QRegularExpressionMatch m = mainPidRe.match(pidOut);
@@ -608,8 +609,7 @@ void TestStg1Security::polkitDeniesSessionLessUnprivilegedSubject()
     }
 
     if (probePid == 0) {
-        runCommand(QStringLiteral("systemctl"), {QStringLiteral("stop"), unitName},
-                   nullptr, 30000);
+        runCommand(QStringLiteral("systemctl"), {QStringLiteral("stop"), unitName}, nullptr, 30000);
         QSKIP(qPrintable(QStringLiteral("could not resolve an unprivileged probe subject "
                                         "(unit start: %1; unit state: %2)")
                              .arg(out.trimmed(), unitState)));
@@ -619,17 +619,18 @@ void TestStg1Security::polkitDeniesSessionLessUnprivilegedSubject()
 
     // pkcheck with the helper's exact argument list, interaction allowed.
     QString deniedOut;
-    const int denied = runPkcheck(WakePolicy::pkcheckArguments(QString(), probePid),
-                                  &deniedOut, 45000);
+    const int denied =
+        runPkcheck(WakePolicy::pkcheckArguments(QString(), probePid), &deniedOut, 45000);
 
-    runCommand(QStringLiteral("systemctl"), {QStringLiteral("stop"), unitName},
-               nullptr, 30000);
+    runCommand(QStringLiteral("systemctl"), {QStringLiteral("stop"), unitName}, nullptr, 30000);
 
     QVERIFY2(denied != 0,
              qPrintable(QStringLiteral("polkit authorized a session-less unprivileged subject "
                                        "(pid %1%2, unit state: %3, pkcheck rc=%4): %5")
-                            .arg(probePid).arg(subjectDetail, unitState)
-                            .arg(denied).arg(deniedOut.trimmed())));
+                            .arg(probePid)
+                            .arg(subjectDetail, unitState)
+                            .arg(denied)
+                            .arg(deniedOut.trimmed())));
 }
 
 void TestStg1Security::polkitChallengePathReachesTheAgent()
@@ -647,24 +648,28 @@ void TestStg1Security::polkitChallengePathReachesTheAgent()
         QSKIP("no non-root process with a system-bus name on this machine");
 
     QString noInteractionOut;
-    const int without = runPkcheck(
-        QStringList{QStringLiteral("--action-id"), QString::fromLatin1(WakePolicy::kPolkitActionId),
-                    QStringLiteral("--process"), QString::number(pid)},
-        &noInteractionOut);
+    const int without = runPkcheck(QStringList{QStringLiteral("--action-id"),
+                                               QString::fromLatin1(WakePolicy::kPolkitActionId),
+                                               QStringLiteral("--process"), QString::number(pid)},
+                                   &noInteractionOut);
     if (without != 2)
         QSKIP(qPrintable(QStringLiteral("pid %1 did not report 'interaction required' "
                                         "without the flag (rc=%2): %3")
-                             .arg(pid).arg(without).arg(noInteractionOut.trimmed())));
+                             .arg(pid)
+                             .arg(without)
+                             .arg(noInteractionOut.trimmed())));
 
     // The F2 defect in one assertion: without --allow-user-interaction pkcheck
     // refuses outright (rc 2). With the helper's exact arguments it must get
     // past that refusal and reach the agent.
     QString out;
-    const int withInteraction = runPkcheck(WakePolicy::pkcheckArguments(QString(), pid), &out, 45000);
+    const int withInteraction =
+        runPkcheck(WakePolicy::pkcheckArguments(QString(), pid), &out, 45000);
     QVERIFY2(withInteraction != 2,
              qPrintable(QStringLiteral("pkcheck still refuses to interact with the agent "
                                        "using the helper's arguments: rc=%1 %2")
-                            .arg(withInteraction).arg(out.trimmed())));
+                            .arg(withInteraction)
+                            .arg(out.trimmed())));
 }
 
 void TestStg1Security::pkgbuildInstallsNoSudoers()
@@ -739,15 +744,16 @@ void TestStg1Security::documentationGivesNoSudoersInstruction()
                 continue;
             QVERIFY2(!line.contains(QStringLiteral("tee")),
                      qPrintable(QStringLiteral("%1 still tells the user to write a sudoers "
-                                               "file: %2").arg(doc, line.trimmed())));
+                                               "file: %2")
+                                    .arg(doc, line.trimmed())));
             QVERIFY2(!line.contains(QStringLiteral("visudo")),
                      qPrintable(QStringLiteral("%1 still tells the user to edit sudoers: %2")
                                     .arg(doc, line.trimmed())));
-            QVERIFY2(!line.contains(QStringLiteral("NOPASSWD: /usr/bin/rtcwake"))
-                         || line.contains(QStringLiteral("removes"))
-                         || line.contains(QStringLiteral("old"))
-                         || line.contains(QStringLiteral("replaces"))
-                         || line.contains(QStringLiteral("Removed")),
+            QVERIFY2(!line.contains(QStringLiteral("NOPASSWD: /usr/bin/rtcwake")) ||
+                         line.contains(QStringLiteral("removes")) ||
+                         line.contains(QStringLiteral("old")) ||
+                         line.contains(QStringLiteral("replaces")) ||
+                         line.contains(QStringLiteral("Removed")),
                      qPrintable(QStringLiteral("%1 still documents the rtcwake sudoers rule: %2")
                                     .arg(doc, line.trimmed())));
         }
@@ -790,9 +796,10 @@ void TestStg1Security::cmakeInstallRulesCoverEveryStg1File()
         QStringLiteral("data/lumalarm-wake-helper.service"),
     };
     for (const QString &needle : required)
-        QVERIFY2(cmake.contains(needle),
-                 qPrintable(QStringLiteral("CMakeLists.txt is missing an STG-1 install rule: %1")
-                                .arg(needle)));
+        QVERIFY2(
+            cmake.contains(needle),
+            qPrintable(
+                QStringLiteral("CMakeLists.txt is missing an STG-1 install rule: %1").arg(needle)));
 }
 
 void TestStg1Security::helperSourceEnforcesTheBoundaryAndUsesNoShell()
@@ -826,8 +833,7 @@ void TestStg1Security::helperSourceEnforcesTheBoundaryAndUsesNoShell()
              "the privileged helper must never invoke a shell");
     QVERIFY2(!code.contains(QStringLiteral("bash -c")),
              "the privileged helper must never invoke bash -c");
-    QVERIFY2(!code.contains(QStringLiteral("sudo")),
-             "the privileged helper must never run sudo");
+    QVERIFY2(!code.contains(QStringLiteral("sudo")), "the privileged helper must never run sudo");
     QVERIFY2(!code.contains(QStringLiteral("pkexec")),
              "the privileged helper must never run pkexec");
 }
@@ -840,14 +846,10 @@ void TestStg1Security::wakeManagerHasNoSudoExecutionPath()
 
     // STG-1.5: no sudo anywhere in the wake/poweroff paths — checked on
     // comment-free code, so a removed call cannot linger behind prose.
-    QVERIFY2(!wmCode.contains(QStringLiteral("sudo")),
-             "WakeManager.cpp must not spawn sudo");
-    QVERIFY2(!wmCode.contains(QStringLiteral("pkexec")),
-             "WakeManager.cpp must not spawn pkexec");
-    QVERIFY2(!wmCode.contains(QStringLiteral("system(")),
-             "WakeManager.cpp must not call system()");
-    QVERIFY2(!wmCode.contains(QStringLiteral("popen(")),
-             "WakeManager.cpp must not call popen()");
+    QVERIFY2(!wmCode.contains(QStringLiteral("sudo")), "WakeManager.cpp must not spawn sudo");
+    QVERIFY2(!wmCode.contains(QStringLiteral("pkexec")), "WakeManager.cpp must not spawn pkexec");
+    QVERIFY2(!wmCode.contains(QStringLiteral("system(")), "WakeManager.cpp must not call system()");
+    QVERIFY2(!wmCode.contains(QStringLiteral("popen(")), "WakeManager.cpp must not call popen()");
 
     // The validation boundary must be referenced from the shared header.
     QVERIFY(wm.contains(QStringLiteral("#include \"wake/WakeSecurity.h\"")));
@@ -876,8 +878,8 @@ void TestStg1Security::installTreeContainsStg1FilesAndNoSudoers()
             {QStringLiteral("--install"), QStringLiteral(STG1_BINARY_DIR)});
     QVERIFY2(p.waitForStarted(5000), "cmake --install did not start");
     QVERIFY2(p.waitForFinished(300000), "cmake --install timed out");
-    const QString log = QString::fromUtf8(p.readAllStandardOutput())
-        + QString::fromUtf8(p.readAllStandardError());
+    const QString log =
+        QString::fromUtf8(p.readAllStandardOutput()) + QString::fromUtf8(p.readAllStandardError());
     QVERIFY2(p.exitStatus() == QProcess::NormalExit && p.exitCode() == 0,
              qPrintable(QStringLiteral("cmake --install failed:\n%1").arg(log)));
 
@@ -899,12 +901,10 @@ void TestStg1Security::installTreeContainsStg1FilesAndNoSudoers()
              "the install tree must not contain a sudoers file");
     const QDir sudoersDir(root + QStringLiteral("/etc/sudoers.d"));
     const QStringList sudoersFiles =
-        sudoersDir.exists()
-            ? sudoersDir.entryList(QDir::Files | QDir::NoDotAndDotDot, QDir::Name)
-            : QStringList();
-    QVERIFY2(sudoersFiles.isEmpty(),
-             qPrintable(QStringLiteral("unexpected sudoers files: %1")
-                            .arg(sudoersFiles.join(QLatin1Char(',')))));
+        sudoersDir.exists() ? sudoersDir.entryList(QDir::Files | QDir::NoDotAndDotDot, QDir::Name)
+                            : QStringList();
+    QVERIFY2(sudoersFiles.isEmpty(), qPrintable(QStringLiteral("unexpected sudoers files: %1")
+                                                    .arg(sudoersFiles.join(QLatin1Char(',')))));
 
     // And no sudoers-named file anywhere else in the install output.
     QStringList anywhere;
@@ -914,9 +914,10 @@ void TestStg1Security::installTreeContainsStg1FilesAndNoSudoers()
         if (f.contains(QStringLiteral("sudoers")))
             anywhere << f;
     }
-    QVERIFY2(anywhere.isEmpty(),
-             qPrintable(QStringLiteral("sudoers files installed: %1")
-                            .arg(anywhere.join(QLatin1Char(',')))));
+    QVERIFY2(
+        anywhere.isEmpty(),
+        qPrintable(
+            QStringLiteral("sudoers files installed: %1").arg(anywhere.join(QLatin1Char(',')))));
 }
 
 // ── Tier 3 ───────────────────────────────────────────────────────────────────
@@ -934,14 +935,13 @@ void TestStg1Security::liveHelperRejectsOutOfBoundsRequests()
 
     const QList<qint64> invalid{0, 1, 59, 86401, 100000, qint64(UINT32_MAX), -1};
     for (const qint64 v : invalid) {
-        if (v < 0 || v > qint64(UINT32_MAX))   // outside the u D-Bus type
+        if (v < 0 || v > qint64(UINT32_MAX)) // outside the u D-Bus type
             continue;
         bool success = true;
         QString message;
         QVERIFY2(helperSchedule(uint(v), &success, &message),
                  qPrintable(QStringLiteral("transport failure for %1").arg(v)));
-        QVERIFY2(!success,
-                 qPrintable(QStringLiteral("out-of-range value %1 was accepted").arg(v)));
+        QVERIFY2(!success, qPrintable(QStringLiteral("out-of-range value %1 was accepted").arg(v)));
         QCOMPARE(message, QStringLiteral("out of range"));
     }
 
@@ -954,18 +954,16 @@ void TestStg1Security::liveHelperRejectsOutOfBoundsRequests()
         const bool answered = helperSchedule(QVariant(int(-1)), &negativeSuccess, &negativeMessage);
         if (answered)
             QVERIFY2(!negativeSuccess,
-                     qPrintable(QStringLiteral("a negative delay was accepted: %1")
-                                    .arg(negativeMessage)));
-        QVERIFY2(armedTimers().isEmpty(),
-                 "a negative delay created a wake timer");
+                     qPrintable(
+                         QStringLiteral("a negative delay was accepted: %1").arg(negativeMessage)));
+        QVERIFY2(armedTimers().isEmpty(), "a negative delay created a wake timer");
     }
 
     // Nothing was created or changed by any of those rejections.
     QString statusAfter;
     QVERIFY(helperStatus(&statusAfter));
     QCOMPARE(statusAfter, statusBefore);
-    QVERIFY2(armedTimers().isEmpty(),
-             "an out-of-range request created a wake timer");
+    QVERIFY2(armedTimers().isEmpty(), "an out-of-range request created a wake timer");
 }
 
 void TestStg1Security::liveHelperAcceptsBoundaryAndReplacesThePreviousWake()
@@ -1007,7 +1005,7 @@ void TestStg1Security::liveHelperAcceptsBoundaryAndReplacesThePreviousWake()
     QVERIFY(success);
     QCOMPARE(message, QStringLiteral("idle"));
 
-    if (!armedTimers().isEmpty())   // belt and braces for a failed assertion
+    if (!armedTimers().isEmpty()) // belt and braces for a failed assertion
         helperCancel(&success, &message);
 }
 
@@ -1044,7 +1042,8 @@ void TestStg1Security::liveHelperRediscoversWakeAfterRestart()
     QVERIFY(helperStatus(&status));
     QVERIFY2(status.startsWith(QStringLiteral("scheduled")),
              qPrintable(QStringLiteral("helper reported '%1' for an armed wake after a "
-                                       "restart").arg(status)));
+                                       "restart")
+                            .arg(status)));
 
     // Cancelling after the restart must actually remove the timer rather than
     // reporting a false success.
@@ -1072,10 +1071,14 @@ void TestStg1Security::liveNonRootCallerIsDeniedWhileStatusStaysPublic()
     // the real caller identification and real polkit.
     const auto runAsNobody = [](const QStringList &methodArgs, QString *out, int *rc) {
         QStringList args{
-            QStringLiteral("--scope"), QStringLiteral("--collect"),
-            QStringLiteral("--uid=65534"), QStringLiteral("--gid=65534"),
-            QStringLiteral("busctl"), QStringLiteral("call"),
-            QStringLiteral("org.lumalarm.Helper"), QStringLiteral("/org/lumalarm/Helper"),
+            QStringLiteral("--scope"),
+            QStringLiteral("--collect"),
+            QStringLiteral("--uid=65534"),
+            QStringLiteral("--gid=65534"),
+            QStringLiteral("busctl"),
+            QStringLiteral("call"),
+            QStringLiteral("org.lumalarm.Helper"),
+            QStringLiteral("/org/lumalarm/Helper"),
             QStringLiteral("org.lumalarm.Helper"),
         };
         args << methodArgs;
@@ -1086,17 +1089,16 @@ void TestStg1Security::liveNonRootCallerIsDeniedWhileStatusStaysPublic()
     QString out;
     int rc = -1;
     if (!runAsNobody({QStringLiteral("GetStatus")}, &out, &rc) || rc != 0)
-        QSKIP(qPrintable(QStringLiteral("could not launch a session-less non-root bus client: %1")
-                             .arg(out)));
+        QSKIP(qPrintable(
+            QStringLiteral("could not launch a session-less non-root bus client: %1").arg(out)));
 
     // ScheduleWake: denied, and nothing may be created by the attempt.
-    QVERIFY(runAsNobody({QStringLiteral("ScheduleWake"), QStringLiteral("u"),
-                         QStringLiteral("60")}, &out, &rc));
+    QVERIFY(runAsNobody({QStringLiteral("ScheduleWake"), QStringLiteral("u"), QStringLiteral("60")},
+                        &out, &rc));
     QVERIFY2(rc == 0, qPrintable(QStringLiteral("busctl failed: %1").arg(out)));
     QVERIFY2(busctlReply(out).startsWith(QStringLiteral("false")),
              qPrintable(QStringLiteral("a non-root ScheduleWake was not denied: %1").arg(out)));
-    QVERIFY2(armedTimers().isEmpty(),
-             "a denied non-root ScheduleWake still created a wake timer");
+    QVERIFY2(armedTimers().isEmpty(), "a denied non-root ScheduleWake still created a wake timer");
 
     // CancelWake: denied too — cancelling is privileged as well.
     QVERIFY(runAsNobody({QStringLiteral("CancelWake")}, &out, &rc));

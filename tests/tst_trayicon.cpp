@@ -1,7 +1,7 @@
-#include <QtTest>
 #include <QApplication>
-#include <QStandardPaths>
 #include <QDateTime>
+#include <QStandardPaths>
+#include <QtTest>
 
 #include "managers/AlarmManager.h"
 #include "ui/TrayIcon.h"
@@ -52,7 +52,7 @@ void TestTrayIcon::constructionIsSafeWithoutSystemTray()
     QCOMPARE(tray.isAvailable(), QSystemTrayIcon::isSystemTrayAvailable());
 
     tray.setVisible(true);
-    QVERIFY(tray.isVisible());          // the flag is tracked regardless
+    QVERIFY(tray.isVisible()); // the flag is tracked regardless
     tray.setVisible(false);
     QVERIFY(!tray.isVisible());
 }
@@ -76,7 +76,7 @@ void TestTrayIcon::tooltipNamesTheNextAlarm()
     a.hour = target.time().hour();
     a.minute = target.time().minute();
     for (int d = 0; d < 7; ++d)
-        a.days[d] = true;   // every day: the occurrence exists today or tomorrow
+        a.days[d] = true; // every day: the occurrence exists today or tomorrow
     a.enabled = true;
     m_alarms->setAlarms({a});
 
@@ -84,8 +84,7 @@ void TestTrayIcon::tooltipNamesTheNextAlarm()
     const QString tip = tray.tooltip();
 
     // Computed from the alarm's own fields, not from the implementation.
-    const QString expected =
-        QStringLiteral("%1:%2").arg(a.hour).arg(a.minute, 2, 10, QChar('0'));
+    const QString expected = QStringLiteral("%1:%2").arg(a.hour).arg(a.minute, 2, 10, QChar('0'));
 
     QVERIFY2(tip.startsWith(QStringLiteral("Next alarm: ")), qPrintable(tip));
     QVERIFY2(tip.contains(expected), qPrintable(tip));

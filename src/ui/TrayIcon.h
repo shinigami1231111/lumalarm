@@ -43,7 +43,7 @@ private:
     void refresh();
     QString buildTooltip() const;
 
-    QString m_tooltip;   // last computed tooltip, valid with or without a tray
+    QString m_tooltip; // last computed tooltip, valid with or without a tray
     QSystemTrayIcon *m_tray;
     AlarmModel *m_model;
     Scheduler *m_scheduler;
