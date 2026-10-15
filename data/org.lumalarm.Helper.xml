@@ -15,5 +15,8 @@
     <method name="GetStatus">
       <arg type="s" name="status" direction="out"/>
     </method>
+    <method name="GetCapabilities">
+      <arg type="a{sv}" name="caps" direction="out"/>
+    </method>
   </interface>
 </node>

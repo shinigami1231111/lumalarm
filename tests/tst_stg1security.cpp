@@ -446,6 +446,7 @@ class TestStg1Security : public QObject
 private slots:
     // ── Tier 1: deterministic contract checks ───────────────────────────
     void sharedBoundaryIsTheSingleSourceOfTruth();
+    void helperXmlDeclaresExactlyTheFourMethods();
     void pkcheckArgumentsEnableInteraction();
     void polkitActionIdMatchesThePolicyFile();
     void polkitFailsClosedOnUnknownSubject();
@@ -475,6 +476,25 @@ private slots:
 };
 
 // ── Tier 1 ───────────────────────────────────────────────────────────────────
+
+// The D-Bus surface is a whitelist: these four methods, nothing else. The
+// helper is root-run, so a fifth method would silently widen the privileged
+// interface. GetCapabilities joined with WAKE-1 §A (2026-10-15).
+void TestStg1Security::helperXmlDeclaresExactlyTheFourMethods()
+{
+    QFile f(QStringLiteral(STG1_SOURCE_DIR "/data/org.lumalarm.Helper.xml"));
+    QVERIFY2(f.open(QIODevice::ReadOnly | QIODevice::Text), qPrintable(f.errorString()));
+    const QString xml = QString::fromUtf8(f.readAll());
+    QStringList methods;
+    const QRegularExpression re(QStringLiteral("method name=\"([^\"]+)\""));
+    auto it = re.globalMatch(xml);
+    while (it.hasNext())
+        methods.append(it.next().captured(1));
+    methods.sort();
+    QCOMPARE(methods,
+             QStringList({QStringLiteral("CancelWake"), QStringLiteral("GetCapabilities"),
+                          QStringLiteral("GetStatus"), QStringLiteral("ScheduleWake")}));
+}
 
 void TestStg1Security::sharedBoundaryIsTheSingleSourceOfTruth()
 {

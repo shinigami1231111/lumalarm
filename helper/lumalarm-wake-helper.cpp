@@ -49,6 +49,7 @@
 #include <QElapsedTimer>
 #include <QProcess>
 #include <QStringList>
+#include <QVariantMap>
 #include <QUuid>
 #include <QVector>
 
@@ -62,6 +63,7 @@
 #include <sys/wait.h>
 #include <unistd.h> // fork, setsid, execvp, read, write, unlink
 
+#include "wake/WakeCaps.h"
 #include "wake/WakeSecurity.h"
 
 namespace {
@@ -305,6 +307,10 @@ public slots:
     bool ScheduleWake(uint seconds, const QString &mode, QString &message);
     bool CancelWake(QString &message);
     QString GetStatus();
+    // WAKE-1 §A: what this machine can actually do, read from the kernel's
+    // own files — sleep states, mem-sleep types + default, RTC list + which
+    // one has wake enabled. Read-only like GetStatus, so no polkit gate.
+    QVariantMap GetCapabilities();
 
 private:
     // Caller's UID as tracked by the bus daemon; ~0u when not called via D-Bus.
@@ -1074,6 +1080,18 @@ QString WakeHelper::GetStatus()
         m_state == QLatin1String("error") ? QStringLiteral("error") : QStringLiteral("idle");
     qInfo() << "[wake-helper] GetStatus: uid" << uid << "->" << status;
     return status;
+}
+
+QVariantMap WakeHelper::GetCapabilities()
+{
+    const uint uid = callerUid();
+    const QVariantMap caps =
+        WakePolicy::capabilitiesToVariantMap(WakePolicy::readCapabilities(QStringLiteral("/sys")));
+    qInfo() << "[wake-helper] GetCapabilities: uid" << uid << "-> sleepStates"
+            << caps.value(QStringLiteral("sleepStates")).toStringList() << "memSleepDefault"
+            << caps.value(QStringLiteral("memSleepDefault")).toString() << "wakeCapableRtc"
+            << caps.value(QStringLiteral("wakeCapableRtc")).toString();
+    return caps;
 }
 
 int main(int argc, char **argv)

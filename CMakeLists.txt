@@ -184,6 +184,7 @@ endif()
 # Replaces the sudoers NOPASSWD rtcwake rule; see helper/lumalarm-wake-helper.cpp
 qt_add_executable(lumalarm-wake-helper
     helper/lumalarm-wake-helper.cpp
+    src/wake/WakeCaps.cpp
 )
 target_link_libraries(lumalarm-wake-helper PRIVATE Qt6::Core Qt6::DBus)
 # The helper shares the STG-1 boundary/polkit/timer contract with the app so
@@ -235,6 +236,18 @@ if(BUILD_TESTING)
         STG1_BINARY_DIR="${CMAKE_BINARY_DIR}"
     )
     add_test(NAME tst_stg1security COMMAND tst_stg1security)
+
+    # ── WAKE-1 §A: capability detection ───────────────────────────────────
+    # The reader parses fixture sys-trees, never the live machine, so the two
+    # no-assumption rules — `mem` is not assumed to be S3, rtc0 is not assumed
+    # to be wake-capable — are asserted as data on every run.
+    qt6_add_executable(tst_wakecaps
+        tests/tst_wakecaps.cpp
+        src/wake/WakeCaps.cpp
+    )
+    target_include_directories(tst_wakecaps PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+    target_link_libraries(tst_wakecaps PRIVATE Qt6::Core Qt6::Test)
+    add_test(NAME tst_wakecaps COMMAND tst_wakecaps)
 
     # Notifier (src/ui/): construction and the disabled / no-bus paths. The
     # live-daemon path is verified manually with busctl --user monitor.
