@@ -1,9 +1,11 @@
 # Lumalarm clang-tidy configuration.
 #
-# Advisory in this phase: WarningsAsErrors is empty, and both
-# scripts/ci-local.sh and .github/workflows/lint.yml treat findings as
-# non-fatal (lint.yml uses continue-on-error: true). Turn findings into
-# errors by adding the check names below to WarningsAsErrors.
+# Mandatory in the local gate since 2026-10-15: scripts/ci-local.sh fails the
+# whole run when clang-tidy exits non-zero on any file, and WarningsAsErrors
+# '*' turns every finding into an error so the exit status really fires — a
+# negative test proved plain warnings alone exit 0. .github/workflows/lint.yml
+# keeps continue-on-error: true — advisory there until its runner Qt/clang
+# pair is verified from a real run after the first push.
 #
 # Kept deliberately small and Qt-friendly: bugprone-* and performance-* find
 # real defects, the modernize-* picks are the mechanical ones, and the
@@ -24,7 +26,9 @@ Checks: >-
   readability-identifier-naming,
   readability-container-size-empty
 
-WarningsAsErrors: ''
+# Every finding is an error here — that is what makes the local gate's
+# exit-status check mandatory (see header). Empty = advisory.
+WarningsAsErrors: '*'
 
 # Only report diagnostics coming from our own sources and headers.
 HeaderFilterRegex: '^(src|tests|helper)/.*'
@@ -48,8 +52,19 @@ CheckOptions:
     value: CamelCase
   - key: readability-identifier-naming.ConstexprVariableCase
     value: CamelCase
+  # File-local constants follow the Qt/kernel kCamelCase style used across
+  # the whole project (kFullScale, kCallTimeoutMs, kPkcheckTimeoutMs);
+  # plain CamelCase would demand KFoo, which no file here uses.
+  # (clang-tidy spells the option ...Regexp, not ...Regex.)
+  - key: readability-identifier-naming.ConstexprVariableIgnoredRegexp
+    value: '^k[A-Z].*'
   - key: readability-identifier-naming.GlobalConstantCase
     value: UPPER_CASE
+  # File-local kCamelCase constants (kPlayerServicePrefix, kHelperService…)
+  # follow the same Qt/kernel style as ConstexprVariable above — plain
+  # UPPER_CASE stays the rule for every other global.
+  - key: readability-identifier-naming.GlobalConstantIgnoredRegexp
+    value: '^k[A-Z].*'
   # LocalConstantCase is deliberately unset: it flagged idiomatic lowercase
   # locals (entry, it, row, idx) and produced 71 findings on its own.
   - key: readability-identifier-naming.LocalVariableCase

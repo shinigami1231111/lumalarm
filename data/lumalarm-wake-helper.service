@@ -12,7 +12,31 @@ ProtectSystem=strict
 ProtectHome=true
 PrivateTmp=true
 RestrictAddressFamilies=AF_UNIX
-Capabilities=CAP_SYS_TIME
+# Hardening: this helper only ever needs to program the RTC alarm. The old
+# `Capabilities=` spelling was deleted by systemd — it logged
+# "Support for option Capabilities= has been removed and it is ignored" and
+# left the unit holding the FULL default bounding set (41 capabilities:
+# cap_sys_admin, cap_sys_module, cap_sys_rawio, cap_sys_ptrace, cap_syslog…).
+# `CapabilityBoundingSet=` is the supported directive and acts as a ceiling:
+# neither this unit nor any process it spawns (rtcwake included) can hold a
+# capability outside it. File access is unaffected — that runs on the user id
+# (root), not on a capability — and `rtcwake -m off` still works because it
+# execs /sbin/poweroff and the reboot itself belongs to PID 1.
+CapabilityBoundingSet=CAP_SYS_TIME
+
+# STG-1.4 (option 1a): the helper records an armed wake in /run/lumalarm/wake
+# so a restart can still report and cancel it. ProtectSystem=strict makes the
+# whole hierarchy read-only, so this one directory is granted back explicitly
+# rather than by weakening the sandbox to ReadWritePaths=/run.
+#
+# created by systemd, before the sandbox is applied, root:root 0755
+RuntimeDirectory=lumalarm
+RuntimeDirectoryMode=0755
+ReadWritePaths=/run/lumalarm
+# kept across `systemctl restart` — the wake outlives the helper process, so
+# restarting the helper must not delete the record of it. Still removed on a
+# real stop, and /run is tmpfs, so the record can never outlive a boot.
+RuntimeDirectoryPreserve=restart
 
 [Install]
 WantedBy=multi-user.target

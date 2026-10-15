@@ -89,7 +89,10 @@ void Notifier::notifyWakeFired()
     deliver(tr("Alarm"), tr("Time to wake up"), 10000);
 }
 
-void Notifier::notifyTestWakeArmed(int seconds)
+void Notifier::notifyTestWakeArmed(int /*seconds*/)
 {
-    deliver(tr("Test alarm armed"), tr("This machine will try to wake in %1 s").arg(seconds), 6000);
+    // A test wake only brings the machine back up — nothing rings. The body is
+    // empty on purpose: the user reads this AFTER waking, when "will wake in
+    // 60 s" would already be history.
+    deliver(tr("Machine armed"), QString(), 6000);
 }

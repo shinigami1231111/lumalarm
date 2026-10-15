@@ -9,10 +9,10 @@
 
 // Single source of truth for where tones live (Issue #2).
 //
-// ConfigManager (discovery, import, delete) and AudioPlayer (playback) both
-// go through this header, so a file the tone list shows is always a file the
-// player can open. Discovery and the import dialog must likewise agree on what
-// counts as a tone — supportedSuffixes() drives both.
+// ConfigManager (discovery, import, delete) and SoundResolver/AlarmPlayer
+// (playback) both go through this header, so a file the tone list shows is
+// always a file the player can open. Discovery and the import dialog must
+// likewise agree on what counts as a tone — supportedSuffixes() drives both.
 //
 // Two locations, one policy:
 //   * user   — <config>/lumalarm/tones. The only writable folder: imports land
@@ -22,7 +22,7 @@
 //              /usr/share/lumalarm/tones; these are read-only drop-ins.
 //
 // Header-only on purpose: it needs no QObject, so every test binary that
-// already compiles AudioPlayer.cpp or ConfigManager.cpp links it unchanged.
+// already compiles SoundResolver.cpp or ConfigManager.cpp links it unchanged.
 namespace TonePaths {
 
 // The folder the user imports into and deletes from.

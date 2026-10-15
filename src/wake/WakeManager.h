@@ -32,6 +32,13 @@ public:
     QString wakeState() const;
     QString lastError() const;
 
+    // Sleep state handed to the helper as ScheduleWake's `mode` (the
+    // `rtcwake -m` layer, "HOW deeply"). Defaults to "mem"; Settings writes
+    // it from ConfigManager::sleepMode. An off-list value is ignored and the
+    // previous one kept, so a bad value can never reach the helper.
+    Q_INVOKABLE void setSleepMode(const QString &mode);
+    Q_INVOKABLE QString sleepMode() const;
+
     // True while the D-Bus helper owns the currently programmed wake. Set only
     // after the helper confirmed a schedule, and released only after a
     // confirmed (or truthfully empty) cancellation — see clearWakeAlarm().
@@ -164,6 +171,7 @@ private:
     QProcess *m_process;
     QString m_state; // "idle", "arming", "armed", "failed"
     QString m_lastError;
+    QString m_sleepMode = QStringLiteral("mem"); // rtcwake -m layer
 };
 
 #endif // WAKEMANAGER_H

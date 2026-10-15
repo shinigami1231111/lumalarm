@@ -8,7 +8,7 @@
 #include <QDBusConnection>
 #include <QDBusConnectionInterface>
 
-#include "audio/AudioPlayer.h"
+#include "audio/AlarmAudioController.h"
 #include "managers/AlarmManager.h"
 #include "managers/ConfigManager.h"
 #include "ui/WizardController.h"
@@ -113,7 +113,7 @@ private slots:
 private:
     ConfigManager *m_config = nullptr;
     WakeManager *m_wake = nullptr;
-    AudioPlayer *m_audio = nullptr;
+    AlarmAudioController *m_audio = nullptr;
 };
 
 void TestWizard::initTestCase()
@@ -143,7 +143,10 @@ void TestWizard::init()
     }
     m_config = new ConfigManager(this);
     m_wake = new WakeManager(this);
-    m_audio = new AudioPlayer(this);
+    // Production controller WITHOUT start(): no backend probe, no recovery,
+    // no CLI, no real audio unless preview() resolves a tone — and the tests
+    // never call previewTone().
+    m_audio = new AlarmAudioController(this);
 }
 
 void TestWizard::cleanup()
@@ -467,10 +470,10 @@ void TestWizard::defaultSoundRoundTrips()
 void TestWizard::skipLeavesConfigurationIntact()
 {
     // Unrelated configuration the wizard has no business touching.
-    const QString wakeBefore = m_config->defaultWakeMode();
+    const QString wakeBefore = m_config->sleepMode();
     const double opacityBefore = m_config->themeOpacity();
     const QString languageBefore = m_config->language();
-    m_config->setDefaultWakeMode(QStringLiteral("disk"));
+    m_config->setSleepMode(QStringLiteral("disk"));
     m_config->setThemeOpacity(0.42);
 
     const bool alarmsExisted = QFile::exists(alarmsPath());
@@ -490,7 +493,7 @@ void TestWizard::skipLeavesConfigurationIntact()
     QVERIFY(m_config->wizardCompleted());
 
     // Every unrelated setting reads back exactly as it did.
-    QCOMPARE(m_config->defaultWakeMode(), QStringLiteral("disk"));
+    QCOMPARE(m_config->sleepMode(), QStringLiteral("disk"));
     QCOMPARE(m_config->themeOpacity(), 0.42);
     QCOMPARE(m_config->language(), QStringLiteral("ar"));
 
@@ -500,7 +503,7 @@ void TestWizard::skipLeavesConfigurationIntact()
     QCOMPARE(readBytes(themePath()), themeBefore);
 
     // Put the settings back so nothing leaks into the other test binaries.
-    m_config->setDefaultWakeMode(wakeBefore);
+    m_config->setSleepMode(wakeBefore);
     m_config->setThemeOpacity(opacityBefore);
     m_config->setLanguage(languageBefore);
 }

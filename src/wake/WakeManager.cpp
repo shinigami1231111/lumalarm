@@ -14,6 +14,8 @@
 #include <QTimeZone>
 #include <unistd.h>
 
+#include <utility>
+
 #include "wake/SchedulerState.h"
 #include "wake/WakeSecurity.h"
 
@@ -52,6 +54,23 @@ bool WakeManager::helperOwnsWake() const
     return m_helperOwnedWake;
 }
 
+QString WakeManager::sleepMode() const
+{
+    return m_sleepMode;
+}
+
+void WakeManager::setSleepMode(const QString &mode)
+{
+    if (!WakePolicy::isValidWakeMode(mode)) {
+        qWarning() << "[WakeManager] setSleepMode ignored unknown mode:" << mode;
+        return;
+    }
+    if (m_sleepMode == mode)
+        return;
+    m_sleepMode = mode;
+    qInfo() << "[WakeManager] sleep mode:" << m_sleepMode;
+}
+
 void WakeManager::prepareWake(int secondsUntilAlarm, const QString &mode)
 {
     // ── STG-1.3: the one validation boundary, applied FIRST ────────────────
@@ -79,6 +98,10 @@ void WakeManager::prepareWake(int secondsUntilAlarm, const QString &mode)
         emit wakeStateChanged();
         return;
     }
+
+    // Both gates passed — this request's mode is the one handed to the helper,
+    // so an explicit call and the Settings selection cannot diverge.
+    m_sleepMode = mode;
 
     if (m_process->state() != QProcess::NotRunning) {
         m_process->kill();
@@ -160,6 +183,10 @@ void WakeManager::onProcessFinished(int exitCode, QProcess::ExitStatus status)
 }
 
 bool WakeManager::runSynchronous(const QString &program, const QStringList &args, int timeoutMs,
+                                 // error/output are two deliberately identical optional
+                                 // out-params (either may be null), always passed in
+                                 // this trailing order; the diagnostic is on the next line.
+                                 // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
                                  QString *error, QString *output)
 {
     QProcess p;
@@ -218,15 +245,28 @@ WakeManager::HelperResult WakeManager::scheduleViaHelper(uint seconds, QString *
     }
 
     // Signature per data/org.lumalarm.Helper.xml:
-    //   ScheduleWake(u seconds) -> (b success, s message)
+    //   ScheduleWake(u seconds, s mode) -> (b success, s message)
     // An explicit timeout is required: the helper may hold the call open while
     // a polkit agent authenticates the user, and giving up early here would
     // wrongly report Unavailable and arm a second wake on the fallback path.
+    //
+    // Defence in depth (STG-1.3): the mode is validated here as well as in
+    // setSleepMode(), so no call site can hand the privileged service a value
+    // outside WakePolicy::wakeModeChoices().
+    if (!WakePolicy::isValidWakeMode(m_sleepMode)) {
+        if (message)
+            *message = QStringLiteral("internal error: sleep mode '%1' is not allowed")
+                           .arg(m_sleepMode);
+        qWarning() << "[WakeManager] scheduleViaHelper refused sleep mode:" << m_sleepMode;
+        return HelperResult::Declined;
+    }
+
     QDBusMessage msg = QDBusMessage::createMethodCall(
         QString::fromLatin1(WakePolicy::kHelperService),
         QString::fromLatin1(WakePolicy::kHelperPath),
         QString::fromLatin1(WakePolicy::kHelperInterface), QStringLiteral("ScheduleWake"));
     msg << QVariant::fromValue(seconds);
+    msg << QVariant::fromValue(m_sleepMode);
     const QDBusMessage raw = iface.connection().call(msg, QDBus::Block, kHelperCallTimeoutMs);
 
     if (raw.type() == QDBusMessage::ErrorMessage) {
@@ -597,7 +637,7 @@ bool WakeManager::clearWakeAlarm(QString *error)
     QString err;
     if (!runSynchronous("rtcwake", QStringList() << "-m" << "no" << "-t" << "0", 20000, &err)) {
         if (error)
-            *error = err;
+            *error = std::move(err); // err dies here anyway
         return false;
     }
     m_helperOwnedWake = false;

@@ -35,19 +35,28 @@ constexpr bool isValidWakeDelay(qint64 seconds)
     return seconds >= kMinWakeSeconds && seconds <= kMaxWakeSeconds;
 }
 
-// rtcwake -m <mode> is caller-controlled on the legacy path. Accept only a
-// short alphabetic token: it can never start with '-', contain a path
-// separator, whitespace or a shell metacharacter, so it cannot change which
-// option rtcwake sees or be interpreted as anything other than a sleep state.
+// rtcwake -m <mode> is caller-controlled on both the app path and the helper,
+// so an allow-list — not a shape check — decides what may pass. Every value
+// below was confirmed against `rtcwake --list-modes` on 2026-10-08
+// (freeze standby mem disk off no on disable show): `disable` and `show` are
+// not sleep states, so they are excluded. Standby sits between mem and disk
+// because the user asked for that order (2026-10-08).
+//
+// A strict list subsumes the old "short alphabetic token" rule: no value can
+// start with '-', contain a path separator, whitespace or a shell
+// metacharacter, so none can change which option rtcwake sees.
+inline const QStringList &wakeModeChoices()
+{
+    static const QStringList kModes{
+        QStringLiteral("freeze"), QStringLiteral("mem"),   QStringLiteral("standby"),
+        QStringLiteral("disk"),   QStringLiteral("off"),   QStringLiteral("no"),
+        QStringLiteral("on")};
+    return kModes;
+}
+
 inline bool isValidWakeMode(const QString &mode)
 {
-    if (mode.isEmpty() || mode.size() > 16)
-        return false;
-    for (const QChar c : mode) {
-        if (!c.isLetter())
-            return false;
-    }
-    return true;
+    return wakeModeChoices().contains(mode);
 }
 
 // ── D-Bus contract (STG-1.1) ─────────────────────────────────────────────────

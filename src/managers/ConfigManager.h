@@ -15,8 +15,10 @@ class ThemeManager;
 class ConfigManager : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(
-        QString defaultWakeMode READ defaultWakeMode WRITE setDefaultWakeMode NOTIFY configChanged)
+    // The rtcwake sleep state — the one mode setting, handed to the helper as
+    // `rtcwake -m <mode>`. It used to be shadowed by a `defaultWakeMode`
+    // property that nothing consumed; removed2026-10-08.
+    Q_PROPERTY(QString sleepMode READ sleepMode WRITE setSleepMode NOTIFY configChanged)
     Q_PROPERTY(
         QString timePickerMode READ timePickerMode WRITE setTimePickerMode NOTIFY configChanged)
     Q_PROPERTY(QString tonesDirectory READ tonesDirectory NOTIFY configChanged)
@@ -53,6 +55,13 @@ class ConfigManager : public QObject
     // setting (show_tray_icon) so upgrading users keep their choice.
     Q_PROPERTY(
         bool trayIconEnabled READ trayIconEnabled WRITE setTrayIconEnabled NOTIFY configChanged)
+    // What the window close button does: "ask" (default), "hide" or "quit".
+    // "ask" is the safe default — the first close offers the choice instead of
+    // guessing, and the prompt's "don't ask again" box is what settles it.
+    Q_PROPERTY(QString closeAction READ closeAction WRITE setCloseAction NOTIFY configChanged)
+    // Alarm ringing behaviour when the window is hidden to tray:
+    // "alarmOnly" shows only the ringing overlay; "mainAndAlarm" shows both.
+    Q_PROPERTY(QString alarmUiMode READ alarmUiMode WRITE setAlarmUiMode NOTIFY configChanged)
     // Night mode: dim the window before an alarm. Defaults are 0 / 30 min / 0.4.
     Q_PROPERTY(
         bool nightModeEnabled READ nightModeEnabled WRITE setNightModeEnabled NOTIFY configChanged)
@@ -68,12 +77,40 @@ class ConfigManager : public QObject
     // NOTIFY stays configChanged like every other property here; languageChanged
     // is an additional signal main.cpp uses to swap the active QTranslator.
     Q_PROPERTY(QString language READ language WRITE setLanguage NOTIFY configChanged)
+    // ── audio (alarm sound rebuild, Phase 4) ────────────────────────────────
+    // The guarantee policy's knobs, read by main.cpp into
+    // AlarmAudioController::applySettings(). Values are validated on read, so
+    // a hand-edited settings.ini can never produce an out-of-range level.
+    // policy: "guarantee" (default) | "alarmOnly".
+    Q_PROPERTY(QString audioPolicy READ audioPolicy WRITE setAudioPolicy NOTIFY
+                   configChanged)
+    // Guarantee: raise the sink to at least this (0-100) when an alarm rings.
+    Q_PROPERTY(int audioFloorPercent READ audioFloorPercent WRITE
+                   setAudioFloorPercent NOTIFY configChanged)
+    // Our own stream volume (0-100); clamped to 1.0 in the player.
+    Q_PROPERTY(int audioStreamPercent READ audioStreamPercent WRITE
+                   setAudioStreamPercent NOTIFY configChanged)
+    // Global default tone (bare name); "" = fall back to the first tone.
+    Q_PROPERTY(QString audioDefaultSound READ audioDefaultSound WRITE
+                   setAudioDefaultSound NOTIFY configChanged)
+    // Output device for the alarm ring (node.name); "" = follow the system
+    // default sink. Stored as a node.name so it survives backend restarts.
+    Q_PROPERTY(QString audioOutputSink READ audioOutputSink WRITE
+                   setAudioOutputSink NOTIFY configChanged)
 
 public:
     explicit ConfigManager(QObject *parent = nullptr);
 
-    QString defaultWakeMode() const;
-    void setDefaultWakeMode(const QString &mode);
+    // Selected rtcwake sleep mode. Constrained to the modes this build offers;
+    // an unknown stored value reads back as the default rather than being
+    // passed to the helper.
+    QString sleepMode() const;
+    void setSleepMode(const QString &mode);
+
+    // Modes offered by the Settings selector, in display order (standby sits
+    // between mem and disk, per the user, 2026-10-08). Single source of truth
+    // for the QML model and for the validity check in sleepMode().
+    Q_INVOKABLE QStringList sleepModeChoices() const;
 
     // Alarm-editor time picker style: "wheel" (default) | "spin".
     QString timePickerMode() const;
@@ -137,6 +174,12 @@ public:
     bool trayIconEnabled() const;
     void setTrayIconEnabled(bool enabled);
 
+    QString closeAction() const;
+    void setCloseAction(const QString &action);
+
+    QString alarmUiMode() const;
+    void setAlarmUiMode(const QString &mode);
+
     bool nightModeEnabled() const;
     void setNightModeEnabled(bool enabled);
     int nightModeMinutesBefore() const;
@@ -156,6 +199,21 @@ public:
     // in Settings maps its labels onto these values.
     QString language() const;
     void setLanguage(const QString &lang);
+
+    // Audio (Phase 4): policy kind string ("guarantee" | "alarmOnly"; any
+    // unknown value reads back as "guarantee"), sink floor %, our stream
+    // volume %, and the global default tone name. Phase 6: the output
+    // device (speaker selector) as a node.name, "" = system default.
+    QString audioPolicy() const;
+    void setAudioPolicy(const QString &policy);
+    int audioFloorPercent() const;
+    void setAudioFloorPercent(int percent);
+    int audioStreamPercent() const;
+    void setAudioStreamPercent(int percent);
+    QString audioDefaultSound() const;
+    void setAudioDefaultSound(const QString &fileName);
+    QString audioOutputSink() const;
+    void setAudioOutputSink(const QString &sinkName);
 
 signals:
     void configChanged();

@@ -8,6 +8,17 @@ ColumnLayout {
     spacing: 18
     property bool __allowThemeWrite: false
 
+    // Speaker selector state (Phase 6): the controller fills outputDevices
+    // asynchronously, so we mirror it here to re-evaluate the combo model.
+    property var sinkDevices: []
+    Component.onCompleted: audioPlayer.refreshOutputDevices()
+    Connections {
+        target: audioPlayer
+        function onOutputDevicesChanged() {
+            root.sinkDevices = audioPlayer.outputDevices
+        }
+    }
+
     Text {
         text: qsTr("Settings")
         color: configManager.themeTextPrimary
@@ -219,22 +230,90 @@ ColumnLayout {
                 }
             }
 
+            // What the close button does (STG-5.4). This is where the close
+            // prompt's "Don't ask me again" choice comes back to: choosing
+            // "Ask me" here reopens the question the next time X is pressed.
+            Text { text: qsTr("When I close the window"); color: configManager.themeTextPrimary; font.pixelSize: 15 }
+            RowLayout {
+                Layout.fillWidth: true; spacing: 8
+                GlassButton {
+                    text: qsTr("Ask me")
+                    filled: configManager.closeAction === "ask"
+                    onClicked: configManager.closeAction = "ask"
+                }
+                GlassButton {
+                    // Disabled rather than silently degrading: with no tray
+                    // host there is nothing to hide behind, so the option is
+                    // visible but unselectable instead of quietly becoming a
+                    // quit.
+                    text: qsTr("Hide to tray")
+                    filled: configManager.closeAction === "hide"
+                    enabled: lifecycle.canHideToTray
+                    onClicked: configManager.closeAction = "hide"
+                }
+                GlassButton {
+                    text: qsTr("Quit")
+                    filled: configManager.closeAction === "quit"
+                    onClicked: configManager.closeAction = "quit"
+                }
+                Item { Layout.fillWidth: true }
+            }
+            Text {
+                visible: !lifecycle.canHideToTray
+                text: qsTr("“Hide to tray” needs a running tray host. Until one appears, closing will minimize the window instead.")
+                color: configManager.themeTextSecondary
+                font.pixelSize: 12
+                wrapMode: Text.WordWrap
+                Layout.fillWidth: true
+            }
+
+            // What to show when an alarm rings while the window is hidden
+            // (STG-5.4). "alarmOnly" shows just the ringing overlay; the main
+            // window stays in the tray.
+            Text { text: qsTr("When alarm rings while hidden"); color: configManager.themeTextPrimary; font.pixelSize: 15 }
+            RowLayout {
+                Layout.fillWidth: true; spacing: 8
+                GlassButton {
+                    text: qsTr("Alarm only")
+                    filled: configManager.alarmUiMode === "alarmOnly"
+                    onClicked: configManager.alarmUiMode = "alarmOnly"
+                }
+                GlassButton {
+                    text: qsTr("Main window + alarm")
+                    filled: configManager.alarmUiMode === "mainAndAlarm"
+                    onClicked: configManager.alarmUiMode = "mainAndAlarm"
+                }
+                Item { Layout.fillWidth: true }
+            }
+
             Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: Qt.rgba(1,1,1,0.07) }
 
             Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: Qt.rgba(1,1,1,0.07) }
 
             // Alarm Defaults
             Text { text: qsTr("Alarm Defaults"); color: configManager.themeTextSecondary; font.pixelSize: 13; font.bold: true; Layout.bottomMargin: -4 }
+
+            // The one and only mode control: this value is what the helper runs
+            // as `rtcwake -m <mode>`.
+            //
+            // It used to be shadowed by a second row, "Default Wake Mode", whose
+            // value NOTHING consumed — the mode handed to the helper comes from
+            // WakeManager::m_sleepMode, fed by this setting alone. That row also
+            // carried a hardcoded model offering "none", which is not a valid
+            // rtcwake mode at all. Removed 2026-10-08 (user report).
+            //
+            // Order comes from ConfigManager::sleepModeChoices(), which keeps
+            // standby between mem and disk (user, 2026-10-08).
             RowLayout {
                 Layout.fillWidth: true; spacing: 14
-                Text { text: qsTr("Default Wake Mode"); color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.preferredWidth: 180 }
+                Text { text: qsTr("RTCwake method"); color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.preferredWidth: 180 }
                 Item { Layout.fillWidth: true }
                 RoundedCombo {
-                    id: wakeCombo
-                    model: ["mem", "disk", "none"]
-                    currentIndex: Math.max(0, wakeCombo.find(configManager.defaultWakeMode))
+                    id: sleepModeCombo
+                    model: configManager.sleepModeChoices()
+                    currentIndex: Math.max(0, sleepModeCombo.find(configManager.sleepMode))
                     Layout.preferredWidth: 140
-                    onActivated: configManager.defaultWakeMode = currentText
+                    onActivated: configManager.sleepMode = currentText
                 }
             }
 
@@ -249,6 +328,101 @@ ColumnLayout {
                     Layout.preferredWidth: 140
                     onActivated: configManager.timePickerMode = currentIndex === 1 ? "spin" : "wheel"
                 }
+            }
+
+            // ================================================================
+            // ALARM SOUND — what an alarm ring is allowed to change
+            // (the rebuilt audio system; live, the controller re-reads the
+            // settings on configChanged).
+            // ================================================================
+            Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: Qt.rgba(1,1,1,0.07) }
+
+            Text { text: qsTr("Alarm Sound"); color: configManager.themeTextSecondary; font.pixelSize: 13; font.bold: true; Layout.bottomMargin: -4 }
+
+            Text { text: qsTr("When an alarm rings"); color: configManager.themeTextPrimary; font.pixelSize: 15 }
+            RowLayout {
+                Layout.fillWidth: true; spacing: 8
+                GlassButton {
+                    text: qsTr("Raise system volume")
+                    filled: configManager.audioPolicy === "guarantee"
+                    onClicked: configManager.audioPolicy = "guarantee"
+                }
+                GlassButton {
+                    text: qsTr("Never touch system volume")
+                    filled: configManager.audioPolicy === "alarmOnly"
+                    onClicked: configManager.audioPolicy = "alarmOnly"
+                }
+                Item { Layout.fillWidth: true }
+            }
+
+            RowLayout {
+                Layout.fillWidth: true; spacing: 14
+                enabled: configManager.audioPolicy === "guarantee"
+                opacity: enabled ? 1.0 : 0.5
+                Text { text: qsTr("Minimum volume"); color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.preferredWidth: 180 }
+                Item { Layout.fillWidth: true }
+                Slider {
+                    from: 0; to: 100; stepSize: 5
+                    value: configManager.audioFloorPercent
+                    implicitWidth: 200
+                    onPressedChanged: {
+                        if (!pressed && value !== configManager.audioFloorPercent)
+                            configManager.audioFloorPercent = value
+                    }
+                }
+                Text {
+                    text: Math.round(configManager.audioFloorPercent) + "%"
+                    color: configManager.themeTextSecondary; font.pixelSize: 14
+                    Layout.preferredWidth: 46; horizontalAlignment: Text.AlignRight
+                }
+            }
+
+            Text {
+                visible: configManager.audioPolicy === "guarantee"
+                text: qsTr("The system volume is raised to this level while an alarm rings, then restored exactly.")
+                color: configManager.themeTextSecondary; font.pixelSize: 12
+                Layout.fillWidth: true
+            }
+            Text {
+                visible: configManager.audioPolicy === "alarmOnly"
+                text: qsTr("Lumalarm plays its own sound only; your system volume is never changed.")
+                color: configManager.themeTextSecondary; font.pixelSize: 12
+                Layout.fillWidth: true
+            }
+
+            RowLayout {
+                Layout.fillWidth: true; spacing: 14
+                Text { text: qsTr("Output device"); color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.preferredWidth: 180 }
+                Item { Layout.fillWidth: true }
+                RoundedCombo {
+                    id: outputSinkCombo
+                    Layout.preferredWidth: 240
+                    model: {
+                        // index 0 = follow the system default sink; distinct
+                        // wording from the language picker's "System default"
+                        // so the Arabic can differ per meaning.
+                        const labels = [qsTr("Default output device")]
+                        for (let i = 0; i < root.sinkDevices.length; ++i)
+                            labels.push(root.sinkDevices[i].description)
+                        return labels
+                    }
+                    currentIndex: {
+                        const wanted = configManager.audioOutputSink
+                        if (wanted === "")
+                            return 0
+                        for (let i = 0; i < root.sinkDevices.length; ++i)
+                            if (root.sinkDevices[i].name === wanted)
+                                return i + 1
+                        return 0 // configured device is not present (unplugged)
+                    }
+                    onActivated: configManager.audioOutputSink =
+                        currentIndex === 0 ? "" : root.sinkDevices[currentIndex - 1].name
+                }
+            }
+            Text {
+                text: qsTr("The alarm rings through this device; other apps keep using the system default.")
+                color: configManager.themeTextSecondary; font.pixelSize: 12
+                Layout.fillWidth: true
             }
 
             // ================================================================
@@ -272,20 +446,89 @@ ColumnLayout {
                     Layout.fillWidth: true; spacing: 14
                     Text { text: qsTr("Wake in"); color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.preferredWidth: 80 }
                     Item { Layout.fillWidth: true }
+                    // The custom-seconds field. It sits to the LEFT of the combo so
+                    // the combo stays pinned to the row's right edge and never moves
+                    // — the spacer absorbs the growth instead of shoving the dropdown
+                    // sideways. Constant row height, zero reflow.
+                    //
+                    // Defect A fix (2026-10-09). The combo used to carry
+                    // `visible: !customField.visible`, so picking "Custom…" hid it
+                    // FOREVER — no line ever set it back, only a restart recovered the
+                    // presets. `expanded` replaces `visible` as the mode flag: the
+                    // combo is never hidden, and the field opens into an animated
+                    // space and closes the same way when a preset is chosen again.
+                    TextField {
+                        id: customField
+
+                        // Single source of truth for "are we in custom mode".
+                        property bool expanded: false
+
+                        // Stay in the layout at all times — `visible: false` removes
+                        // an item from the layout entirely, so it could never animate
+                        // back in. Collapsed it is simply 0 wide and transparent.
+                        visible: true
+                        enabled: expanded
+                        clip: true
+
+                        // minimumWidth must be 0 explicitly: an unset Layout minimum
+                        // falls back to implicitWidth, which would refuse to collapse.
+                        Layout.minimumWidth: 0
+                        Layout.preferredWidth: expanded ? 160 : 0
+                        opacity: expanded ? 1 : 0
+
+                        height: 32
+                        color: configManager.themeTextPrimary
+                        font.pixelSize: 14
+                        leftPadding: 10
+                        placeholderText: qsTr("Custom seconds (60-3600)")
+                        validator: IntValidator { bottom: 60; top: 3600 }
+
+                        // Open: unhurried, ease-out — the space breathes out from
+                        // alongside the Custom label. Close: noticeably snappier, so
+                        // switching back to a preset feels instant rather than laggy.
+                        Behavior on Layout.preferredWidth {
+                            NumberAnimation { duration: 240; easing.type: Easing.OutCubic }
+                        }
+                        Behavior on opacity {
+                            NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                        }
+
+                        background: Rectangle {
+                            radius: 7
+                            color: Qt.rgba(1,1,1,0.08)
+                            border.color: Qt.rgba(1,1,1,0.12); border.width: 1
+                        }
+                        onEditingFinished: {
+                            const v = parseInt(text)
+                            if (isNaN(v))
+                                return
+                            // Persist only a value the validation boundary would
+                            // accept. Anything else stays in the field untouched so
+                            // armTestWake() sees the real number and refuses it —
+                            // never silently rewritten into an accepted one.
+                            if (v >= 60 && v <= 3600)
+                                persistTestWake(v)
+                        }
+                    }
+
                     RoundedCombo {
                         id: testWakeCombo
                         model: [qsTr("60 s"), qsTr("2 min"), qsTr("5 min"), qsTr("10 min"), qsTr("30 min"), qsTr("60 min"), qsTr("Custom…")]
                         // Initial selection comes from the persisted duration.
                         currentIndex: presetIndexFor(configManager.testWakeDuration)
-                        visible: !customField.visible
+                        // Never hidden. The old `visible: !customField.visible` was
+                        // Defect A — it made "Custom…" a one-way door.
                         Layout.preferredWidth: 130
                         onActivated: {
                             if (currentIndex === 6) {
-                                customField.visible = true
                                 customField.text = configManager.testWakeDuration
+                                customField.expanded = true
                                 customField.forceActiveFocus()
                                 customField.selectAll()
                             } else {
+                                // Reverse the motion: the space closes up and the
+                                // presets are usable again — no restart required.
+                                customField.expanded = false
                                 persistTestWake(presetSeconds(currentIndex))
                             }
                         }
@@ -297,34 +540,15 @@ ColumnLayout {
                     }
                 }
 
-                TextField {
-                    id: customField
-                    visible: false
-                    Layout.fillWidth: true
-                    height: 32
-                    color: configManager.themeTextPrimary
-                    font.pixelSize: 14
-                    leftPadding: 10
-                    placeholderText: qsTr("Custom seconds (60-3600)")
-                    validator: IntValidator { bottom: 60; top: 3600 }
-                    background: Rectangle {
-                        radius: 7
-                        color: Qt.rgba(1,1,1,0.08)
-                        border.color: Qt.rgba(1,1,1,0.12); border.width: 1
-                    }
-                    onEditingFinished: {
-                        const v = parseInt(text)
-                        if (!isNaN(v))
-                            persistTestWake(v)
-                    }
-                }
-
                 RowLayout {
                     Layout.fillWidth: true; spacing: 10
                     GlassButton {
+                        // Stays enabled while armed — pressing it again just swaps the
+                        // wake. armTestWake() already cancels the previous one first
+                        // ("Never stack test wakes"), so no relabel is needed: it is
+                        // simply the test button.
                         text: qsTr("Arm test alarm")
                         pixelSize: 13
-                        enabled: wakeManager.wakeState !== "armed"
                         onClicked: wakeManager.armTestWake(testAlarmCard.selectedSeconds())
                     }
                     GlassButton {
@@ -334,10 +558,9 @@ ColumnLayout {
                         onClicked: wakeManager.cancelTestWake()
                     }
                     Item { Layout.fillWidth: true }
-                    Text {
-                        text: wakeManager.wakeState
-                        color: configManager.themeTextSecondary; font.pixelSize: 12
-                    }
+                    // Raw `wakeState` readout (idle/armed/failed) removed 2026-10-10:
+                    // the card is only really read again AFTER the wake, when that
+                    // word is already stale. The notification carries it instead.
                 }
 
                 Text {
@@ -350,7 +573,16 @@ ColumnLayout {
                 }
 
                 // Duration currently offered, whichever input produced it.
+                // While the custom field is on screen, return what is typed
+                // RIGHT NOW rather than the persisted value. The setter clamps
+                // to [60, 3600] on write, so reading it back would launder an
+                // invalid number into an accepted one before armTestWake() ever
+                // got the chance to refuse it with "out of range".
                 function selectedSeconds() {
+                    if (customField.expanded) {
+                        const v = parseInt(customField.text)
+                        return isNaN(v) ? 0 : v
+                    }
                     if (testWakeCombo.currentIndex === 6)
                         return configManager.testWakeDuration
                     return testWakeCombo.presetSeconds(testWakeCombo.currentIndex)
@@ -536,7 +768,7 @@ ColumnLayout {
                         themeManager.show_maximize_button = true
                         themeManager.show_close_button = true
                         themeManager.show_tray_icon = true
-                        configManager.defaultWakeMode = "mem"
+                        configManager.sleepMode = "mem" // the rtcwake -m layer, not the dead defaultWakeMode
                         configManager.stopwatchShowMs = true
                         configManager.trayIconEnabled = true
                         configManager.notificationsEnabled = true

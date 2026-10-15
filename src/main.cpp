@@ -1,5 +1,9 @@
 #include <QApplication>
 #include <QDir>
+#include <QSocketNotifier>
+#include <csignal>
+#include <sys/socket.h>
+#include <unistd.h>
 #include <QFile>
 #include <QFont>
 #include <QFontDatabase>
@@ -17,17 +21,38 @@
 #include <QTimer>
 #include <QTranslator>
 
-#include "audio/AudioPlayer.h"
+#include "audio/AlarmAudioController.h"
+#include "audio/VolumePolicy.h"
 #include "managers/AlarmManager.h"
 #include "managers/ConfigManager.h"
 #include "managers/ThemeManager.h"
 #include "ui/BlurManager.h"
 #include "ui/NightMode.h"
 #include "ui/Notifier.h"
-#include "ui/TrayIcon.h"
+#include "ui/TrayController.h"
 #include "ui/WizardController.h"
+#include "app/AppLifecycle.h"
+#include "app/SingleInstance.h"
 #include "wake/Scheduler.h"
 #include "wake/WakeManager.h"
+
+namespace {
+// SIGTERM/SIGINT arrive on a signal context — we may not touch Qt from there.
+// The handler only writes a byte to a socketpair; a QSocketNotifier on the read
+// end runs on the event loop and does the real work. This matters because a
+// hidden-to-tray app must still honour "log out / reboot": the close veto must
+// never be able to block session end (Phase 5.3).
+int g_sigFd[2] = {-1, -1};
+
+void unixSignalHandler(int)
+{
+    if (g_sigFd[1] >= 0) {
+        const char c = 1;
+        const auto n = ::write(g_sigFd[1], &c, sizeof(c));
+        Q_UNUSED(n);
+    }
+}
+} // namespace
 
 int main(int argc, char *argv[])
 {
@@ -41,10 +66,26 @@ int main(int argc, char *argv[])
     QApplication app(argc, argv);
     app.setApplicationName("Lumalarm");
     app.setOrganizationName("Lumalarm");
+    // A tray app must never quit because its window closed or hid — only an
+    // explicit quit() may end it. Without this, hiding to tray kills the app
+    // the moment the last window disappears.
+    app.setQuitOnLastWindowClosed(false);
 
     // Single-instance protection: prevent a second Lumalarm process from
     // running concurrently. Two instances would both poll alarms, both fire
     // sounds, and both write to the same config files causing corruption.
+    //
+    // D-Bus first: it can also RAISE the running instance, so double-clicking
+    // the launcher while Lumalarm is hidden in the tray shows the window instead
+    // of doing nothing. The lock file below stays as the no-session-bus fallback
+    // and as the guarantee against concurrent config writes.
+    auto *singleInstance = new SingleInstance(&app);
+    const bool isPrimary = singleInstance->registerService();
+    if (!isPrimary) {
+        singleInstance->notifyExisting();
+        return 0;
+    }
+
     QString lockPath = QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) +
                        "/lumalarm/lumalarm.lock";
     QDir().mkpath(QFileInfo(lockPath).absolutePath());
@@ -58,15 +99,39 @@ int main(int argc, char *argv[])
     QQuickStyle::setStyle("Fusion");
 
     qmlRegisterUncreatableType<AlarmManager>("GlassAlarm", 1, 0, "AlarmManager", "Singleton");
-    qmlRegisterUncreatableType<AudioPlayer>("GlassAlarm", 1, 0, "AudioPlayer", "Singleton");
+    qmlRegisterUncreatableType<AlarmAudioController>("GlassAlarm", 1, 0, "AlarmAudioController",
+                                                     "Singleton");
     qmlRegisterUncreatableType<ThemeManager>("GlassAlarm", 1, 0, "ThemeManager", "Singleton");
 
     AlarmManager alarmManager;
-    AudioPlayer audioPlayer;
     ConfigManager configManager;
+    // The whole alarm-sound stack (mixer, policy, journal, player, MPRIS).
+    // QML keeps the historical `audioPlayer` context name; the object behind
+    // it is this controller with the old AudioPlayer API (play/preview/stop/
+    // isPlaying/playbackError).
+    AlarmAudioController audio;
     WakeManager wakeManager;
     BlurManager blurManager;
     Scheduler scheduler(&alarmManager, &wakeManager);
+
+    // Audio settings: seed once, then follow config changes (Phase 5 edits
+    // them through ConfigManager; the controller re-reads on configChanged).
+    const auto audioSettingsFrom = [&configManager]() {
+        AlarmAudioController::Settings s;
+        s.policy = VolumePolicy::kindFromString(configManager.audioPolicy());
+        s.floorPercent = configManager.audioFloorPercent();
+        s.streamPercent = configManager.audioStreamPercent();
+        s.defaultSound = configManager.audioDefaultSound();
+        s.outputSink = configManager.audioOutputSink();
+        return s;
+    };
+    audio.applySettings(audioSettingsFrom());
+    QObject::connect(&configManager, &ConfigManager::configChanged, &audio,
+                     [&audio, audioSettingsFrom]() {
+                         audio.applySettings(audioSettingsFrom());
+                     });
+    // Backend probe + crash recovery (journal from a crashed previous run).
+    audio.start();
 
     // Desktop notifications (STG-5.3). Seeded from the persisted setting;
     // kept in sync below whenever the setting changes.
@@ -85,7 +150,7 @@ int main(int argc, char *argv[])
     // --show-wizard only overrides what is *reported* for this run; it never
     // rewrites wizard/completed. No other CLI flag is accepted.
     const bool forceWizard = app.arguments().contains(QStringLiteral("--show-wizard"));
-    WizardController wizard(&configManager, &wakeManager, &audioPlayer);
+    WizardController wizard(&configManager, &wakeManager, &audio);
     wizard.setForceShow(forceWizard);
 
     // ── i18n (STG-5.2) ───────────────────────────────────────────────────────
@@ -131,11 +196,6 @@ int main(int argc, char *argv[])
 
         const Alarm &a = alarms[index];
 
-        // Stop any previously playing alarm audio — only one alarm rings at a time.
-        if (audioPlayer.isPlaying()) {
-            audioPlayer.stop();
-        }
-
         currentRingingAlarmId = a.id;
 
         // Execute custom command if enabled.
@@ -148,26 +208,27 @@ int main(int argc, char *argv[])
             }
         }
 
-        // Play alarm sound immediately
-        if (a.enableSound) {
-            audioPlayer.play(a.soundFile);
-        }
+        // Ring: the controller resolves the sound (per-alarm -> global
+        // default -> first tone -> silent), raises the sink under the
+        // guarantee policy with a write-ahead journal, and verifies/forces
+        // our own stream volume. Replaces Issue #1's per-alarm volume.
+        if (a.enableSound)
+            audio.ring(a.soundFile);
 
-        // Auto-stop the alarm after the configured duration.
-        // Capture alarmId by value so the lambda can check if this is still
-        // the current alarm — prevents a stale timer from stopping a newer one.
+        // Auto-stop the alarm after the configured duration. stopRing() is
+        // idempotent and restores the sink; the alarmId check keeps a stale
+        // timer from stopping a newer alarm's ring.
         QString alarmId = a.id;
         QTimer::singleShot(a.autoStopDuration * 1000,
-                           [&audioPlayer, &currentRingingAlarmId, alarmId]() {
-                               if (currentRingingAlarmId == alarmId && audioPlayer.isPlaying()) {
-                                   audioPlayer.stop();
-                               }
+                           [&audio, &currentRingingAlarmId, alarmId]() {
+                               if (currentRingingAlarmId == alarmId)
+                                   audio.stopRing();
                            });
     });
 
     // Reinitialize audio on system resume (fixes PipeWire/PulseAudio after suspend)
     QObject::connect(&scheduler, &Scheduler::systemResumed,
-                     [&audioPlayer]() { audioPlayer.reinitializeAudio(); });
+                     [&audio]() { audio.reinitializeAudio(); });
 
     // Notifications: upcoming-alarm threshold, alarm fired, test wake armed.
     QObject::connect(&scheduler, &Scheduler::alarmApproaching, &notifier,
@@ -183,7 +244,7 @@ int main(int argc, char *argv[])
 
     QQmlApplicationEngine engine;
     engine.rootContext()->setContextProperty("alarmManager", &alarmManager);
-    engine.rootContext()->setContextProperty("audioPlayer", &audioPlayer);
+    engine.rootContext()->setContextProperty("audioPlayer", &audio);
     engine.rootContext()->setContextProperty("configManager", &configManager);
     engine.rootContext()->setContextProperty("themeManager", configManager.theme());
     engine.rootContext()->setContextProperty("wakeManager", &wakeManager);
@@ -203,55 +264,100 @@ int main(int argc, char *argv[])
         &engine, &QQmlApplicationEngine::objectCreationFailed, &app,
         []() { QCoreApplication::exit(-1); }, Qt::QueuedConnection);
 
+    // ── APP LIFECYCLE (Phase 1) ────────────────────────────────────────────
+    // AppLifecycle is the ONLY thing allowed to change the window's visibility
+    // or state (I1). It is parented to `app`, not `engine`, so it outlives the
+    // QML engine and the window — the crash this replaced was a stack-local
+    // `auto applyBlur = [&]{...}` lambda referenced after its block ended.
+    // Created BEFORE engine.load() so QML can bind to it from the first frame.
+    auto *lifecycle = new AppLifecycle(&configManager, &blurManager, &app);
+    // The audio restore must finish inside quit(), before the tray/window
+    // teardown (guide: synchronous, bounded); the journal covers a timeout.
+    lifecycle->attachAudio(&audio);
+
+    // Tray: heap, parented to the lifecycle (I6 — explicit teardown, never left
+    // to a stack local racing engine destruction).
+    auto *tray = new TrayController(alarmManager.model(), &scheduler, lifecycle);
+    lifecycle->attachTray(tray);
+
+    QObject::connect(&app, &QCoreApplication::aboutToQuit, lifecycle,
+                     [lifecycle]() { lifecycle->quit(); }, Qt::QueuedConnection);
+
+    // A second launch raises us (I4: queued, never on the D-Bus stack).
+    QObject::connect(singleInstance, &SingleInstance::activated, lifecycle,
+                     &AppLifecycle::showMainWindow, Qt::QueuedConnection);
+
+    // ── SESSION END / SIGTERM (Phase 5.3) ──────────────────────────────────
+    // The close veto and setQuitOnLastWindowClosed(false) must never keep the
+    // session alive. Logout goes through commitDataRequest; systemctl --user
+    // stop / Ctrl-C go through SIGTERM/SIGINT.
+    QObject::connect(&app, &QGuiApplication::commitDataRequest, &app,
+                     [lifecycle]() { lifecycle->quit(); }, Qt::DirectConnection);
+
+    if (::socketpair(AF_UNIX, SOCK_STREAM, 0, g_sigFd) == 0) {
+        auto *notifier = new QSocketNotifier(g_sigFd[0], QSocketNotifier::Read, &app);
+        QObject::connect(notifier, &QSocketNotifier::activated, &app,
+                         [lifecycle, notifier](QSocketDescriptor, QSocketNotifier::Type) {
+            char c = 0;
+            const auto n = ::read(g_sigFd[0], &c, sizeof(c));
+            Q_UNUSED(n);
+            notifier->setEnabled(false);   // one signal is enough; never re-enter
+            lifecycle->quit();
+        });
+        std::signal(SIGTERM, unixSignalHandler);
+        std::signal(SIGINT, unixSignalHandler);
+    }
+
+    engine.rootContext()->setContextProperty("lifecycle", lifecycle);
+
     // QML module resources live under :/qt/qml/<URI>/ (Qt policy QTP0001, NEW
     // since Qt 6.5 — applied via qt_standard_project_setup(REQUIRES 6.5)).
     engine.load(QUrl("qrc:/qt/qml/GlassAlarm/qml/main.qml"));
 
-    // Set window icon after QML window is created
-    QQuickWindow *mainWin = nullptr;
-    if (!engine.rootObjects().isEmpty()) {
-        mainWin = qobject_cast<QQuickWindow *>(engine.rootObjects().first());
-        if (mainWin) {
-            mainWin->setIcon(QIcon(":/icon.svg"));
+    if (engine.rootObjects().isEmpty())
+        return 1;
 
-            // KWin blur-behind must be requested after the window exists.
-            auto applyBlur = [&]() {
-                bool compositor = configManager.theme()->blur_mode() == "compositor";
-                blurManager.setBlurEnabled(mainWin, compositor);
-            };
-            // Apply once shown, on every resize, and when blur mode changes.
-            QObject::connect(mainWin, &QWindow::visibleChanged, [&](bool vis) {
-                if (vis)
-                    applyBlur();
-            });
-            QObject::connect(mainWin, &QWindow::xChanged, applyBlur);
-            QObject::connect(mainWin, &QWindow::yChanged, applyBlur);
-            QObject::connect(mainWin, &QWindow::widthChanged, applyBlur);
-            QObject::connect(mainWin, &QWindow::heightChanged, applyBlur);
-            QObject::connect(configManager.theme(), &ThemeManager::themeChanged, applyBlur);
-            applyBlur();
-        }
+    // The window only exists after the engine has loaded; hand it to the
+    // lifecycle, which is now the sole owner of its visibility.
+    auto *mainWin = qobject_cast<QQuickWindow *>(engine.rootObjects().constFirst());
+    if (mainWin)
+        mainWin->setIcon(QIcon(":/icon.svg"));
+    lifecycle->attachWindow(mainWin);
+
+    // Show unless started hidden for autostart AND a tray is there to come back
+    // through (I8). --hidden without a usable tray deliberately shows the window.
+    const bool startHidden = app.arguments().contains(QLatin1String("--hidden"));
+    lifecycle->start(startHidden);
+
+    // ── PHASE 6 STRESS HOOKS (env-gated, compiled in but inert by default) ─
+    if (qEnvironmentVariableIsSet("LUMALARM_STRESS_QUITRACE")) {
+        // Self-driving: call quit(), then fire 20 show/quit emissions. Every one
+        // must be a no-op and the process must exit 0 — proves I5 (quit is
+        // idempotent and every other entry point goes inert) and I6 (the tray's
+        // connections are severed by shutdown() before the loop ends).
+        QTimer::singleShot(2000, &app, [lifecycle, tray]() {
+            qInfo() << "[stress] calling lifecycle->quit()";
+            lifecycle->quit();
+            for (int i = 0; i < 20; ++i) {
+                QTimer::singleShot(i, qApp, [tray, i]() {
+                    tray->showRequested();
+                    tray->quitRequested();
+                    qInfo() << "[stress] emission" << i << "-> must be a no-op";
+                });
+            }
+        });
     }
-
-    // System tray icon — created once, shown/hidden based on setting.
-    auto showWindowFromTray = [&]() {
-        if (mainWin) {
-            mainWin->setVisible(true);
-            mainWin->showNormal();
-            mainWin->raise();
-            mainWin->requestActivate();
-        }
-    };
-
-    // Tray icon (STG-5.4): tooltip names the next alarm; menu raises the window
-    // or quits. Visibility follows configManager.trayIconEnabled().
-    TrayIcon tray(alarmManager.model(), &scheduler);
-    QObject::connect(&tray, &TrayIcon::showWindowRequested, &app, showWindowFromTray);
-    QObject::connect(&tray, &TrayIcon::quitRequested, &app, &QCoreApplication::quit);
-
-    auto updateTrayVisibility = [&]() { tray.setVisible(configManager.trayIconEnabled()); };
-    updateTrayVisibility();
-    QObject::connect(&configManager, &ConfigManager::configChanged, &app, updateTrayVisibility);
+    if (qEnvironmentVariableIsSet("LUMALARM_STRESS_HIDESHOW")) {
+        auto *t = new QTimer(&app);
+        int *n = new int(0);
+        QObject::connect(t, &QTimer::timeout, &app, [lifecycle, n]() {
+            if (*n % 2 == 0) lifecycle->hideMainWindow();
+            else             lifecycle->showMainWindow();
+            if (++(*n) > 400) { delete n; QTimer::singleShot(0, qApp, &QCoreApplication::quit); }
+        });
+        t->start(150);
+    }
+    // ── END STRESS HOOKS ───────────────────────────────────────────────────
 
     // Apply the theme's font family if it resolves to an installed font.
     // Falls back silently to the system default when unavailable.

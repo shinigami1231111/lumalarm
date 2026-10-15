@@ -55,7 +55,7 @@ class TestConfigManager : public QObject
 private slots:
     void initTestCase();
     void constructionCreatesConfigPathsAndDefaults();
-    void defaultWakeModeRoundTripsThroughSettings();
+    void defaultWakeModeWasRemovedInFavourOfSleepMode();
     void timePickerModeIsNormalizedOnRead();
     void availableTonesReflectsTonesDirectory();
     void availableTonesIncludesSystemToneFolder();
@@ -67,6 +67,7 @@ private slots:
     void deleteToneRefusesSystemTones();
     void listedTonesResolveForPlayback();
     void testWakeDurationDefaultsAndClamps();
+    void audioSettingsRoundTripAndClamp();
 
 private:
     void cleanupTones();
@@ -120,28 +121,39 @@ void TestConfigManager::constructionCreatesConfigPathsAndDefaults()
     QVERIFY2(QDir(cm.tonesDirectory()).exists(),
              qPrintable(QStringLiteral("tones dir missing: %1").arg(cm.tonesDirectory())));
 
-    // Fresh defaults.
-    QCOMPARE(cm.defaultWakeMode(), QStringLiteral("mem"));
+    // Fresh defaults. sleepMode is the ONLY mode setting: it is what the
+    // helper runs as `rtcwake -m <mode>`.
+    QCOMPARE(cm.sleepMode(), QStringLiteral("mem"));
     QCOMPARE(cm.timePickerMode(), QStringLiteral("wheel"));
 
     // ThemeManager is owned and wired up (theme changes surface as configChanged).
     QVERIFY(cm.theme() != nullptr);
 }
 
-void TestConfigManager::defaultWakeModeRoundTripsThroughSettings()
+void TestConfigManager::defaultWakeModeWasRemovedInFavourOfSleepMode()
 {
     ConfigManager cm;
     QSignalSpy spy(&cm, &ConfigManager::configChanged);
 
-    cm.setDefaultWakeMode(QStringLiteral("rtc"));
-    QCOMPARE(cm.defaultWakeMode(), QStringLiteral("rtc"));
+    // sleepMode is validated against WakePolicy::wakeModeChoices(), so only a
+    // listed mode can be stored — it is the value the helper runs as
+    // `rtcwake -m <mode>`, and the only mode setting there is. The old
+    // `defaultWakeMode` property was rendered in Settings but read by nothing,
+    // and offered a hardcoded list containing "none", which is not a valid
+    // rtcwake mode at all; it was removed on 2026-10-08.
+    cm.setSleepMode(QStringLiteral("standby"));
+    QCOMPARE(cm.sleepMode(), QStringLiteral("standby"));
     QCOMPARE(spy.count(), 1);
 
     // A brand-new ConfigManager over the same test config dir must read back
     // what the first one wrote — proves the value reaches the ini file.
-    cm.setDefaultWakeMode(QStringLiteral("none"));
     ConfigManager reloaded;
-    QCOMPARE(reloaded.defaultWakeMode(), QStringLiteral("none"));
+    QCOMPARE(reloaded.sleepMode(), QStringLiteral("standby"));
+
+    // An off-list mode is never stored: it falls back to the default, so a
+    // stray or hand-edited ini value cannot reach the privileged helper.
+    cm.setSleepMode(QStringLiteral("none"));
+    QCOMPARE(cm.sleepMode(), QStringLiteral("mem"));
 }
 
 void TestConfigManager::timePickerModeIsNormalizedOnRead()
@@ -482,6 +494,61 @@ void TestConfigManager::testWakeDurationDefaultsAndClamps()
     // The clamped value is what a fresh instance reads back from disk.
     ConfigManager reloaded;
     QCOMPARE(reloaded.testWakeDuration(), 3600);
+}
+
+void TestConfigManager::audioSettingsRoundTripAndClamp()
+{
+    ConfigManager cm;
+    QSignalSpy spy(&cm, &ConfigManager::configChanged);
+
+    // Fresh defaults: the guarantee policy at a 50 % floor, full stream, no
+    // explicit default sound (the resolver falls back to the first tone).
+    QCOMPARE(cm.audioPolicy(), QStringLiteral("guarantee"));
+    QCOMPARE(cm.audioFloorPercent(), 50);
+    QCOMPARE(cm.audioStreamPercent(), 100);
+    QVERIFY(cm.audioDefaultSound().isEmpty());
+    QVERIFY(cm.audioOutputSink().isEmpty()); // "System default" speaker
+
+    // Policy: only the two documented values survive a write; anything else
+    // reads back as the safe default instead of silently disabling the floor.
+    cm.setAudioPolicy(QStringLiteral("alarmOnly"));
+    QCOMPARE(cm.audioPolicy(), QStringLiteral("alarmOnly"));
+    cm.setAudioPolicy(QStringLiteral("banana"));
+    QCOMPARE(cm.audioPolicy(), QStringLiteral("guarantee"));
+
+    // Percentages clamp to 0..100 on write AND on read (settings.ini may be
+    // hand-edited — the controller must never see an out-of-range level).
+    cm.setAudioFloorPercent(150);
+    QCOMPARE(cm.audioFloorPercent(), 100);
+    cm.setAudioFloorPercent(-5);
+    QCOMPARE(cm.audioFloorPercent(), 0);
+    cm.setAudioStreamPercent(42);
+    QCOMPARE(cm.audioStreamPercent(), 42);
+
+    // Default sound is stored trimmed (QML combos may hand over padding).
+    cm.setAudioDefaultSound(QStringLiteral("  beep.wav  "));
+    QCOMPARE(cm.audioDefaultSound(), QStringLiteral("beep.wav"));
+
+    // Output device (speaker selector): trimmed node.name, "" = default.
+    cm.setAudioOutputSink(QStringLiteral("  alsa_output.pci-0000_00_1b.0.analog-stereo  "));
+    QCOMPARE(cm.audioOutputSink(),
+             QStringLiteral("alsa_output.pci-0000_00_1b.0.analog-stereo"));
+
+    // Every real change announces configChanged (the controller re-reads the
+    // settings); a no-op write must stay silent so bindings cannot loop.
+    QVERIFY(spy.count() > 0);
+    const int before = spy.count();
+    cm.setAudioPolicy(cm.audioPolicy());
+    cm.setAudioFloorPercent(cm.audioFloorPercent());
+    cm.setAudioOutputSink(cm.audioOutputSink());
+    QCOMPARE(spy.count(), before);
+
+    // Leave the shared test-mode settings at defaults for later runs.
+    cm.setAudioPolicy(QStringLiteral("guarantee"));
+    cm.setAudioFloorPercent(50);
+    cm.setAudioStreamPercent(100);
+    cm.setAudioDefaultSound(QString());
+    cm.setAudioOutputSink(QString());
 }
 
 void TestConfigManager::cleanupTones()

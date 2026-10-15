@@ -111,8 +111,13 @@ Rectangle {
             hoverColor: Qt.rgba(1, 0.2, 0.2, 0.35)
             pressedColor: Qt.rgba(1, 0.2, 0.2, 0.5)
             onClicked: {
-                audioPlayer.stop()
-                ringing = false
+                // Full ring stop: playback + sink restore + journal clear
+                // (the controller's stop() delegates here while ringing).
+                audioPlayer.stopRing()
+                // Do NOT assign to `ringing` — it is a binding fed by main.qml
+                // (one source of truth shared with RingingWindow). Report the
+                // stop and let the owner clear the state.
+                root.stopAlarm()
             }
         }
     }

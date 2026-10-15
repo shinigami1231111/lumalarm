@@ -16,3 +16,4 @@ moc_*
 qmltypes/
 RELEASE_DEFERRED.md
 build-local-ci/
+build-clean/

@@ -4,7 +4,7 @@
 #include <QtTest>
 
 #include "managers/AlarmManager.h"
-#include "ui/TrayIcon.h"
+#include "ui/TrayController.h"
 #include "wake/Scheduler.h"
 #include "wake/WakeManager.h"
 
@@ -46,25 +46,33 @@ void TestTrayIcon::initTestCase()
 
 void TestTrayIcon::constructionIsSafeWithoutSystemTray()
 {
-    TrayIcon tray(m_alarms->model(), m_scheduler);
+    TrayController tray(m_alarms->model(), m_scheduler);
 
-    // No tray on the offscreen platform: the icon must degrade quietly.
-    QCOMPARE(tray.isAvailable(), QSystemTrayIcon::isSystemTrayAvailable());
+    // Nothing is created until it is enabled, so it must not claim usability.
+    QVERIFY(!tray.usable());
 
-    tray.setVisible(true);
-    QVERIFY(tray.isVisible()); // the flag is tracked regardless
-    tray.setVisible(false);
-    QVERIFY(!tray.isVisible());
+    // Enabling with no tray host must degrade quietly, and usable() must agree
+    // with what the platform actually reports (it is DYNAMIC, not cached).
+    tray.setEnabled(true);
+    QCOMPARE(tray.usable(), QSystemTrayIcon::isSystemTrayAvailable());
+
+    tray.setEnabled(false);
+    QVERIFY(!tray.usable());
+
+    // shutdown() is idempotent and leaves the object inert.
+    tray.shutdown();
+    tray.shutdown();
+    QVERIFY(!tray.usable());
 }
 
 void TestTrayIcon::tooltipWithoutAlarmsReportsNone()
 {
     // Null scheduler is the degenerate case; it must never crash.
-    TrayIcon detached(nullptr, nullptr);
+    TrayController detached(nullptr, nullptr);
     QCOMPARE(detached.tooltip(), QStringLiteral("No alarm scheduled"));
 
     m_alarms->setAlarms({});
-    TrayIcon tray(m_alarms->model(), m_scheduler);
+    TrayController tray(m_alarms->model(), m_scheduler);
     QCOMPARE(tray.tooltip(), QStringLiteral("No alarm scheduled"));
 }
 
@@ -80,7 +88,7 @@ void TestTrayIcon::tooltipNamesTheNextAlarm()
     a.enabled = true;
     m_alarms->setAlarms({a});
 
-    TrayIcon tray(m_alarms->model(), m_scheduler);
+    TrayController tray(m_alarms->model(), m_scheduler);
     const QString tip = tray.tooltip();
 
     // Computed from the alarm's own fields, not from the implementation.

@@ -123,6 +123,8 @@ static const QStringList kQmlFilesFromCmake = {
     QStringLiteral("qml/pages/AlarmEditor.qml"),
     QStringLiteral("qml/overlays/RingingOverlay.qml"),
     QStringLiteral("qml/overlays/SoundManager.qml"),
+    QStringLiteral("qml/overlays/CloseDialog.qml"),
+    QStringLiteral("qml/overlays/RingingWindow.qml"),
     QStringLiteral("qml/pages/TimerPage.qml"),
     QStringLiteral("qml/pages/StopwatchPage.qml"),
     QStringLiteral("qml/pages/SettingsPage.qml"),

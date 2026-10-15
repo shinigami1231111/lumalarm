@@ -7,7 +7,7 @@
 
 class ConfigManager;
 class WakeManager;
-class AudioPlayer;
+class AlarmAudioController;
 
 // First-run wizard (STG-5.5): a six-step guided setup that gets a brand-new
 // user to a working state — language chosen, wake method verified, notification
@@ -46,7 +46,8 @@ class WizardController : public QObject
 public:
     // Three non-owning dependencies; all MUST be non-null and outlive this
     // object (they are stack locals in main(), declared before it).
-    explicit WizardController(ConfigManager *config, WakeManager *wake, AudioPlayer *audio,
+    explicit WizardController(ConfigManager *config, WakeManager *wake,
+                              AlarmAudioController *audio,
                               QObject *parent = nullptr);
 
     int currentStep() const;
@@ -140,7 +141,7 @@ private:
 
     ConfigManager *m_config;
     WakeManager *m_wake;
-    AudioPlayer *m_audio;
+    AlarmAudioController *m_audio;
     int m_currentStep = 0;
     bool m_completed = false;
     bool m_forceShow = false;

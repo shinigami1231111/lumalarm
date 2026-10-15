@@ -62,7 +62,13 @@ ctest --test-dir build --output-on-failure
 | `tst_alarmmodel` | `AlarmModel` (models): rows, signals, roles, sort order, count/get shape |
 | `tst_selectionbehavior` | `AlarmModel` (models): `selectedId` selection semantics |
 | `tst_qmlresources` | every shipped QML file and icon resolves inside the app's embedded QML module resources |
-| `tst_audioplayer` | `AudioPlayer` (audio): defaults, property clamping, missing-file error path |
+| `tst_systemmixer` | `SystemMixer` (audio): backend fallback order, parsers, the async CLI runner with timeout, `FakeMixer` |
+| `tst_volumepolicy` | `VolumePolicy` (audio): raise/clamp decisions, single-factor balance, 3 % override tolerance |
+| `tst_restorejournal` | `RestoreJournal` (audio): write-ahead record, atomic 0600 file, compare-and-set crash recovery |
+| `tst_soundresolver` | `SoundResolver` (audio): per-alarm → global default → first tone → empty |
+| `tst_alarmplayer` | `AlarmPlayer` (audio): media seam, stream-volume clamp (never > 1.0), mandatory stream verification/forcing |
+| `tst_mprispause` | `MprisPause` (audio): MPRIS bus-name filter, no-bus no-op, resume-only-what-we-paused |
+| `tst_audiocontroller` | `AlarmAudioController` (audio): ring flow end to end — journal before raise, exact restore, alarmOnly, user override, bounded quit, startup recovery |
 | `tst_configmanager` | `ConfigManager` (managers): settings round-trips, `timePickerMode` normalization |
 | `tst_thememanager` | `ThemeManager` (managers): seeded defaults, palette presets, theme file round-trip |
 | `tst_blurmanager` | `BlurManager` (ui): construction and null-window contract |
@@ -171,7 +177,9 @@ src/
   main.cpp
   models/    Alarm, AlarmModel
   managers/  AlarmManager, ConfigManager, ThemeManager
-  audio/     AudioPlayer
+  audio/     AlarmAudioController, SystemMixer (+ pactl/wpctl/amixer/NULL
+             backends), VolumePolicy, RestoreJournal, SoundResolver,
+             AlarmPlayer, MprisPause
   wake/      Scheduler, SchedulerState, WakeManager
   ui/        BlurManager, Notifier, TrayIcon, NightMode, WizardController
 qml/

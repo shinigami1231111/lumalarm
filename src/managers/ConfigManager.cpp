@@ -1,6 +1,7 @@
 #include "managers/ConfigManager.h"
 #include "managers/ThemeManager.h"
 #include "managers/TonePaths.h"
+#include "wake/WakeSecurity.h"
 #include <QFileInfo>
 #include <QFileInfoList>
 
@@ -65,15 +66,41 @@ void ConfigManager::migrateOldConfig()
     }
 }
 
-QString ConfigManager::defaultWakeMode() const
+// `alarm/defaultWakeMode` was removed on 2026-10-08. It was exposed in Settings
+// as "Default Wake Mode" but no call site ever read it: the mode handed to the
+// helper is `sleepMode` below. No migration is needed — the dead value never
+// influenced behaviour, so dropping it cannot change what any wake does.
+
+namespace {
+// Display order for the sleep-mode selector — standby sits between mem and
+// disk (user, 2026-10-08). The list itself lives in WakePolicy
+// (wake/WakeSecurity.h) so the Settings UI, the app and the root helper can
+// never drift apart; see WakePolicy::wakeModeChoices().
+const QStringList &sleepModeList()
 {
-    return m_settings->value("alarm/defaultWakeMode", "mem").toString();
+    return WakePolicy::wakeModeChoices();
+}
+} // namespace
+
+QString ConfigManager::sleepMode() const
+{
+    // A value written by hand into settings.ini that we do not offer must not
+    // reach the helper: read back as the default instead.
+    const QString stored =
+        m_settings->value(QStringLiteral("wake/sleepMode"), QStringLiteral("mem")).toString();
+    return sleepModeList().contains(stored) ? stored : QStringLiteral("mem");
 }
 
-void ConfigManager::setDefaultWakeMode(const QString &mode)
+void ConfigManager::setSleepMode(const QString &mode)
 {
-    m_settings->setValue("alarm/defaultWakeMode", mode);
+    const QString valid = sleepModeList().contains(mode) ? mode : QStringLiteral("mem");
+    m_settings->setValue(QStringLiteral("wake/sleepMode"), valid);
     emit configChanged();
+}
+
+QStringList ConfigManager::sleepModeChoices() const
+{
+    return sleepModeList();
 }
 
 QString ConfigManager::timePickerMode() const
@@ -375,6 +402,45 @@ void ConfigManager::setTrayIconEnabled(bool enabled)
     emit configChanged();
 }
 
+// What the window's close button does. Unknown or missing values fall back to
+// "ask", so a corrupt setting can never silently quit the app behind the user's
+// back — it degrades to being asked.
+QString ConfigManager::closeAction() const
+{
+    QString action = m_settings->value(QStringLiteral("closeAction")).toString();
+    if (action == QLatin1String("hide") || action == QLatin1String("quit"))
+        return action;
+    return QStringLiteral("ask");
+}
+
+void ConfigManager::setCloseAction(const QString &action)
+{
+    // Only the three known values ever reach storage, so the QML close path
+    // never has to interpret a string it might not understand.
+    QString clean = action;
+    if (clean != QLatin1String("hide") && clean != QLatin1String("quit"))
+        clean = QStringLiteral("ask");
+    m_settings->setValue(QStringLiteral("closeAction"), clean);
+    emit configChanged();
+}
+
+QString ConfigManager::alarmUiMode() const
+{
+    QString mode = m_settings->value(QStringLiteral("alarmUiMode")).toString();
+    if (mode == QLatin1String("alarmOnly") || mode == QLatin1String("mainAndAlarm"))
+        return mode;
+    return QStringLiteral("mainAndAlarm");
+}
+
+void ConfigManager::setAlarmUiMode(const QString &mode)
+{
+    QString clean = mode;
+    if (clean != QLatin1String("alarmOnly") && clean != QLatin1String("mainAndAlarm"))
+        clean = QStringLiteral("mainAndAlarm");
+    m_settings->setValue(QStringLiteral("alarmUiMode"), clean);
+    emit configChanged();
+}
+
 bool ConfigManager::nightModeEnabled() const
 {
     return m_settings->value(QStringLiteral("nightMode/enabled"), false).toBool();
@@ -447,6 +513,96 @@ void ConfigManager::setLanguage(const QString &lang)
     emit configChanged();
     if (previous != lang)
         emit languageChanged();
+}
+
+// ── audio (alarm sound rebuild, Phase 4) ────────────────────────────────────
+
+QString ConfigManager::audioPolicy() const
+{
+    // Unknown stored values read back as the safe default: the guarantee
+    // policy is what the guide specifies when nothing says otherwise.
+    const QString policy =
+        m_settings->value(QStringLiteral("audio/policy"),
+                          QStringLiteral("guarantee"))
+            .toString()
+            .trimmed();
+    return policy == QLatin1String("alarmOnly") ? QStringLiteral("alarmOnly")
+                                                : QStringLiteral("guarantee");
+}
+
+void ConfigManager::setAudioPolicy(const QString &policy)
+{
+    const QString clean =
+        policy == QLatin1String("alarmOnly") ? QStringLiteral("alarmOnly")
+                                             : QStringLiteral("guarantee");
+    if (audioPolicy() == clean)
+        return;
+    m_settings->setValue(QStringLiteral("audio/policy"), clean);
+    emit configChanged();
+}
+
+int ConfigManager::audioFloorPercent() const
+{
+    return qBound(0, m_settings->value(QStringLiteral("audio/floorPercent"), 50)
+                         .toInt(),
+                  100);
+}
+
+void ConfigManager::setAudioFloorPercent(int percent)
+{
+    const int clean = qBound(0, percent, 100);
+    if (audioFloorPercent() == clean)
+        return;
+    m_settings->setValue(QStringLiteral("audio/floorPercent"), clean);
+    emit configChanged();
+}
+
+int ConfigManager::audioStreamPercent() const
+{
+    return qBound(0, m_settings->value(QStringLiteral("audio/streamPercent"), 100)
+                         .toInt(),
+                  100);
+}
+
+void ConfigManager::setAudioStreamPercent(int percent)
+{
+    const int clean = qBound(0, percent, 100);
+    if (audioStreamPercent() == clean)
+        return;
+    m_settings->setValue(QStringLiteral("audio/streamPercent"), clean);
+    emit configChanged();
+}
+
+QString ConfigManager::audioDefaultSound() const
+{
+    return m_settings->value(QStringLiteral("audio/defaultSound"))
+        .toString()
+        .trimmed();
+}
+
+void ConfigManager::setAudioDefaultSound(const QString &fileName)
+{
+    const QString clean = fileName.trimmed();
+    if (audioDefaultSound() == clean)
+        return;
+    m_settings->setValue(QStringLiteral("audio/defaultSound"), clean);
+    emit configChanged();
+}
+
+QString ConfigManager::audioOutputSink() const
+{
+    return m_settings->value(QStringLiteral("audio/outputSink"))
+        .toString()
+        .trimmed();
+}
+
+void ConfigManager::setAudioOutputSink(const QString &sinkName)
+{
+    const QString clean = sinkName.trimmed();
+    if (audioOutputSink() == clean)
+        return;
+    m_settings->setValue(QStringLiteral("audio/outputSink"), clean);
+    emit configChanged();
 }
 
 QString ConfigManager::configFilePath() const

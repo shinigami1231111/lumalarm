@@ -139,9 +139,9 @@ void TstI18n::arabicCatalogTranslatesKnownStrings()
     QVERIFY2(containsArabic(settings), "SettingsPage/Settings is not Arabic");
 
     // A plain C++ string (context = QObject subclass name).
-    const QString quit = QCoreApplication::translate("TrayIcon", "Quit");
-    QVERIFY2(quit != QStringLiteral("Quit"), "TrayIcon/Quit is untranslated");
-    QVERIFY2(containsArabic(quit), "TrayIcon/Quit is not Arabic");
+    const QString quit = QCoreApplication::translate("TrayController", "Quit");
+    QVERIFY2(quit != QStringLiteral("Quit"), "TrayController/Quit is untranslated");
+    QVERIFY2(containsArabic(quit), "TrayController/Quit is not Arabic");
 
     // The placeholder must survive .arg() exactly as authored, otherwise the
     // runtime message loses the reason/duration it is supposed to report.

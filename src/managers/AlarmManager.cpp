@@ -266,7 +266,7 @@ void AlarmManager::loadFromFile()
     QVector<Alarm> alarms;
     const QJsonArray arr = doc.array();
     alarms.reserve(arr.size());
-    for (const QJsonValue &val : arr) {
+    for (const auto &val : arr) {
         alarms.append(Alarm::fromJson(val.toObject()));
     }
     m_model->resetFromList(alarms);

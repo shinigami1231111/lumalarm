@@ -18,9 +18,11 @@
 #   LUMALARM_ENABLE_KDE_BLUR=OFF) and the same build + ctest invocation. The
 #   workflow additionally builds inside Fedora 40 and Arch containers on an
 #   Ubuntu 24.04 runner; this script covers the host only. The lint step
-#   mirrors .github/workflows/lint.yml, which is advisory (continue-on-error
-#   there) — so lint findings are reported but do not fail the run, and lint
-#   is skipped entirely while no .clang-tidy config exists in the repo.
+#   reports the same findings as .github/workflows/lint.yml but is stricter:
+#   HERE any finding fails the run (mandatory since 2026-10-15, after the
+#   Qt/GCC-flag noise was eliminated), while lint.yml stays advisory
+#   (continue-on-error: true) until its runner pair is verified from a real
+#   run. Lint is skipped entirely while no .clang-tidy config exists.
 #
 # Exit status: 0 when configure, build and ctest are all green; non-zero on
 # the first hard failure. Missing prerequisites exit 1 with the exact install
@@ -218,7 +220,15 @@ run_lint() {
         -DLUMALARM_ENABLE_KDE_BLUR=OFF \
         -DCMAKE_EXPORT_COMPILE_COMMANDS=ON >/dev/null
 
-    echo "[ci-local] running clang-tidy over src/ (advisory, like lint.yml)"
+    # Qt6 exports -mno-direct-extern-access for GNU and -fno-direct-access-external-data for
+    # Clang as an interface pair (Qt6Targets.cmake). The g++ build bakes the GNU spelling into
+    # the compile database, and clang-tidy reports it as an unknown argument (a
+    # clang-diagnostic-error on every TU). Swap to the Clang spelling — identical semantics —
+    # in the lint database only; the real build keeps the GNU hardening flag untouched.
+    sed -i 's/-mno-direct-extern-access/-fno-direct-access-external-data/g' \
+        "$BUILD_DIR/compile_commands.json"
+
+    echo "[ci-local] running clang-tidy over src/ (mandatory: findings fail this gate)"
     local findings=0
     while IFS= read -r -d '' file; do
         if ! clang-tidy -p "$BUILD_DIR" --quiet "$file"; then
@@ -226,11 +236,14 @@ run_lint() {
         fi
     done < <(find src -name '*.cpp' -print0)
 
+    # Mandatory since 2026-10-15 (the Qt/GCC-flag noise that used to make every
+    # file "fail" was eliminated first). lint.yml on GitHub keeps
+    # continue-on-error: true until its runner pair is verified from a real run.
     if [ "$findings" -gt 0 ]; then
-        echo "[ci-local] clang-tidy reported findings in ${findings} file(s) — advisory only"
-    else
-        echo "[ci-local] clang-tidy clean"
+        echo "[ci-local] clang-tidy reported findings in ${findings} file(s) — FAILING (lint is mandatory here; lint.yml stays advisory)"
+        return 1
     fi
+    echo "[ci-local] clang-tidy clean"
 }
 
 # ── main ──────────────────────────────────────────────────────────────────────

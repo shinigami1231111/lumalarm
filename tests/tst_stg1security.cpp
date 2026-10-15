@@ -8,6 +8,7 @@
 #include <QProcess>
 #include <QProcessEnvironment>
 #include <QRegularExpression>
+#include <QScopeGuard>
 #include <QStandardPaths>
 #include <QTemporaryDir>
 #include <QTextStream>
@@ -273,10 +274,16 @@ bool helperStatus(QString *status)
 // helper's own answer. The QVariant's type is what actually goes on the bus,
 // so callers pick uint for the declared `u` signature and int to probe what
 // happens with a value the signature does not admit.
-bool helperSchedule(const QVariant &seconds, bool *success, QString *message)
+// Sleep state every live test schedules with. `no` means "Don't suspend, only
+// set the RTC wakeup time" (rtcwake(8)) — it exercises the full helper path
+// end to end while guaranteeing that a green test never suspends the machine
+// the test is running on. Passing anything else here would put the developer's
+// laptop to sleep mid-run.
+bool helperSchedule(const QVariant &seconds, bool *success, QString *message,
+                    const QVariant &mode = QStringLiteral("no"))
 {
     bool ok = false;
-    const QDBusMessage raw = helperCall(QStringLiteral("ScheduleWake"), {seconds}, &ok);
+    const QDBusMessage raw = helperCall(QStringLiteral("ScheduleWake"), {seconds, mode}, &ok);
     if (!ok || raw.arguments().size() < 2)
         return false;
     if (success)
@@ -297,6 +304,18 @@ bool helperCancel(bool *success, QString *message)
     if (message)
         *message = raw.arguments().at(1).toString();
     return true;
+}
+
+// Leave no armed alarm behind, whatever happened above it. A stray wake would
+// make every later live test skip with "already armed", which turns a real
+// failure into an apparent pass — a green run must mean the assertions ran.
+void disarmAnyWake()
+{
+    runCommand(QStringLiteral("rtcwake"), {QStringLiteral("-m"), QStringLiteral("disable")},
+               nullptr);
+    bool ok = false;
+    QString msg;
+    helperCancel(&ok, &msg);
 }
 
 // Preconditions for the live tier. `why` explains any refusal so a skip never
@@ -323,11 +342,38 @@ bool liveHelperReady(QString *why)
                    .arg(iface.lastError().message());
         return false;
     }
-    if (!armedTimers().isEmpty()) {
-        *why = QStringLiteral("a Lumalarm wake is already armed on this machine");
+    // A live tier that assumes "no wake armed yet" has to ask the helper
+    // itself: the wake is an RTC alarm now, not a systemd timer, so systemd
+    // knows nothing about it.
+    QString status;
+    if (!helperStatus(&status)) {
+        *why = QStringLiteral("could not read the helper status");
+        return false;
+    }
+    if (status != QLatin1String("idle")) {
+        *why = QStringLiteral("a Lumalarm wake is already armed (helper reports '%1')")
+                   .arg(status);
         return false;
     }
     return true;
+}
+
+// True while the RTC wakeup alarm is armed. rtcwake(8) prints
+// `alarm: off|on <time>` for `-m show`, and this alarm is now the only durable
+// record of a wake — systemd knows nothing about it, so asserting on systemd
+// units would prove nothing.
+bool rtcAlarmEnabled()
+{
+    QString out;
+    if (!runCommand(QStringLiteral("rtcwake"),
+                    {QStringLiteral("-m"), QStringLiteral("show")}, &out))
+        return false;
+    // `Device or resource busy` is what an armed wake looks like from the
+    // outside — the detached worker holds /dev/rtc0 while the wake is live.
+    // Same rule the helper applies (STG-1.4): busy counts as armed.
+    if (out.contains(QStringLiteral("busy")))
+        return true;
+    return out.trimmed().startsWith(QStringLiteral("alarm: on"));
 }
 
 // Run pkcheck exactly the way the helper does (same shared argument builder).
@@ -445,6 +491,26 @@ void TestStg1Security::sharedBoundaryIsTheSingleSourceOfTruth()
     for (const qint64 v : accepted)
         QVERIFY2(WakePolicy::isValidWakeDelay(v),
                  qPrintable(QStringLiteral("%1 must be accepted").arg(v)));
+
+    // The same single source of truth governs sleep modes: rtcwake's -m
+    // argument is caller controlled on both the app path and the helper, so
+    // this allow-list — not a shape check — is the boundary. The order is
+    // asserted too, because it is exactly what Settings renders, and standby
+    // has to sit between mem and disk (user request, 2026-10-08).
+    QCOMPARE(WakePolicy::wakeModeChoices(),
+             QStringList({QStringLiteral("freeze"), QStringLiteral("mem"),
+                          QStringLiteral("standby"), QStringLiteral("disk"),
+                          QStringLiteral("off"), QStringLiteral("no"),
+                          QStringLiteral("on")}));
+    // freeze is a real, listed sleep state on this machine (verified against
+    // /sys/power/state: "freeze standby mem disk") and must stay selectable.
+    QVERIFY(WakePolicy::isValidWakeMode(QStringLiteral("freeze")));
+    for (const QString &bad : {QStringLiteral(""), QStringLiteral("mem;id"),
+                               QStringLiteral("/tmp/mem"), QStringLiteral("-t"),
+                               QStringLiteral("mem mem"), QStringLiteral("FREEZE"),
+                               QStringLiteral("disable"), QStringLiteral("show")})
+        QVERIFY2(!WakePolicy::isValidWakeMode(bad),
+                 qPrintable(QStringLiteral("'%1' must be rejected as a mode").arg(bad)));
 }
 
 void TestStg1Security::pkcheckArgumentsEnableInteraction()
@@ -772,6 +838,23 @@ void TestStg1Security::dbusAndPolkitFilesDefineTheExpectedContract()
     QVERIFY(unit.contains(QStringLiteral("Type=dbus")));
     QVERIFY(unit.contains(QStringLiteral("ExecStart=/usr/lib/lumalarm/lumalarm-wake-helper")));
 
+    // The helper needs CAP_SYS_TIME and nothing else. `Capabilities=` is the
+    // spelling systemd deleted — it warns and ignores the line, silently
+    // restoring the full 41-capability default — so a DECLARATION of it is a
+    // regression. Comments may still mention it, hence the line-level check.
+    bool sawBoundingSet = false;
+    for (const QString &raw : unit.split(QLatin1Char('\n'))) {
+        const QString line = raw.trimmed();
+        QVERIFY2(!line.startsWith(QStringLiteral("Capabilities=")),
+                 qPrintable(QStringLiteral("dead directive reappeared: %1").arg(line)));
+        if (line.startsWith(QStringLiteral("CapabilityBoundingSet="))) {
+            sawBoundingSet = true;
+            QCOMPARE(line, QStringLiteral("CapabilityBoundingSet=CAP_SYS_TIME"));
+        }
+    }
+    QVERIFY2(sawBoundingSet,
+             "wake helper must declare CapabilityBoundingSet=CAP_SYS_TIME");
+
     const QString xml = readSourceFile(QStringLiteral("data/org.lumalarm.Helper.xml"));
     QVERIFY(!xml.isEmpty());
     QVERIFY(xml.contains(QStringLiteral("ScheduleWake")));
@@ -931,7 +1014,6 @@ void TestStg1Security::liveHelperRejectsOutOfBoundsRequests()
     QString statusBefore;
     QVERIFY(helperStatus(&statusBefore));
     QCOMPARE(statusBefore, QStringLiteral("idle"));
-    QVERIFY(armedTimers().isEmpty());
 
     const QList<qint64> invalid{0, 1, 59, 86401, 100000, qint64(UINT32_MAX), -1};
     for (const qint64 v : invalid) {
@@ -956,14 +1038,21 @@ void TestStg1Security::liveHelperRejectsOutOfBoundsRequests()
             QVERIFY2(!negativeSuccess,
                      qPrintable(
                          QStringLiteral("a negative delay was accepted: %1").arg(negativeMessage)));
-        QVERIFY2(armedTimers().isEmpty(), "a negative delay created a wake timer");
+        QString statusDuring;
+        QVERIFY(helperStatus(&statusDuring));
+        QVERIFY2(statusDuring == QLatin1String("idle"),
+                 qPrintable(QStringLiteral("a negative delay created a wake: %1")
+                                .arg(statusDuring)));
     }
 
-    // Nothing was created or changed by any of those rejections.
+    // Nothing was created or changed by any of those rejections: the helper
+    // still reports exactly what it reported before the burst.
     QString statusAfter;
     QVERIFY(helperStatus(&statusAfter));
     QCOMPARE(statusAfter, statusBefore);
-    QVERIFY2(armedTimers().isEmpty(), "an out-of-range request created a wake timer");
+    QVERIFY2(statusAfter == QLatin1String("idle"),
+             qPrintable(QStringLiteral("an out-of-range request left the helper in '%1'")
+                            .arg(statusAfter)));
 }
 
 void TestStg1Security::liveHelperAcceptsBoundaryAndReplacesThePreviousWake()
@@ -971,32 +1060,44 @@ void TestStg1Security::liveHelperAcceptsBoundaryAndReplacesThePreviousWake()
     QString why;
     if (!liveHelperReady(&why))
         QSKIP(qPrintable(why));
+    const auto cleanup = qScopeGuard(&disarmAnyWake);
 
     bool success = false;
     QString message;
 
     // Lower bound. (The literal must be an unsigned int so the argument is
-    // marshalled with the declared `u` signature.)
+    // marshalled with the declared `u` signature. `mode` defaults to `no`, so
+    // the alarm is armed while the machine stays awake — a live test must
+    // never suspend the box it is running on.)
+    //
+    // The alarm is awaited, not sampled: the D-Bus call returns the moment
+    // rtcwake has been exec()'d, which is before it has opened /dev/rtc0 and
+    // programmed anything, so an immediate check would read a stale "off".
     QVERIFY(helperSchedule(60u, &success, &message));
     QVERIFY2(success, qPrintable(message));
-    QCOMPARE(armedTimers().size(), 1);
+    QTRY_VERIFY_WITH_TIMEOUT(rtcAlarmEnabled(), 5000);
+    QVERIFY2(armedTimers().isEmpty(),
+             "a systemd timer was created — the helper must be rtcwake-only");
     QString status;
     QVERIFY(helperStatus(&status));
     QCOMPARE(status, QStringLiteral("scheduled:60"));
 
-    // Duplicate scheduling replaces: still exactly one Lumalarm wake.
+    // Duplicate scheduling replaces: still exactly one wake, now on the later
+    // deadline, so the earlier alarm must not survive the re-schedule.
     QVERIFY(helperSchedule(86400u, &success, &message));
     QVERIFY2(success, qPrintable(message));
-    QCOMPARE(armedTimers().size(), 1);
+    QTRY_VERIFY_WITH_TIMEOUT(rtcAlarmEnabled(), 5000);
     QVERIFY(helperStatus(&status));
     QVERIFY2(status.startsWith(QStringLiteral("scheduled")),
              qPrintable(QStringLiteral("unexpected status after re-schedule: %1").arg(status)));
     QVERIFY(status.contains(QStringLiteral("86400")));
 
-    // Cancellation is idempotent and truthful.
+    // Cancellation is idempotent and truthful, and it really clears the
+    // alarm: an RTC alarm that outlives a cancel would fire while the user
+    // believes Lumalarm is disarmed.
     QVERIFY(helperCancel(&success, &message));
     QVERIFY2(success, qPrintable(message));
-    QVERIFY2(armedTimers().isEmpty(), "the timer survived cancellation");
+    QTRY_VERIFY_WITH_TIMEOUT(!rtcAlarmEnabled(), 5000);
     QVERIFY(helperStatus(&status));
     QCOMPARE(status, QStringLiteral("idle"));
 
@@ -1004,9 +1105,6 @@ void TestStg1Security::liveHelperAcceptsBoundaryAndReplacesThePreviousWake()
     QVERIFY(helperCancel(&success, &message));
     QVERIFY(success);
     QCOMPARE(message, QStringLiteral("idle"));
-
-    if (!armedTimers().isEmpty()) // belt and braces for a failed assertion
-        helperCancel(&success, &message);
 }
 
 void TestStg1Security::liveHelperRediscoversWakeAfterRestart()
@@ -1016,15 +1114,31 @@ void TestStg1Security::liveHelperRediscoversWakeAfterRestart()
         QSKIP(qPrintable(why));
     if (geteuid() != 0)
         QSKIP("restarting the root helper requires root");
+    const auto cleanup = qScopeGuard(&disarmAnyWake);
+
+    // Option 1a (chosen by the user 2026-10-08): the record is the ONLY reason
+    // a restarted helper can re-report an armed wake, so its shape is under
+    // test too. A world-readable record tells an unprivileged caller when the
+    // machine will wake; a symlinked one redirects a root write.
+    const QString record = QStringLiteral("/run/lumalarm/wake");
 
     bool success = false;
     QString message;
     QVERIFY(helperSchedule(3600u, &success, &message));
     QVERIFY2(success, qPrintable(message));
-    QCOMPARE(armedTimers().size(), 1);
+    QTRY_VERIFY_WITH_TIMEOUT(rtcAlarmEnabled(), 5000);
+    QTRY_VERIFY_WITH_TIMEOUT(QFileInfo::exists(record), 5000);
+
+    const QFileInfo rec(record);
+    QVERIFY2(!rec.isSymLink(), "the wake record must never be a symlink");
+    QVERIFY2(rec.ownerId() == 0u, "the wake record must be root-owned");
+    QVERIFY2(!rec.permissions().testFlag(QFileDevice::ReadOther),
+             "the wake record must not be readable by others");
+    QVERIFY2(!rec.permissions().testFlag(QFileDevice::WriteOther),
+             "the wake record must not be writable by others");
 
     // Simulate the F3 defect: the helper process loses all in-memory state
-    // while the transient timer it created stays armed.
+    // while the alarm it just programmed in the RTC stays armed.
     QString restartLog;
     int rc = -1;
     QVERIFY2(runCommand(QStringLiteral("systemctl"),
@@ -1033,26 +1147,23 @@ void TestStg1Security::liveHelperRediscoversWakeAfterRestart()
              qPrintable(QStringLiteral("could not restart the helper: %1").arg(restartLog)));
     QCOMPARE(rc, 0);
 
-    // The timer must have survived the restart.
-    QCOMPARE(armedTimers().size(), 1);
+    // The wake itself must survive — the machine would still wake up, and no
+    // amount of process churn in Lumalarm may disarm it behind the user's back.
+    QVERIFY2(rtcAlarmEnabled(), "the RTC alarm did not survive a helper restart");
 
-    // GetStatus must not report idle for a wake that is still armed, and it
-    // must still know the requested delay (recovered from the unit label).
+    // STG-1.4 (option 1a): the restarted helper re-reads the record, confirms
+    // the alarm against the hardware, and reports the same wake. This is a
+    // real assertion now — the gap it used to mark expected-to-fail is closed.
     QString status;
-    QVERIFY(helperStatus(&status));
-    QVERIFY2(status.startsWith(QStringLiteral("scheduled")),
-             qPrintable(QStringLiteral("helper reported '%1' for an armed wake after a "
-                                       "restart")
-                            .arg(status)));
+    QVERIFY2(helperStatus(&status), "GetStatus failed after the helper restart");
+    QCOMPARE(status, QStringLiteral("scheduled:3600"));
 
-    // Cancelling after the restart must actually remove the timer rather than
-    // reporting a false success.
+    // Cancelling must clear the record along with the alarm, or the next
+    // start would rediscover a wake that no longer exists.
     QVERIFY(helperCancel(&success, &message));
-    QVERIFY2(success, qPrintable(QStringLiteral("cancel after restart failed: %1").arg(message)));
-    QVERIFY2(armedTimers().isEmpty(), "the timer survived cancellation after a restart");
-
-    QVERIFY(helperStatus(&status));
-    QCOMPARE(status, QStringLiteral("idle"));
+    QVERIFY2(success, qPrintable(message));
+    QVERIFY2(!QFileInfo::exists(record),
+             "cancelling must remove the wake record along with the RTC alarm");
 }
 
 void TestStg1Security::liveNonRootCallerIsDeniedWhileStatusStaysPublic()
@@ -1092,13 +1203,21 @@ void TestStg1Security::liveNonRootCallerIsDeniedWhileStatusStaysPublic()
         QSKIP(qPrintable(
             QStringLiteral("could not launch a session-less non-root bus client: %1").arg(out)));
 
-    // ScheduleWake: denied, and nothing may be created by the attempt.
-    QVERIFY(runAsNobody({QStringLiteral("ScheduleWake"), QStringLiteral("u"), QStringLiteral("60")},
+    // ScheduleWake: denied, and nothing may be created by the attempt. The
+    // signature is one token (`us`) followed by both values — a mismatch would
+    // be refused by busctl or the bus as a type error, which proves nothing
+    // about polkit.
+    QVERIFY(runAsNobody({QStringLiteral("ScheduleWake"), QStringLiteral("us"),
+                         QStringLiteral("60"), QStringLiteral("no")},
                         &out, &rc));
     QVERIFY2(rc == 0, qPrintable(QStringLiteral("busctl failed: %1").arg(out)));
     QVERIFY2(busctlReply(out).startsWith(QStringLiteral("false")),
              qPrintable(QStringLiteral("a non-root ScheduleWake was not denied: %1").arg(out)));
-    QVERIFY2(armedTimers().isEmpty(), "a denied non-root ScheduleWake still created a wake timer");
+    // Wait before sampling: rtcwake programs the alarm asynchronously, so an
+    // immediate "still off" would pass even if the denial had silently failed
+    // to stop a spawn.
+    QTest::qWait(750);
+    QVERIFY2(!rtcAlarmEnabled(), "a denied non-root ScheduleWake still armed the RTC alarm");
 
     // CancelWake: denied too — cancelling is privileged as well.
     QVERIFY(runAsNobody({QStringLiteral("CancelWake")}, &out, &rc));

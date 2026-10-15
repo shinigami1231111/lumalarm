@@ -4,6 +4,7 @@
   <interface name="org.lumalarm.Helper">
     <method name="ScheduleWake">
       <arg type="u" name="seconds" direction="in"/>
+      <arg type="s" name="mode" direction="in"/>
       <arg type="b" name="success" direction="out"/>
       <arg type="s" name="message" direction="out"/>
     </method>

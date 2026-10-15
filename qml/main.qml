@@ -6,7 +6,8 @@ import GlassAlarm
 
 Window {
     id: root
-    visible: true
+    // C++ shows the window in lifecycle.start(); QML never assigns `visible` (I1).
+    visible: false
     width: 960
     height: 660
     minimumWidth: 720
@@ -37,13 +38,30 @@ Window {
     }
     property int countdownValue: -1
 
-    // When tray is enabled, closing the window hides it instead of destroying it.
+    // ── RINGING STATE (Phase 4) ────────────────────────────────────────────
+    // One source of truth, read by BOTH the in-window overlay and the
+    // standalone RingingWindow. Previously the state lived only inside the
+    // main window, so with the window hidden the "alarmOnly" mode had no UI at
+    // all — the ringing overlay was an Item in a window nobody could see.
+    property bool ringing: false
+    property var ringAlarm: ({})
+    property int ringIndex: -1
+    property string ringHour: "00"
+    property string ringMinute: "00"
+    property string ringMedia: ""
+
+    // ── THE SINGLE CLOSE PATH (I9) ────────────────────────────────────────
+    // Every native close attempt — the title-bar X, Alt+F4, the window manager
+    // — is vetoed here and handed to C++. AppLifecycle is the only thing that
+    // decides (and the only thing that ever touches `visible` or calls quit).
     onClosing: function(close) {
-        if (themeManager.show_tray_icon) {
-            close.accepted = false
-            root.visible = false
-        }
-        // If tray is disabled, allow the close (accepted = true by default) → app exits.
+        close.accepted = false
+        lifecycle.requestClose()
+    }
+
+    Connections {
+        target: lifecycle
+        function onClosePromptRequested() { closeDialog.openPrompt() }
     }
 
     // True window-level transparency helpers.
@@ -215,12 +233,9 @@ Window {
                         text: "\u2715"; pixelSize: 16; implicitWidth: 40; implicitHeight: 40; buttonRadius: 20
                         baseColor: Qt.rgba(1, 1, 1, 0.06); hoverColor: Qt.rgba(1, 0.2, 0.2, 0.25)
                         Layout.alignment: Qt.AlignVCenter
-                        onClicked: {
-                            if (themeManager.show_tray_icon)
-                                root.visible = false
-                            else
-                                Qt.quit()
-                        }
+                        // Same decision as the window-manager close event — one
+                        // path, so X can never mean two different things.
+                        onClicked: lifecycle.requestClose()
                     }
                 }
 
@@ -413,12 +428,26 @@ Window {
     Rectangle {
         anchors.fill: parent
         color: "transparent"
-        visible: ringingOverlay.ringing
+        visible: root.ringing && lifecycle.windowShown
         z: 950
         RingingOverlay {
             id: ringingOverlay
+            ringing: root.ringing
+            alarmData: root.ringAlarm
+            alarmIndex: root.ringIndex
+            alarmHour: root.ringHour
+            alarmMinute: root.ringMinute
+            alarmMedia: root.ringMedia
+            // The overlay no longer mutates `ringing` itself — it reports the
+            // stop and this component owns the state.
+            onStopAlarm: root.ringing = false
         }
     }
+
+    // Phase 4: with the window hidden and alarmUiMode = "alarmOnly" the old
+    // overlay had nothing to draw in — it was an Item inside a hidden window.
+    // This is a real, never-destroyed Window; its own binding decides visibility.
+    RingingWindow {}
 
     // First-run wizard (STG-5.5): topmost layer of all, so the guided setup
     // covers the whole UI while it is open. It hides itself as soon as
@@ -428,16 +457,30 @@ Window {
         z: 1000
     }
 
+    // Close prompt (STG-5.4): topmost of all — above the wizard — because the
+    // title-bar X can raise it at any moment. Fills and stacks itself.
+    CloseDialog {
+        id: closeDialog
+    }
+
     Connections {
         target: scheduler
         function onAlarmTriggered(index) {
             var a = alarmManager.model.get(index)
             if (!a) return
-            ringingOverlay.alarmIndex = index
-            ringingOverlay.alarmHour = a.hour; ringingOverlay.alarmMinute = a.minute
-            ringingOverlay.alarmMedia = a.soundFile
-            ringingOverlay.alarmData = a
-            ringingOverlay.ringing = true
+            root.ringIndex = index
+            root.ringHour = a.hour; root.ringMinute = a.minute
+            root.ringMedia = a.soundFile
+            root.ringAlarm = a
+            root.ringing = true
+
+            // If the window is already visible the in-window ringing overlay
+            // handles it. Otherwise the alarm-while-hidden mode decides (Phase 4):
+            // "mainAndAlarm" raises the main window; "alarmOnly" leaves it hidden
+            // and RingingWindow (its own Window, shown by its own binding) does
+            // the work. QML never touches `visible` here — C++ owns it (I1).
+            if (!lifecycle.windowShown && configManager.alarmUiMode === "mainAndAlarm")
+                lifecycle.showMainWindow()
         }
         function onCountdownUpdated(seconds) { root.countdownValue = seconds }
     }

@@ -1,6 +1,6 @@
 #include "ui/WizardController.h"
 
-#include "audio/AudioPlayer.h"
+#include "audio/AlarmAudioController.h"
 #include "managers/ConfigManager.h"
 #include "wake/WakeManager.h"
 
@@ -23,7 +23,7 @@ const char *kNotificationsPath = "/org/freedesktop/Notifications";
 const char *kNotificationsInterface = "org.freedesktop.Notifications";
 } // namespace
 
-WizardController::WizardController(ConfigManager *config, WakeManager *wake, AudioPlayer *audio,
+WizardController::WizardController(ConfigManager *config, WakeManager *wake, AlarmAudioController *audio,
                                    QObject *parent)
     : QObject(parent), m_config(config), m_wake(wake), m_audio(audio)
 {
@@ -270,8 +270,8 @@ void WizardController::previewSound(const QString &id)
 {
     if (!m_audio || id.isEmpty())
         return;
-    // AudioPlayer::preview() resolves bare file names against the tones dir
-    // itself, exactly like AudioPlayer::play() does for an alarm.
+    // AlarmAudioController::preview() resolves bare file names against the
+    // tones dir itself, exactly like its play() does for an alarm.
     m_audio->preview(id);
 }
 

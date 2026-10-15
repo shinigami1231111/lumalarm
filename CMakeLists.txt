@@ -35,7 +35,18 @@ set(SOURCES
     src/main.cpp
     src/managers/AlarmManager.cpp
     src/models/AlarmModel.cpp
-    src/audio/AudioPlayer.cpp
+    src/audio/AlarmAudioController.cpp
+    src/audio/SystemMixer.cpp
+    src/audio/MixerBackend.cpp
+    src/audio/PactlMixer.cpp
+    src/audio/WpctlMixer.cpp
+    src/audio/AmixerMixer.cpp
+    src/audio/NullMixer.cpp
+    src/audio/VolumePolicy.cpp
+    src/audio/RestoreJournal.cpp
+    src/audio/SoundResolver.cpp
+    src/audio/AlarmPlayer.cpp
+    src/audio/MprisPause.cpp
     src/wake/Scheduler.cpp
     src/wake/SchedulerState.cpp
     src/wake/WakeManager.cpp
@@ -43,7 +54,9 @@ set(SOURCES
     src/managers/ThemeManager.cpp
     src/ui/BlurManager.cpp
     src/ui/Notifier.cpp
-    src/ui/TrayIcon.cpp
+    src/ui/TrayController.cpp
+    src/app/AppLifecycle.cpp
+    src/app/SingleInstance.cpp
     src/ui/NightMode.cpp
     src/ui/WizardController.cpp
 )
@@ -52,7 +65,18 @@ set(HEADERS
     src/models/Alarm.h
     src/managers/AlarmManager.h
     src/models/AlarmModel.h
-    src/audio/AudioPlayer.h
+    src/audio/AlarmAudioController.h
+    src/audio/SystemMixer.h
+    src/audio/MixerBackend.h
+    src/audio/PactlMixer.h
+    src/audio/WpctlMixer.h
+    src/audio/AmixerMixer.h
+    src/audio/NullMixer.h
+    src/audio/VolumePolicy.h
+    src/audio/RestoreJournal.h
+    src/audio/SoundResolver.h
+    src/audio/AlarmPlayer.h
+    src/audio/MprisPause.h
     src/wake/Scheduler.h
     src/wake/SchedulerState.h
     src/wake/WakeManager.h
@@ -61,7 +85,9 @@ set(HEADERS
     src/managers/ThemeManager.h
     src/ui/BlurManager.h
     src/ui/Notifier.h
-    src/ui/TrayIcon.h
+    src/ui/TrayController.h
+    src/app/AppLifecycle.h
+    src/app/SingleInstance.h
     src/ui/NightMode.h
     src/ui/WizardController.h
 )
@@ -83,6 +109,8 @@ set(QML_FILES
     qml/pages/AlarmEditor.qml
     qml/overlays/RingingOverlay.qml
     qml/overlays/SoundManager.qml
+    qml/overlays/CloseDialog.qml
+    qml/overlays/RingingWindow.qml
     qml/pages/TimerPage.qml
     qml/pages/StopwatchPage.qml
     qml/pages/SettingsPage.qml
@@ -218,11 +246,12 @@ if(BUILD_TESTING)
     target_link_libraries(tst_notifier PRIVATE Qt6::Core Qt6::Test Qt6::DBus)
     add_test(NAME tst_notifier COMMAND tst_notifier)
 
-    # TrayIcon (src/ui/): construction and tooltip text on a headless box
-    # (offscreen platform, no system tray -> icon disabled, no crash).
+    # TrayController (src/ui/): construction, usability and tooltip text on a
+    # headless box (offscreen platform, no system tray -> icon stays unusable,
+    # no crash).
     qt6_add_executable(tst_trayicon
         tests/tst_trayicon.cpp
-        src/ui/TrayIcon.cpp
+        src/ui/TrayController.cpp
         src/wake/Scheduler.cpp
         src/wake/SchedulerState.cpp
         src/wake/WakeManager.cpp
@@ -232,6 +261,112 @@ if(BUILD_TESTING)
     target_include_directories(tst_trayicon PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
     target_link_libraries(tst_trayicon PRIVATE Qt6::Core Qt6::Test Qt6::DBus Qt6::Widgets)
     add_test(NAME tst_trayicon COMMAND tst_trayicon)
+
+    # SystemMixer — parsers, backends, async runner, fake mixer
+    qt6_add_executable(tst_systemmixer
+        tests/tst_systemmixer.cpp
+        src/audio/SystemMixer.cpp
+        src/audio/MixerBackend.cpp
+        src/audio/PactlMixer.cpp
+        src/audio/WpctlMixer.cpp
+        src/audio/AmixerMixer.cpp
+        src/audio/NullMixer.cpp
+        src/audio/FakeMixer.cpp
+    )
+    target_include_directories(tst_systemmixer PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+    target_link_libraries(tst_systemmixer PRIVATE Qt6::Core Qt6::Test)
+    add_test(NAME tst_systemmixer COMMAND tst_systemmixer)
+
+    # VolumePolicy — pure decision logic: policy kinds, balance-preserving
+    # floor raise with the hard 100 % ceiling, the 3 % tolerance and the
+    # user-override comparison. No mixer, no files.
+    qt6_add_executable(tst_volumepolicy
+        tests/tst_volumepolicy.cpp
+        src/audio/VolumePolicy.cpp
+    )
+    target_include_directories(tst_volumepolicy PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+    target_link_libraries(tst_volumepolicy PRIVATE Qt6::Core Qt6::Test)
+    add_test(NAME tst_volumepolicy COMMAND tst_volumepolicy)
+
+    # RestoreJournal — write-ahead file contract (atomic, 0600, versioned,
+    # corrupt => delete) plus compare-and-set crash recovery on FakeMixer.
+    qt6_add_executable(tst_restorejournal
+        tests/tst_restorejournal.cpp
+        src/audio/RestoreJournal.cpp
+        src/audio/VolumePolicy.cpp
+        src/audio/SystemMixer.cpp
+        src/audio/MixerBackend.cpp
+        src/audio/PactlMixer.cpp
+        src/audio/WpctlMixer.cpp
+        src/audio/AmixerMixer.cpp
+        src/audio/NullMixer.cpp
+        src/audio/FakeMixer.cpp
+    )
+    target_include_directories(tst_restorejournal PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+    target_link_libraries(tst_restorejournal PRIVATE Qt6::Core Qt6::Test)
+    add_test(NAME tst_restorejournal COMMAND tst_restorejournal)
+
+    # SoundResolver — the resolution chain per-alarm -> global default ->
+    # first tone -> empty, against injected tone dirs.
+    qt6_add_executable(tst_soundresolver
+        tests/tst_soundresolver.cpp
+        src/audio/SoundResolver.cpp
+    )
+    target_include_directories(tst_soundresolver PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+    target_link_libraries(tst_soundresolver PRIVATE Qt6::Core Qt6::Test)
+    add_test(NAME tst_soundresolver COMMAND tst_soundresolver)
+
+    # AlarmPlayer — media seam (no real audio device), stream-volume clamp
+    # and the mandatory stream verification/forcing on FakeMixer.
+    qt6_add_executable(tst_alarmplayer
+        tests/tst_alarmplayer.cpp
+        src/audio/AlarmPlayer.cpp
+        src/audio/VolumePolicy.cpp
+        src/audio/SystemMixer.cpp
+        src/audio/MixerBackend.cpp
+        src/audio/PactlMixer.cpp
+        src/audio/WpctlMixer.cpp
+        src/audio/AmixerMixer.cpp
+        src/audio/NullMixer.cpp
+        src/audio/FakeMixer.cpp
+    )
+    target_include_directories(tst_alarmplayer PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+    target_link_libraries(tst_alarmplayer PRIVATE Qt6::Core Qt6::Test Qt6::Multimedia)
+    add_test(NAME tst_alarmplayer COMMAND tst_alarmplayer)
+
+    # MprisPause — the pure bus-name filter and the no-bus safety contract
+    # (tests never pause a real player).
+    qt6_add_executable(tst_mprispause
+        tests/tst_mprispause.cpp
+        src/audio/MprisPause.cpp
+    )
+    target_include_directories(tst_mprispause PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+    target_link_libraries(tst_mprispause PRIVATE Qt6::Core Qt6::Test Qt6::DBus)
+    add_test(NAME tst_mprispause COMMAND tst_mprispause)
+
+    # AlarmAudioController — the ring flow end to end on FakeMixer: journal
+    # written BEFORE the sink moves, restore exactly, alarmOnly never touches
+    # the sink, user override means no restore, quit bounded, startup recovery.
+    # FakeMpris ensures no real player is ever paused by a test run.
+    qt6_add_executable(tst_audiocontroller
+        tests/tst_audiocontroller.cpp
+        src/audio/AlarmAudioController.cpp
+        src/audio/AlarmPlayer.cpp
+        src/audio/VolumePolicy.cpp
+        src/audio/RestoreJournal.cpp
+        src/audio/SoundResolver.cpp
+        src/audio/MprisPause.cpp
+        src/audio/SystemMixer.cpp
+        src/audio/MixerBackend.cpp
+        src/audio/PactlMixer.cpp
+        src/audio/WpctlMixer.cpp
+        src/audio/AmixerMixer.cpp
+        src/audio/NullMixer.cpp
+        src/audio/FakeMixer.cpp
+    )
+    target_include_directories(tst_audiocontroller PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+    target_link_libraries(tst_audiocontroller PRIVATE Qt6::Core Qt6::Test Qt6::Multimedia Qt6::DBus)
+    add_test(NAME tst_audiocontroller COMMAND tst_audiocontroller)
 
     # NightMode (src/ui/): edge-trigger semantics, settings round-trip and
     # clamping. Runs headless (GUILESS) — no QML involved.
@@ -262,7 +397,20 @@ if(BUILD_TESTING)
         src/managers/ConfigManager.cpp
         src/managers/ThemeManager.cpp   # ConfigManager owns a ThemeManager
         src/wake/WakeManager.cpp
-        src/audio/AudioPlayer.cpp
+        # Production controller (no start(): no backend probe, no recovery,
+        # no CLI). The wizard only calls preview() on it.
+        src/audio/AlarmAudioController.cpp
+        src/audio/AlarmPlayer.cpp
+        src/audio/VolumePolicy.cpp
+        src/audio/RestoreJournal.cpp
+        src/audio/SoundResolver.cpp
+        src/audio/MprisPause.cpp
+        src/audio/SystemMixer.cpp
+        src/audio/MixerBackend.cpp
+        src/audio/PactlMixer.cpp
+        src/audio/WpctlMixer.cpp
+        src/audio/AmixerMixer.cpp
+        src/audio/NullMixer.cpp
         src/managers/AlarmManager.cpp
         src/models/AlarmModel.cpp
     )
@@ -296,14 +444,8 @@ if(BUILD_TESTING)
     # Construction + one observable behavior per previously untested module.
     # ConfigManager/ThemeManager tests enable QStandardPaths test mode so they
     # never touch the real ~/.config/lumalarm.
-    qt6_add_executable(tst_audioplayer
-        tests/tst_audioplayer.cpp
-        src/audio/AudioPlayer.cpp
-    )
-    target_include_directories(tst_audioplayer PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
-    target_link_libraries(tst_audioplayer PRIVATE Qt6::Core Qt6::Test Qt6::Multimedia)
-    add_test(NAME tst_audioplayer COMMAND tst_audioplayer)
-
+    # (tst_audioplayer removed with AudioPlayer — Issue #1; its surface is
+    # covered by tst_alarmplayer + tst_audiocontroller.)
     qt6_add_executable(tst_configmanager
         tests/tst_configmanager.cpp
         src/managers/ConfigManager.cpp
