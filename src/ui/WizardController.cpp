@@ -35,11 +35,10 @@ WizardController::WizardController(ConfigManager *config, WakeManager *wake, Ala
     // Start on a completed run as completed, unless --show-wizard forces it on.
     m_completed = m_forceShow ? false : (m_config && m_config->wizardCompleted());
 
-    // Default sound = first available tone, so every step is immediately valid
-    // (matches what the alarm editor does for a brand-new alarm).
-    const QVariantList sounds = availableSounds();
-    if (!sounds.isEmpty())
-        m_defaultSound = sounds.first().toMap().value(QStringLiteral("id")).toString();
+    // Mirror ConfigManager's configChanged so QML re-reads mirror/emoji flags
+    // whenever they change.
+    QObject::connect(m_config, &ConfigManager::configChanged, this,
+                     &WizardController::configChangedMirror);
 
     probeNotifications();
 }
@@ -69,18 +68,8 @@ bool WizardController::canGoBack() const
 
 bool WizardController::canGoNext() const
 {
-    switch (m_currentStep) {
-    case Sound:
-        // Normally always a selection (default = first tone). When the tones
-        // catalogue is empty there is nothing to pick, so Next must not trap
-        // the user on this page.
-        return !m_defaultSound.isEmpty() || availableSounds().isEmpty();
-    case WakeMethod:
-        // Unlock only after a successful probe or an explicit skip.
-        return m_wakeProbePassed || m_wakeProbeSkipped;
-    default:
-        return true;
-    }
+    // Next is never gated: the user may leave any page without testing.
+    return true;
 }
 
 bool WizardController::wizardCompleted() const
@@ -103,6 +92,36 @@ void WizardController::setLanguage(const QString &lang)
     // engine.retranslate() — so RTL/LTR flips while this page is on screen.
     m_config->setLanguage(lang);
     emit languageChanged();
+}
+
+bool WizardController::mirrorApp() const
+{
+    return m_config ? m_config->mirrorApp() : false;
+}
+
+bool WizardController::mirrorWindowButtons() const
+{
+    return m_config ? m_config->mirrorWindowButtons() : false;
+}
+
+bool WizardController::showEmojis() const
+{
+    return m_config ? m_config->showEmojis() : true;
+}
+
+void WizardController::setMirrorApp(bool v)
+{
+    if (m_config) m_config->setMirrorApp(v);
+}
+
+void WizardController::setMirrorWindowButtons(bool v)
+{
+    if (m_config) m_config->setMirrorWindowButtons(v);
+}
+
+void WizardController::setShowEmojis(bool v)
+{
+    if (m_config) m_config->setShowEmojis(v);
 }
 
 QString WizardController::wakeStatus() const
@@ -177,7 +196,7 @@ void WizardController::reset()
     m_wakeStatus.clear();
     emit wakeStatusChanged();
     emit currentStepChanged(); // canGoNext() gate changed with the probes
-    setCurrentStep(Welcome);
+    setCurrentStep(Language);
     probeNotifications();
 }
 
@@ -249,32 +268,6 @@ bool WizardController::testNotification()
     return true;
 }
 
-QVariantList WizardController::availableSounds() const
-{
-    // Never hard-coded: this is exactly the list the alarm editor offers.
-    QVariantList out;
-    if (!m_config)
-        return out;
-    const QStringList tones = m_config->availableTones();
-    out.reserve(tones.size());
-    for (const QString &tone : tones) {
-        QVariantMap entry;
-        entry.insert(QStringLiteral("id"), tone); // what alarms store
-        entry.insert(QStringLiteral("label"), tone);
-        out.append(entry);
-    }
-    return out;
-}
-
-void WizardController::previewSound(const QString &id)
-{
-    if (!m_audio || id.isEmpty())
-        return;
-    // AlarmAudioController::preview() resolves bare file names against the
-    // tones dir itself, exactly like its play() does for an alarm.
-    m_audio->preview(id);
-}
-
 QString WizardController::detectWakeMethod() const
 {
     if (!m_wake)
@@ -286,21 +279,6 @@ QString WizardController::detectWakeMethod() const
         return tr("Real-time clock wake (rtcwake) — recommended");
 
     return tr("No hardware wake source — alarms ring only while the machine is awake");
-}
-
-void WizardController::setDefaultSound(const QString &id)
-{
-    if (m_defaultSound == id)
-        return;
-    m_defaultSound = id;
-    emit defaultSoundChanged();
-    // canGoNext() depends on having a selection, so announce that too.
-    emit currentStepChanged();
-}
-
-QString WizardController::defaultSound() const
-{
-    return m_defaultSound;
 }
 
 bool WizardController::armProbeWake()

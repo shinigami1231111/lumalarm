@@ -2,18 +2,15 @@ import QtQuick
 import QtQuick.Layouts
 import GlassAlarm
 
-// Page 4 — notifications. Presence of org.freedesktop.Notifications on the
-// session bus is probed by the controller; sending one is optional and never
-// blocks progress.
+// Page 3 — notifications. Checks whether this session has a notification
+// daemon; sending one is optional and never blocks progress.
 WizardPage {
     id: root
     title: qsTr("Notifications")
-    subtitle: qsTr("Lumalarm can notify you on the desktop before an alarm rings. This step checks whether this session has a notification daemon.")
+    subtitle: qsTr("Lumalarm can notify you on the desktop before an alarm rings.")
     primaryLabel: qsTr("Next")
     primaryEnabled: true
     onPrimaryClicked: wizard.next()
-
-    property string probeResult: ""
 
     Rectangle {
         Layout.fillWidth: true
@@ -30,7 +27,8 @@ WizardPage {
             spacing: 6
 
             Text {
-                text: wizard.notificationsAvailable ? qsTr("Notifications available") : qsTr("No notification daemon")
+                text: wizard.notificationsAvailable ? qsTr("Notifications available")
+                                                    : qsTr("No notification daemon")
                 color: configManager.themeTextPrimary
                 font.pixelSize: 15
                 font.bold: true
@@ -44,7 +42,7 @@ WizardPage {
                 font.pixelSize: 13
                 text: wizard.notificationsAvailable
                     ? qsTr("Alarms can be announced through the desktop notification service.")
-                    : qsTr("Desktop notifications will not be shown on this session. Alarms still ring normally — this is not blocking.")
+                    : qsTr("Desktop notifications will not be shown. Alarms still ring normally.")
             }
         }
     }
@@ -57,12 +55,16 @@ WizardPage {
         GlassButton {
             text: qsTr("Send test notification")
             pixelSize: 13
-            onClicked: root.probeResult = wizard.testNotification()
-                ? qsTr("Test notification sent.")
-                : qsTr("Could not send the notification.")
+            onClicked: {
+                const ok = wizard.testNotification()
+                root.probeResult = ok ? qsTr("Test notification sent.")
+                                      : qsTr("Could not send the notification.")
+            }
         }
         Item { Layout.fillWidth: true }
     }
+
+    property string probeResult: ""
 
     Text {
         Layout.fillWidth: true

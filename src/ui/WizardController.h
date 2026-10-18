@@ -9,9 +9,9 @@ class ConfigManager;
 class WakeManager;
 class AlarmAudioController;
 
-// First-run wizard (STG-5.5): a six-step guided setup that gets a brand-new
-// user to a working state — language chosen, wake method verified, notification
-// capability probed, alarm sound previewed — without reading the README.
+// First-run wizard (STG-5.5): a four-step guided setup — language chosen,
+// wake method confirmed, notification capability probed — without reading the
+// README.
 //
 // Dependencies are explicit and non-owning (same contract as NightMode);
 // nothing is ever looked up through parent(). All interaction with the QML
@@ -29,19 +29,21 @@ class WizardController : public QObject
     Q_PROPERTY(bool canGoBack READ canGoBack NOTIFY currentStepChanged)
     Q_PROPERTY(bool canGoNext READ canGoNext NOTIFY currentStepChanged)
     Q_PROPERTY(bool wizardCompleted READ wizardCompleted NOTIFY wizardCompletedChanged)
-    // UI language chosen on page 2. Read straight from ConfigManager — there is
+    // UI language chosen on page 1. Read straight from ConfigManager — there is
     // exactly one language setting (STG-5.2), the wizard only writes to it.
     Q_PROPERTY(QString language READ language WRITE setLanguage NOTIFY languageChanged)
-    // Status line of the wake test page ("Wake test succeeded" / "...failed: why").
+    // Status line of the wake page ("Wake test succeeded" / "...failed: why").
     Q_PROPERTY(QString wakeStatus READ wakeStatus NOTIFY wakeStatusChanged)
-    // Chosen tone for page 2 / the summary row on page 6. Notifying, so the
-    // summary stays correct after the user changes it on an earlier page.
-    Q_PROPERTY(
-        QString defaultSound READ defaultSound WRITE setDefaultSound NOTIFY defaultSoundChanged)
     // Session-bus probe for org.freedesktop.Notifications (non-blocking, cached
     // per call site — QML re-reads it whenever the page becomes visible).
     Q_PROPERTY(
         bool notificationsAvailable READ notificationsAvailable NOTIFY notificationProbeChanged)
+    // Arabic-only UI options persisted with the language.
+    Q_PROPERTY(bool mirrorApp READ mirrorApp WRITE setMirrorApp NOTIFY configChangedMirror)
+    Q_PROPERTY(
+        bool mirrorWindowButtons READ mirrorWindowButtons WRITE setMirrorWindowButtons
+            NOTIFY configChangedMirror)
+    Q_PROPERTY(bool showEmojis READ showEmojis WRITE setShowEmojis NOTIFY configChangedMirror)
 
 public:
     // Three non-owning dependencies; all MUST be non-null and outlive this
@@ -53,16 +55,21 @@ public:
     int currentStep() const;
     int stepCount() const;
     bool canGoBack() const;
-    // Gate: the wake page only unlocks Next after a successful probe or an
-    // explicit "Skip this step".
+    // Next is never gated: the user may leave the wake page without testing.
     bool canGoNext() const;
     bool wizardCompleted() const;
     QString language() const;
     QString wakeStatus() const;
     bool notificationsAvailable() const;
+    bool mirrorApp() const;
+    void setMirrorApp(bool v);
+    bool mirrorWindowButtons() const;
+    void setMirrorWindowButtons(bool v);
+    bool showEmojis() const;
+    void setShowEmojis(bool v);
 
     // How many steps the wizard has (kStepCount). QML reads it, never hardcodes.
-    static constexpr int kStepCount = 6;
+    static constexpr int kStepCount = 4;
 
     // WakeManager::armTestWake() accepts only [60, 3600] s, so the shortest
     // non-destructive probe is 60 s — a 5 s request would be refused outright.
@@ -72,16 +79,15 @@ public:
     static constexpr int kWakeProbeSeconds = 60;
 
     // Step indices, so the QML and the tests agree on what "step 1" means.
-    // Language first (STG-5.5.2), then sound, then the test alarm, then the
-    // notification probe, then the summary.
-    enum Step { Welcome = 0, Language = 1, Sound = 2, WakeMethod = 3, Notifications = 4, Done = 5 };
+    // Language first, then the wake method, then the notification probe,
+    // then the summary.
+    enum Step { Language = 0, WakeMethod = 1, Notifications = 2, Done = 3 };
 
     Q_INVOKABLE void next();
     Q_INVOKABLE void back();
     // Skip: mark completed (so it never auto-shows again) and hide. It writes
     // nothing else — the language persisted itself the moment it was picked
-    // (retranslation is live), while the sound and the wake probe are never
-    // persisted at all.
+    // (retranslation is live).
     Q_INVOKABLE void skip();
     // Finish: mark completed and hide. Idempotent by the same guard.
     Q_INVOKABLE void finish();
@@ -92,29 +98,23 @@ public:
     // and make the overlay reappear.
     Q_INVOKABLE void reset();
 
-    // Page 2: the language selector. Writes ConfigManager's single ui/language
+    // Page 1: the language selector. Writes ConfigManager's single ui/language
     // key; main.cpp already swaps the catalog and retranslates on change, so
     // Arabic takes effect (and mirrors the layout) immediately.
     void setLanguage(const QString &lang);
 
-    // Page 3: arm the shortest wake WakeManager accepts, report the outcome,
-    // then cancel it immediately — non-destructive by construction.
+    // Page 2: arm the shortest wake WakeManager accepts, report the outcome,
+    // then cancel it immediately — non-destructive by construction. Next does
+    // not depend on this.
     Q_INVOKABLE bool testWake();
-    // Page 3: explicit "Skip this step" that unlocks Next.
+    // Page 2: explicit "Skip this step".
     Q_INVOKABLE void skipWakeStep();
-    // Page 4: send one benign notification; false when there is no daemon.
+    // Page 3: send one benign notification; false when there is no daemon.
     Q_INVOKABLE bool testNotification();
 
-    // Pages 3 and 6: plain-language description of the wake mechanism
+    // Pages 2 and 4: plain-language description of the wake mechanism
     // WakeManager reports for this machine.
     Q_INVOKABLE QString detectWakeMethod() const;
-
-    // Page 2: tones already shipped by the app (ConfigManager::availableTones).
-    // Never a hard-coded list.
-    Q_INVOKABLE QVariantList availableSounds() const;
-    Q_INVOKABLE void previewSound(const QString &id);
-    Q_INVOKABLE void setDefaultSound(const QString &id);
-    Q_INVOKABLE QString defaultSound() const;
 
     // --show-wizard: force the wizard visible for this run regardless of the
     // persisted flag, without rewriting it.
@@ -126,7 +126,7 @@ Q_SIGNALS:
     void languageChanged();
     void wakeStatusChanged();
     void notificationProbeChanged();
-    void defaultSoundChanged();
+    void configChangedMirror();
 
 protected:
     // Seam for the privileged, helper-dependent half of testWake(). The real
@@ -148,7 +148,6 @@ private:
     bool m_wakeProbePassed = false;
     bool m_wakeProbeSkipped = false;
     QString m_wakeStatus;
-    QString m_defaultSound;
     bool m_notificationsAvailable = false;
 };
 

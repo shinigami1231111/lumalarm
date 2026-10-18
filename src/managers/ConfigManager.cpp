@@ -515,6 +515,46 @@ void ConfigManager::setLanguage(const QString &lang)
         emit languageChanged();
 }
 
+bool ConfigManager::mirrorApp() const
+{
+    return m_settings->value(QStringLiteral("ui/mirrorApp"), false).toBool();
+}
+
+void ConfigManager::setMirrorApp(bool v)
+{
+    if (mirrorApp() == v)
+        return;
+    m_settings->setValue(QStringLiteral("ui/mirrorApp"), v);
+    emit configChanged();
+}
+
+bool ConfigManager::mirrorWindowButtons() const
+{
+    return m_settings->value(QStringLiteral("ui/mirrorWindowButtons"), false)
+        .toBool();
+}
+
+void ConfigManager::setMirrorWindowButtons(bool v)
+{
+    if (mirrorWindowButtons() == v)
+        return;
+    m_settings->setValue(QStringLiteral("ui/mirrorWindowButtons"), v);
+    emit configChanged();
+}
+
+bool ConfigManager::showEmojis() const
+{
+    return m_settings->value(QStringLiteral("ui/showEmojis"), true).toBool();
+}
+
+void ConfigManager::setShowEmojis(bool v)
+{
+    if (showEmojis() == v)
+        return;
+    m_settings->setValue(QStringLiteral("ui/showEmojis"), v);
+    emit configChanged();
+}
+
 // ── audio (alarm sound rebuild, Phase 4) ────────────────────────────────────
 
 QString ConfigManager::audioPolicy() const

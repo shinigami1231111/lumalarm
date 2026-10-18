@@ -77,6 +77,18 @@ class ConfigManager : public QObject
     // NOTIFY stays configChanged like every other property here; languageChanged
     // is an additional signal main.cpp uses to swap the active QTranslator.
     Q_PROPERTY(QString language READ language WRITE setLanguage NOTIFY configChanged)
+    // Mirror the whole UI right-to-left. Only offered when Arabic is chosen;
+    // off by default so English and Japanese stay left-to-right.
+    Q_PROPERTY(
+        bool mirrorApp READ mirrorApp WRITE setMirrorApp NOTIFY configChanged)
+    // Mirror the title-bar window buttons (quit / minimize / maximize). Only
+    // offered when Arabic is chosen; off by default so the buttons stay put.
+    Q_PROPERTY(
+        bool mirrorWindowButtons READ mirrorWindowButtons WRITE
+            setMirrorWindowButtons NOTIFY configChanged)
+    // Show emojis alongside text in the UI. Can be turned off.
+    Q_PROPERTY(bool showEmojis READ showEmojis WRITE setShowEmojis NOTIFY
+                   configChanged)
     // ── audio (alarm sound rebuild, Phase 4) ────────────────────────────────
     // The guarantee policy's knobs, read by main.cpp into
     // AlarmAudioController::applySettings(). Values are validated on read, so
@@ -199,6 +211,14 @@ public:
     // in Settings maps its labels onto these values.
     QString language() const;
     void setLanguage(const QString &lang);
+
+    // Arabic-only UI options, persisted with the language.
+    bool mirrorApp() const;
+    void setMirrorApp(bool v);
+    bool mirrorWindowButtons() const;
+    void setMirrorWindowButtons(bool v);
+    bool showEmojis() const;
+    void setShowEmojis(bool v);
 
     // Audio (Phase 4): policy kind string ("guarantee" | "alarmOnly"; any
     // unknown value reads back as "guarantee"), sink floor %, our stream

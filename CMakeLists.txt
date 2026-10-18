@@ -97,11 +97,9 @@ set(QML_FILES
     qml/NightDim.qml
     qml/wizard/WizardOverlay.qml
     qml/wizard/WizardPage.qml
-    qml/wizard/pages/WelcomePage.qml
     qml/wizard/pages/LanguagePage.qml
     qml/wizard/pages/WakeMethodPage.qml
     qml/wizard/pages/NotificationPage.qml
-    qml/wizard/pages/SoundPage.qml
     qml/wizard/pages/DonePage.qml
     qml/components/GlassButton.qml
     qml/components/GlassCard.qml

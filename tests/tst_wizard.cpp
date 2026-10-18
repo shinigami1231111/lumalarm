@@ -102,11 +102,8 @@ private slots:
     void completedWizardDoesNotReopen();
     void forceShowOverridesPersistedFlag();
     void languageSelectionUpdatesConfiguration();
-    void testWakeSuccessUnlocksNext();
-    void testWakeFailureLeavesNextLocked();
+    void testWakeRunsWithoutGate();
     void testNotificationReportsBusTruthfully();
-    void availableSoundsAreEnumerated();
-    void defaultSoundRoundTrips();
     void skipLeavesConfigurationIntact();
     void wizardRunNeverTouchesAlarms();
 
@@ -165,7 +162,7 @@ void TestWizard::initialStepIsZeroAndCannotGoBack()
     ProbeableWizard w(m_config, m_wake, m_audio);
     QCOMPARE(w.currentStep(), 0);
     QCOMPARE(w.canGoBack(), false);
-    QCOMPARE(w.stepCount(), 6);
+    QCOMPARE(w.stepCount(), 4);
     QCOMPARE(w.wizardCompleted(), false);
     QCOMPARE(w.currentStep(), int(0));
 }
@@ -175,9 +172,7 @@ void TestWizard::nextWalksAllSteps()
     ProbeableWizard w(m_config, m_wake, m_audio);
     QSignalSpy spy(&w, &WizardController::currentStepChanged);
 
-    // Only the wake page (3) gates Next; it is unlocked by a skip so the walk
-    // stays deterministic regardless of the host's wake capabilities.
-    w.skipWakeStep();
+    // Next is never gated, so the walk stays deterministic.
     for (int i = 0; i < WizardController::kStepCount; ++i)
         w.next();
 
@@ -188,9 +183,6 @@ void TestWizard::nextWalksAllSteps()
 void TestWizard::nextOnLastStepIsANoop()
 {
     ProbeableWizard w(m_config, m_wake, m_audio);
-    // Reach the last step first: the wake page deliberately gates Next, and
-    // this case is about what happens *at* the end, not about that gate.
-    w.skipWakeStep();
     for (int i = 0; i < WizardController::kStepCount; ++i)
         w.next();
     QCOMPARE(w.currentStep(), WizardController::kStepCount - 1);
@@ -291,7 +283,7 @@ void TestWizard::genuineFreshProfileOpensWizard()
 
     QVERIFY2(reportedFirstRun, "a brand-new profile must report wizardCompleted()==false");
     QVERIFY2(overlayVisible, "a brand-new profile must show the wizard overlay");
-    QCOMPARE(landingStep, 0);
+    QCOMPARE(landingStep, int(WizardController::Language));
 }
 
 void TestWizard::establishedProfileIsNotPromptedAgain()
@@ -377,46 +369,25 @@ void TestWizard::languageSelectionUpdatesConfiguration()
     QVERIFY(m_config->language().isEmpty());
 }
 
-void TestWizard::testWakeSuccessUnlocksNext()
+void TestWizard::testWakeRunsWithoutGate()
 {
     ProbeableWizard page(m_config, m_wake, m_audio);
-    // welcome -> language -> sound -> wake method
-    for (int i = 0; i < WizardController::WakeMethod; ++i)
-        page.next();
+    // language -> wake method (two Next clicks)
+    page.next();
     QCOMPARE(page.currentStep(), int(WizardController::WakeMethod));
-    QCOMPARE(page.canGoNext(), false); // locked before any probe
 
-    QSignalSpy stepSpy(&page, &WizardController::currentStepChanged);
-    QSignalSpy statusSpy(&page, &WizardController::wakeStatusChanged);
+    // Next is always clickable — no gate before or after the probe.
+    QCOMPARE(page.canGoNext(), true);
 
     page.probeResult = true;
-    const bool outcome = page.testWake();
-
-    QCOMPARE(outcome, true);
-    QCOMPARE(page.canGoNext(), true); // gate opened
-    QVERIFY(stepSpy.count() >= 1);
-    QVERIFY(statusSpy.count() >= 1);
+    QVERIFY(page.testWake());
     QVERIFY(page.wakeStatus().contains(QStringLiteral("succeeded")));
-}
-
-void TestWizard::testWakeFailureLeavesNextLocked()
-{
-    ProbeableWizard page(m_config, m_wake, m_audio);
-    // welcome -> language -> sound -> wake method
-    for (int i = 0; i < WizardController::WakeMethod; ++i)
-        page.next();
-    QCOMPARE(page.currentStep(), int(WizardController::WakeMethod));
-    QCOMPARE(page.canGoNext(), false);
-
-    QSignalSpy stepSpy(&page, &WizardController::currentStepChanged);
 
     page.probeResult = false;
-    const bool outcome = page.testWake();
-
-    QCOMPARE(outcome, false);
-    QCOMPARE(page.canGoNext(), false); // still locked
-    QCOMPARE(stepSpy.count(), 0);      // gate did not open
+    QVERIFY(!page.testWake());
     QVERIFY(page.wakeStatus().contains(QStringLiteral("failed")));
+    // Even a failed probe never locks Next.
+    QCOMPARE(page.canGoNext(), true);
 }
 
 void TestWizard::testNotificationReportsBusTruthfully()
@@ -433,38 +404,6 @@ void TestWizard::testNotificationReportsBusTruthfully()
         QVERIFY2(sent, "testNotification() failed although a daemon is present");
         QCOMPARE(w.notificationsAvailable(), true);
     }
-}
-
-void TestWizard::availableSoundsAreEnumerated()
-{
-    // availableSounds() reads the app's own tone catalogue; init() seeded it
-    // with wizard-test-tone.wav.
-    ProbeableWizard w(m_config, m_wake, m_audio);
-    const QVariantList sounds = w.availableSounds();
-    QVERIFY(!sounds.isEmpty());
-
-    bool found = false;
-    for (const QVariant &entry : sounds)
-        if (entry.toMap().value(QStringLiteral("id")).toString() ==
-            QLatin1String("wizard-test-tone.wav"))
-            found = true;
-    QVERIFY2(found, "seeded tone missing from availableSounds()");
-}
-
-void TestWizard::defaultSoundRoundTrips()
-{
-    ProbeableWizard w(m_config, m_wake, m_audio);
-    const QString before = w.defaultSound();
-    QVERIFY(!before.isEmpty()); // default = first available tone
-
-    QSignalSpy spy(&w, &WizardController::defaultSoundChanged);
-    w.setDefaultSound(QStringLiteral("other-tone.mp3"));
-    QCOMPARE(w.defaultSound(), QStringLiteral("other-tone.mp3"));
-    QCOMPARE(spy.count(), 1);
-
-    // Same value again: no emission.
-    w.setDefaultSound(QStringLiteral("other-tone.mp3"));
-    QCOMPARE(spy.count(), 1);
 }
 
 void TestWizard::skipLeavesConfigurationIntact()

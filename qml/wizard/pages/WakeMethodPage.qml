@@ -2,15 +2,14 @@ import QtQuick
 import QtQuick.Layouts
 import GlassAlarm
 
-// Page 3 — wake method. Reports the mechanism already detected by
-// WakeManager, offers a non-destructive probe (arm, observe, cancel), and only
-// unlocks Next after the probe succeeded or the step was explicitly skipped.
+// Page 2 — wake method. Reports how this machine can wake from sleep and lets
+// the user choose the sleep mode. Next is always clickable — no test is forced.
 WizardPage {
     id: root
     title: qsTr("Wake method")
-    subtitle: qsTr("For an alarm to bring the machine back from sleep, Lumalarm needs a wake source. Here is what this machine offers.")
+    subtitle: qsTr("For an alarm to bring the machine back from sleep, Lumalarm needs a wake source.")
     primaryLabel: qsTr("Next")
-    primaryEnabled: wizard.canGoNext
+    primaryEnabled: true
     onPrimaryClicked: wizard.next()
 
     Rectangle {
@@ -41,15 +40,43 @@ WizardPage {
                 wrapMode: Text.WordWrap
             }
             Text {
-                // WakeManager accepts 60–3600 s for a probe, so 60 s is the
-                // shortest non-destructive test on offer.
-                text: qsTr("The test arms a wake 60 seconds ahead and cancels it as soon as the result is in. Nothing else is changed.")
+                text: qsTr("Choose how deeply the machine sleeps before the alarm wakes it.")
                 color: configManager.themeTextSecondary
                 font.pixelSize: 12
                 Layout.fillWidth: true
                 wrapMode: Text.WordWrap
             }
+
+            // The same mode selector Settings offers — one value, shared with
+            // the helper as `rtcwake -m <mode>`.
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 14
+                Text {
+                    text: qsTr("Sleep mode")
+                    color: configManager.themeTextPrimary
+                    font.pixelSize: 14
+                    Layout.preferredWidth: 100
+                }
+                Item { Layout.fillWidth: true }
+                RoundedCombo {
+                    model: configManager.sleepModeChoices()
+                    currentIndex: Math.max(
+                        0, sleepModeCombo.find(configManager.sleepMode))
+                    Layout.preferredWidth: 140
+                    onActivated: configManager.sleepMode = currentText
+                }
+            }
         }
+    }
+
+    Text {
+        Layout.fillWidth: true
+        wrapMode: Text.WordWrap
+        color: "#ff6b6b"
+        font.pixelSize: 13
+        font.bold: true
+        text: qsTr("Save your work before testing the wake — the machine will sleep.")
     }
 
     RowLayout {

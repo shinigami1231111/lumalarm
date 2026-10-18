@@ -163,7 +163,7 @@ int main(int argc, char *argv[])
     // QEvent::LanguageChange to the widgets, but QML needs an explicit
     // engine.retranslate() — that is wired up right after the engine exists.
     QTranslator translator;
-    auto applyLanguage = [&app, &translator](const QString &lang) {
+    auto applyLanguage = [&app, &translator, &configManager](const QString &lang) {
         QString effective = lang;
         if (effective.isEmpty())
             effective = QLocale::system().name();
@@ -175,11 +175,15 @@ int main(int argc, char *argv[])
         if (loaded)
             app.installTranslator(&translator);
 
-        // RTL follows the *loaded* catalog, never the raw setting: a system
-        // locale without a catalog must stay left-to-right.
+        // RTL: the user's mirrorApp choice wins; otherwise follow the loaded
+        // catalog's text direction; a system locale without a catalog stays
+        // left-to-right.
         const Qt::LayoutDirection want =
-            (loaded && QLocale(effective).textDirection() == Qt::RightToLeft) ? Qt::RightToLeft
-                                                                              : Qt::LeftToRight;
+            configManager.mirrorApp()
+                ? Qt::RightToLeft
+                : ((loaded && QLocale(effective).textDirection() == Qt::RightToLeft)
+                       ? Qt::RightToLeft
+                       : Qt::LeftToRight);
         app.setLayoutDirection(want);
     };
     applyLanguage(configManager.language());
@@ -258,6 +262,11 @@ int main(int argc, char *argv[])
     QObject::connect(&configManager, &ConfigManager::languageChanged, &engine, [&]() {
         applyLanguage(configManager.language());
         engine.retranslate();
+    });
+
+    // Re-apply layout direction when mirrorApp changes at runtime.
+    QObject::connect(&configManager, &ConfigManager::configChanged, &app, [&]() {
+        applyLanguage(configManager.language());
     });
 
     QObject::connect(
