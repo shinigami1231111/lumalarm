@@ -105,6 +105,7 @@ set(QML_FILES
     qml/wizard/pages/DonePage.qml
     qml/components/GlassButton.qml
     qml/components/GlassCard.qml
+    qml/components/Tokens.qml
     qml/pages/AlarmListView.qml
     qml/pages/AlarmEditor.qml
     qml/overlays/RingingOverlay.qml

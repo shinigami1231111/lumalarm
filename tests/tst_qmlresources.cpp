@@ -119,6 +119,7 @@ static const QStringList kQmlFilesFromCmake = {
     QStringLiteral("qml/wizard/pages/DonePage.qml"),
     QStringLiteral("qml/components/GlassButton.qml"),
     QStringLiteral("qml/components/GlassCard.qml"),
+    QStringLiteral("qml/components/Tokens.qml"),
     QStringLiteral("qml/pages/AlarmListView.qml"),
     QStringLiteral("qml/pages/AlarmEditor.qml"),
     QStringLiteral("qml/overlays/RingingOverlay.qml"),
