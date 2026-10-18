@@ -351,12 +351,12 @@ void TestWizard::languageSelectionUpdatesConfiguration()
     QSignalSpy spy(&w, &WizardController::languageChanged);
     QCOMPARE(spy.count(), 0);
 
-    w.setLanguage(QStringLiteral("ar"));
-    QCOMPARE(w.language(), QStringLiteral("ar"));
-    QCOMPARE(m_config->language(), QStringLiteral("ar")); // one shared key
+    w.setLanguage(QStringLiteral("ja"));
+    QCOMPARE(w.language(), QStringLiteral("ja"));
+    QCOMPARE(m_config->language(), QStringLiteral("ja")); // one shared key
     QCOMPARE(spy.count(), 1);
 
-    w.setLanguage(QStringLiteral("ar")); // unchanged -> silent
+    w.setLanguage(QStringLiteral("ja")); // unchanged -> silent
     QCOMPARE(spy.count(), 1);
 
     w.setLanguage(QStringLiteral("en"));
@@ -423,7 +423,7 @@ void TestWizard::skipLeavesConfigurationIntact()
     // test), change the language, then abandon the setup.
     ProbeableWizard w(m_config, m_wake, m_audio);
     w.next();
-    w.setLanguage(QStringLiteral("ar"));
+    w.setLanguage(QStringLiteral("ja"));
     w.next();
     w.back();
     w.skip();
@@ -434,7 +434,7 @@ void TestWizard::skipLeavesConfigurationIntact()
     // Every unrelated setting reads back exactly as it did.
     QCOMPARE(m_config->sleepMode(), QStringLiteral("disk"));
     QCOMPARE(m_config->themeOpacity(), 0.42);
-    QCOMPARE(m_config->language(), QStringLiteral("ar"));
+    QCOMPARE(m_config->language(), QStringLiteral("ja"));
 
     // Neither the alarm store nor the theme file was opened for writing.
     QCOMPARE(QFile::exists(alarmsPath()), alarmsExisted);

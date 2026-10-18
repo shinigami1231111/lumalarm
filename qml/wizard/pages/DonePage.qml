@@ -35,8 +35,7 @@ WizardPage {
                 Text {
                     Layout.fillWidth: true
                     text: wizard.language === "en" ? "English"
-                          : (wizard.language === "ar" ? "العربية"
-                          : (wizard.language === "ja" ? "日本語" : qsTr("System default")))
+                          : (wizard.language === "ja" ? "日本語" : qsTr("System default"))
                     color: configManager.themeTextPrimary
                     font.pixelSize: 13
                     horizontalAlignment: Text.AlignRight

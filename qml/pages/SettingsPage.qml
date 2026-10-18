@@ -646,14 +646,23 @@ ColumnLayout {
                     // a label for a language the reader cannot read defeats the
                     // purpose. Only "System default" is translatable, and it is
                     // what the empty ui/language value resolves to in main.cpp.
-                    model: [qsTr("System default"), "English", "العربية"]
+                    model: [qsTr("System default"), "English", "日本語"]
                     currentIndex: configManager.language === "en" ? 1
-                                  : (configManager.language === "ar" ? 2 : 0)
+                                  : (configManager.language === "ja" ? 2 : 0)
                     Layout.preferredWidth: 170
                     onActivated: {
-                        const codes = ["", "en", "ar"]
+                        const codes = ["", "en", "ja"]
                         configManager.language = codes[currentIndex]
                     }
+                }
+            }
+
+            RowLayout {
+                Layout.fillWidth: true; spacing: 14
+                Text { text: qsTr("Show emojis"); color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.fillWidth: true }
+                ToggleSwitch {
+                    checked: configManager.showEmojis
+                    onCheckedChanged: configManager.showEmojis = checked
                 }
             }
 
