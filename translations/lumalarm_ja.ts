@@ -4,92 +4,103 @@
 <context>
     <name>AlarmEditor</name>
     <message>
-        <location filename="../qml/pages/AlarmEditor.qml" line="119"/>
+        <location filename="../qml/pages/AlarmEditor.qml" line="154"/>
         <source>Edit Alarm</source>
         <translation>アラームを編集</translation>
     </message>
     <message>
-        <location filename="../qml/pages/AlarmEditor.qml" line="119"/>
+        <location filename="../qml/pages/AlarmEditor.qml" line="154"/>
         <source>New Alarm</source>
         <translation>新規アラーム</translation>
     </message>
     <message>
-        <location filename="../qml/pages/AlarmEditor.qml" line="129"/>
+        <location filename="../qml/pages/AlarmEditor.qml" line="164"/>
         <source>Name (optional)</source>
         <translation>名前（任意）</translation>
     </message>
     <message>
-        <location filename="../qml/pages/AlarmEditor.qml" line="136"/>
+        <location filename="../qml/pages/AlarmEditor.qml" line="171"/>
         <source>e.g. Morning, Work, Wake up</source>
         <translation>例：朝、仕事、起床</translation>
     </message>
     <message>
-        <location filename="../qml/pages/AlarmEditor.qml" line="181"/>
+        <location filename="../qml/pages/AlarmEditor.qml" line="207"/>
         <source>Hour</source>
         <translation>時</translation>
     </message>
     <message>
-        <location filename="../qml/pages/AlarmEditor.qml" line="189"/>
+        <location filename="../qml/pages/AlarmEditor.qml" line="240"/>
         <source>Minute</source>
         <translation>分</translation>
     </message>
     <message>
-        <location filename="../qml/pages/AlarmEditor.qml" line="200"/>
+        <location filename="../qml/pages/AlarmEditor.qml" line="267"/>
+        <source>AM</source>
+        <translation>午前</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/AlarmEditor.qml" line="267"/>
+        <source>PM</source>
+        <translation>午後</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/AlarmEditor.qml" line="324"/>
         <source>Set Days</source>
         <translation>曜日を設定</translation>
     </message>
     <message>
-        <location filename="../qml/pages/AlarmEditor.qml" line="218"/>
+        <location filename="../qml/pages/AlarmEditor.qml" line="342"/>
         <source>Mon</source>
         <translation>月</translation>
     </message>
     <message>
-        <location filename="../qml/pages/AlarmEditor.qml" line="218"/>
+        <location filename="../qml/pages/AlarmEditor.qml" line="342"/>
         <source>Tue</source>
         <translation>火</translation>
     </message>
     <message>
-        <location filename="../qml/pages/AlarmEditor.qml" line="218"/>
+        <location filename="../qml/pages/AlarmEditor.qml" line="342"/>
         <source>Wed</source>
         <translation>水</translation>
     </message>
     <message>
-        <location filename="../qml/pages/AlarmEditor.qml" line="218"/>
+        <location filename="../qml/pages/AlarmEditor.qml" line="342"/>
         <source>Thu</source>
         <translation>木</translation>
     </message>
     <message>
-        <location filename="../qml/pages/AlarmEditor.qml" line="218"/>
+        <location filename="../qml/pages/AlarmEditor.qml" line="342"/>
         <source>Fri</source>
         <translation>金</translation>
     </message>
     <message>
-        <location filename="../qml/pages/AlarmEditor.qml" line="218"/>
+        <location filename="../qml/pages/AlarmEditor.qml" line="342"/>
         <source>Sat</source>
         <translation>土</translation>
     </message>
     <message>
-        <location filename="../qml/pages/AlarmEditor.qml" line="218"/>
+        <location filename="../qml/pages/AlarmEditor.qml" line="342"/>
         <source>Sun</source>
         <translation>日</translation>
     </message>
     <message>
-        <location filename="../qml/pages/AlarmEditor.qml" line="236"/>
+        <location filename="../qml/pages/AlarmEditor.qml" line="288"/>
+        <location filename="../qml/pages/AlarmEditor.qml" line="362"/>
         <source>Auto Stop</source>
         <translation>自動停止</translation>
     </message>
     <message>
-        <location filename="../qml/pages/AlarmEditor.qml" line="239"/>
+        <location filename="../qml/pages/AlarmEditor.qml" line="368"/>
         <source>Enable Sound</source>
         <translation>サウンドを有効化</translation>
     </message>
     <message>
-        <location filename="../qml/pages/AlarmEditor.qml" line="294"/>
+        <location filename="../qml/pages/AlarmEditor.qml" line="423"/>
         <source>Enable Command</source>
         <translation>コマンドを有効化</translation>
     </message>
     <message>
-        <location filename="../qml/pages/AlarmEditor.qml" line="302"/>
+        <location filename="../qml/pages/AlarmEditor.qml" line="431"/>
         <source>e.g. notify-send &apos;Wake up!&apos;</source>
         <translation>例：notify-send &apos;目覚まし&apos;</translation>
     </message>
@@ -115,6 +126,75 @@
         <location filename="../qml/pages/AlarmListView.qml" line="150"/>
         <source>Del</source>
         <translation>削除</translation>
+    </message>
+</context>
+<context>
+    <name>AlarmSoundPage</name>
+    <message>
+        <location filename="../qml/wizard/pages/AlarmSoundPage.qml" line="13"/>
+        <location filename="../qml/wizard/pages/AlarmSoundPage.qml" line="83"/>
+        <source>Alarm Sound</source>
+        <translation>アラームサウンド</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/pages/AlarmSoundPage.qml" line="14"/>
+        <source>The alarm rings through this device; other apps keep using the system default.</source>
+        <translation>アラームはこのデバイスを通して鳴り、他のアプリはシステムデフォルトを使い続けます。</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/pages/AlarmSoundPage.qml" line="15"/>
+        <source>Next</source>
+        <translation>次へ</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/pages/AlarmSoundPage.qml" line="47"/>
+        <source>Output device</source>
+        <translation>出力デバイス</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/pages/AlarmSoundPage.qml" line="57"/>
+        <source>Default output device</source>
+        <translation>デフォルトの出力デバイス</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/pages/AlarmSoundPage.qml" line="90"/>
+        <source>Stop preview</source>
+        <translation>プレビューを停止</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/pages/AlarmSoundPage.qml" line="91"/>
+        <source>Preview</source>
+        <translation>プレビュー</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/pages/AlarmSoundPage.qml" line="120"/>
+        <source>When an alarm rings</source>
+        <translation>アラームが鳴ったとき</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/pages/AlarmSoundPage.qml" line="132"/>
+        <source>Raise system volume</source>
+        <translation>システム音量を上げる</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/pages/AlarmSoundPage.qml" line="137"/>
+        <source>Never touch system volume</source>
+        <translation>システム音量を変更しない</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/pages/AlarmSoundPage.qml" line="151"/>
+        <source>Minimum volume</source>
+        <translation>最小音量</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/pages/AlarmSoundPage.qml" line="177"/>
+        <source>The system volume is raised to this level while an alarm rings, then restored exactly.</source>
+        <translation>アラームが鳴っている間、システム音量はこのレベルに上げられ、終了後に正確に復元されます。</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/pages/AlarmSoundPage.qml" line="185"/>
+        <source>Lumalarm plays its own sound only; your system volume is never changed.</source>
+        <translation>Lumalarmは自身の音のみ再生し、システム音量は変更されません。</translation>
     </message>
 </context>
 <context>
@@ -163,57 +243,57 @@
 <context>
     <name>ConfigManager</name>
     <message>
-        <location filename="../src/managers/ConfigManager.cpp" line="278"/>
+        <location filename="../src/managers/ConfigManager.cpp" line="293"/>
         <source>A tone named &quot;%1&quot; already exists.</source>
         <translation>「%1」という名前のトーンが既に存在します。</translation>
     </message>
     <message>
-        <location filename="../src/managers/ConfigManager.cpp" line="280"/>
+        <location filename="../src/managers/ConfigManager.cpp" line="295"/>
         <source>The selected file no longer exists.</source>
         <translation>選択したファイルは既に存在しません。</translation>
     </message>
     <message>
-        <location filename="../src/managers/ConfigManager.cpp" line="282"/>
+        <location filename="../src/managers/ConfigManager.cpp" line="297"/>
         <source>The selected item is not a local file.</source>
         <translation>選択した項目はローカルファイルではありません。</translation>
     </message>
     <message>
-        <location filename="../src/managers/ConfigManager.cpp" line="284"/>
+        <location filename="../src/managers/ConfigManager.cpp" line="299"/>
         <source>Unsupported file. Use .wav, .mp3, .ogg, .flac or .aac.</source>
         <translation>サポートされていないファイルです。.wav、.mp3、.ogg、.flac、.aac を使用してください。</translation>
     </message>
     <message>
-        <location filename="../src/managers/ConfigManager.cpp" line="286"/>
+        <location filename="../src/managers/ConfigManager.cpp" line="301"/>
         <source>The tones folder could not be created.</source>
         <translation>トーンのフォルダを作成できませんでした。</translation>
     </message>
     <message>
-        <location filename="../src/managers/ConfigManager.cpp" line="288"/>
+        <location filename="../src/managers/ConfigManager.cpp" line="303"/>
         <source>The tones folder is not writable.</source>
         <translation>トーンのフォルダに書き込みできません。</translation>
     </message>
     <message>
-        <location filename="../src/managers/ConfigManager.cpp" line="290"/>
+        <location filename="../src/managers/ConfigManager.cpp" line="305"/>
         <source>The file could not be copied into the tones folder.</source>
         <translation>ファイルをトーンのフォルダにコピーできませんでした。</translation>
     </message>
     <message>
-        <location filename="../src/managers/ConfigManager.cpp" line="292"/>
+        <location filename="../src/managers/ConfigManager.cpp" line="307"/>
         <source>The tone &quot;%1&quot; no longer exists.</source>
         <translation>「%1」というトーンは既に存在しません。</translation>
     </message>
     <message>
-        <location filename="../src/managers/ConfigManager.cpp" line="294"/>
+        <location filename="../src/managers/ConfigManager.cpp" line="309"/>
         <source>The tone &quot;%1&quot; is installed system-wide and cannot be deleted.</source>
         <translation>「%1」はシステム全体にインストールされており、削除できません。</translation>
     </message>
     <message>
-        <location filename="../src/managers/ConfigManager.cpp" line="297"/>
+        <location filename="../src/managers/ConfigManager.cpp" line="312"/>
         <source>The tone could not be deleted.</source>
         <translation>トーンを削除できませんでした。</translation>
     </message>
     <message>
-        <location filename="../src/managers/ConfigManager.cpp" line="298"/>
+        <location filename="../src/managers/ConfigManager.cpp" line="313"/>
         <source>The operation failed.</source>
         <translation>操作に失敗しました。</translation>
     </message>
@@ -236,42 +316,67 @@
         <translation>完了</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/DonePage.qml" line="33"/>
+        <location filename="../qml/wizard/pages/DonePage.qml" line="19"/>
+        <source>Default output device</source>
+        <translation>デフォルトの出力デバイス</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/pages/DonePage.qml" line="44"/>
         <source>Language</source>
         <translation>言語</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/DonePage.qml" line="38"/>
+        <location filename="../qml/wizard/pages/DonePage.qml" line="49"/>
         <source>System default</source>
         <translation>システムデフォルト</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/DonePage.qml" line="48"/>
+        <location filename="../qml/wizard/pages/DonePage.qml" line="59"/>
         <source>Wake method</source>
         <translation>起動方法</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/DonePage.qml" line="62"/>
+        <location filename="../qml/wizard/pages/DonePage.qml" line="73"/>
         <source>Notifications</source>
         <translation>通知</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/DonePage.qml" line="66"/>
+        <location filename="../qml/wizard/pages/DonePage.qml" line="77"/>
         <source>Available</source>
         <translation>利用可能</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/DonePage.qml" line="66"/>
+        <location filename="../qml/wizard/pages/DonePage.qml" line="77"/>
         <source>Not available</source>
         <translation>利用不可</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/DonePage.qml" line="78"/>
+        <location filename="../qml/wizard/pages/DonePage.qml" line="87"/>
+        <source>Alarm Sound</source>
+        <translation>アラームサウンド</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/pages/DonePage.qml" line="92"/>
+        <source>Raise system volume</source>
+        <translation>システム音量を上げる</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/pages/DonePage.qml" line="92"/>
+        <source>Never touch system volume</source>
+        <translation>システム音量を変更しない</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/pages/DonePage.qml" line="102"/>
+        <source>Output device</source>
+        <translation>出力デバイス</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/pages/DonePage.qml" line="118"/>
         <source>Run this setup again any time from Settings.</source>
         <translation>この設定はいつでも設定から再実行できます。</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/DonePage.qml" line="85"/>
+        <location filename="../qml/wizard/pages/DonePage.qml" line="125"/>
         <source>Run again next time</source>
         <translation>次回実行</translation>
     </message>
@@ -385,22 +490,22 @@
 <context>
     <name>Notifier</name>
     <message>
-        <location filename="../src/ui/Notifier.cpp" line="84"/>
+        <location filename="../src/ui/Notifier.cpp" line="91"/>
         <source>Alarm in %1 min</source>
         <translation>あと%1分でアラーム</translation>
     </message>
     <message>
-        <location filename="../src/ui/Notifier.cpp" line="89"/>
+        <location filename="../src/ui/Notifier.cpp" line="96"/>
         <source>Alarm</source>
         <translation>アラーム</translation>
     </message>
     <message>
-        <location filename="../src/ui/Notifier.cpp" line="89"/>
+        <location filename="../src/ui/Notifier.cpp" line="96"/>
         <source>Time to wake up</source>
         <translation>起こす時間です</translation>
     </message>
     <message>
-        <location filename="../src/ui/Notifier.cpp" line="97"/>
+        <location filename="../src/ui/Notifier.cpp" line="104"/>
         <source>Machine armed</source>
         <translation>マシンを起動準備</translation>
     </message>
@@ -656,113 +761,109 @@
         <source>Wheel</source>
         <translation>ホイール</translation>
     </message>
+    
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="326"/>
-        <source>Spin</source>
-        <translation>スピン</translation>
-    </message>
-    <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="340"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="353"/>
         <source>Alarm Sound</source>
         <translation>アラームサウンド</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="342"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="355"/>
         <source>When an alarm rings</source>
         <translation>アラームが鳴ったとき</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="346"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="359"/>
         <source>Raise system volume</source>
         <translation>システム音量を上げる</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="351"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="364"/>
         <source>Never touch system volume</source>
         <translation>システム音量を変更しない</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="362"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="375"/>
         <source>Minimum volume</source>
         <translation>最小音量</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="382"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="395"/>
         <source>The system volume is raised to this level while an alarm rings, then restored exactly.</source>
         <translation>アラームが鳴っている間、システム音量はこのレベルに上げられ、終了後に正確に復元されます。</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="388"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="401"/>
         <source>Lumalarm plays its own sound only; your system volume is never changed.</source>
         <translation>Lumalarmは自身の音のみ再生し、システム音量は変更されません。</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="395"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="408"/>
         <source>Output device</source>
         <translation>出力デバイス</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="404"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="417"/>
         <source>Default output device</source>
         <translation>デフォルトの出力デバイス</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="423"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="436"/>
         <source>The alarm rings through this device; other apps keep using the system default.</source>
         <translation>アラームはこのデバイスを通して鳴り、他のアプリはシステムデフォルトを使い続けます。</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="433"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="446"/>
         <source>Test alarm</source>
         <translation>アラームをテスト</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="435"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="448"/>
         <source>Arm a real wake without creating an alarm, to check that this machine actually wakes.</source>
         <translation>アラームを作成せずに実際の起動をセットし、このマシンが実際に起動するか確認します。</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="447"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="460"/>
         <source>Wake in</source>
         <translation>起動まで</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="516"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="529"/>
         <source>60 s</source>
         <translation>60秒</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="516"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="529"/>
         <source>2 min</source>
         <translation>2分</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="516"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="529"/>
         <source>5 min</source>
         <translation>5分</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="516"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="529"/>
         <source>10 min</source>
         <translation>10分</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="516"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="529"/>
         <source>30 min</source>
         <translation>30分</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="516"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="529"/>
         <source>60 min</source>
         <translation>60分</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="516"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="529"/>
         <source>Custom…</source>
         <translation>カスタム…</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="483"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="496"/>
         <source>Custom seconds (60-3600)</source>
         <translation>カスタム秒数（60-3600）</translation>
     </message>
@@ -772,122 +873,142 @@
         <translation>RTC起動方法</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="550"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="326"/>
+        <source>Classic</source>
+        <translation>クラシック</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/SettingsPage.qml" line="335"/>
+        <source>Time format</source>
+        <translation>時刻形式</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/SettingsPage.qml" line="339"/>
+        <source>24-hour</source>
+        <translation>24時間表示</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/SettingsPage.qml" line="339"/>
+        <source>12-hour (AM/PM)</source>
+        <translation>12時間表示（AM/PM）</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/SettingsPage.qml" line="563"/>
         <source>Arm test alarm</source>
         <translation>アラームをテストにセット</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="555"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="568"/>
         <source>Cancel test alarm</source>
         <translation>テストアラームをキャンセル</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="598"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="611"/>
         <source>Test alarm armed in %1 s</source>
         <translation>テストアラームが%1秒でセットされました</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="601"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="614"/>
         <source>Test alarm failed: %1</source>
         <translation>テストアラームが失敗しました：%1</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="613"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="626"/>
         <source>Behavior</source>
         <translation>動作</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="616"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="629"/>
         <source>Show milliseconds in stopwatch</source>
         <translation>ストップウォッチにミリ秒を表示</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="624"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="637"/>
         <source>Desktop notifications</source>
         <translation>デスクトップ通知</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="632"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="645"/>
         <source>Setup wizard</source>
         <translation>セットアップウィザード</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="634"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="647"/>
         <source>Run again</source>
         <translation>再実行</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="642"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="655"/>
         <source>Language</source>
         <translation>言語</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="649"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="662"/>
         <source>System default</source>
         <translation>システムデフォルト</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="662"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="675"/>
         <source>Show emojis</source>
         <translation>絵文字を表示</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="664"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="677"/>
         <source>Off</source>
         <translation>オフ</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="664"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="677"/>
         <source>Less</source>
         <translation>少なめ</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="664"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="677"/>
         <source>More</source>
         <translation>多め</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="676"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="689"/>
         <source>Night Mode</source>
         <translation>ナイトモード</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="678"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="691"/>
         <source>Dim the window before an alarm so it does not light up a dark room.</source>
         <translation>アラームの前にウィンドウを暗くし、暗い部屋を照らさないようにします。</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="685"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="698"/>
         <source>Enable night mode</source>
         <translation>ナイトモードを有効にする</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="696"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="709"/>
         <source>Dim before alarm</source>
         <translation>アラーム前に暗くする</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="709"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="722"/>
         <source> min</source>
         <translation> 分</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="719"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="732"/>
         <source>Dim strength</source>
         <translation>暗くする強度</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="741"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="754"/>
         <source>Preview</source>
         <translation>プレビュー</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="751"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="764"/>
         <source>Dimming</source>
         <translation>暗くする</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="762"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="775"/>
         <source>Reset to Defaults</source>
         <translation>デフォルトにリセット</translation>
     </message>
@@ -996,57 +1117,62 @@
 <context>
     <name>TimerPage</name>
     <message>
-        <location filename="../qml/pages/TimerPage.qml" line="37"/>
+        <location filename="../qml/pages/TimerPage.qml" line="61"/>
         <source>Timer</source>
         <translation>タイマー</translation>
     </message>
     <message>
-        <location filename="../qml/pages/TimerPage.qml" line="50"/>
+        <location filename="../qml/pages/TimerPage.qml" line="74"/>
         <source>Running</source>
         <translation>実行中</translation>
     </message>
     <message>
-        <location filename="../qml/pages/TimerPage.qml" line="50"/>
+        <location filename="../qml/pages/TimerPage.qml" line="74"/>
         <source>Paused</source>
         <translation>一時停止</translation>
     </message>
     <message>
-        <location filename="../qml/pages/TimerPage.qml" line="50"/>
+        <location filename="../qml/pages/TimerPage.qml" line="74"/>
         <source>Set a duration</source>
         <translation>時間を設定</translation>
     </message>
     <message>
-        <location filename="../qml/pages/TimerPage.qml" line="63"/>
+        <location filename="../qml/pages/TimerPage.qml" line="90"/>
         <source>Hours</source>
         <translation>時間</translation>
     </message>
     <message>
-        <location filename="../qml/pages/TimerPage.qml" line="64"/>
+        <location filename="../qml/pages/TimerPage.qml" line="91"/>
         <source>Min</source>
         <translation>分</translation>
     </message>
     <message>
-        <location filename="../qml/pages/TimerPage.qml" line="65"/>
+        <location filename="../qml/pages/TimerPage.qml" line="92"/>
         <source>Sec</source>
         <translation>秒</translation>
     </message>
     <message>
-        <location filename="../qml/pages/TimerPage.qml" line="92"/>
+        <location filename="../qml/pages/TimerPage.qml" line="93"/>
+        <source>Auto Stop</source>
+        <translation>自動停止</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/TimerPage.qml" line="138"/>
         <source>Pause</source>
         <translation>一時停止</translation>
     </message>
     <message>
-        <location filename="../qml/pages/TimerPage.qml" line="92"/>
+        <location filename="../qml/pages/TimerPage.qml" line="138"/>
         <source>Start</source>
         <translation>開始</translation>
     </message>
     <message>
-        <location filename="../qml/pages/TimerPage.qml" line="110"/>
+        <location filename="../qml/pages/TimerPage.qml" line="157"/>
         <source>Reset</source>
         <translation>リセット</translation>
     </message>
     <message>
-        <location filename="../qml/pages/TimerPage.qml" line="123"/>
+        <location filename="../qml/pages/TimerPage.qml" line="170"/>
         <source>Sound when done:</source>
         <translation>完了時の音：</translation>
     </message>
@@ -1131,12 +1257,12 @@
 <context>
     <name>WheelTimePicker</name>
     <message>
-        <location filename="../qml/pickers/WheelTimePicker.qml" line="116"/>
+        <location filename="../qml/pickers/WheelTimePicker.qml" line="130"/>
         <source>AM</source>
         <translation>午前</translation>
     </message>
     <message>
-        <location filename="../qml/pickers/WheelTimePicker.qml" line="116"/>
+        <location filename="../qml/pickers/WheelTimePicker.qml" line="130"/>
         <source>PM</source>
         <translation>午後</translation>
     </message>
@@ -1144,37 +1270,37 @@
 <context>
     <name>WizardController</name>
     <message>
-        <location filename="../src/ui/WizardController.cpp" line="220"/>
+        <location filename="../src/ui/WizardController.cpp" line="269"/>
         <source>Wake test succeeded — this machine can wake up.</source>
         <translation>起動テスト成功 — このマシンは起動できます。</translation>
     </message>
     <message>
-        <location filename="../src/ui/WizardController.cpp" line="221"/>
+        <location filename="../src/ui/WizardController.cpp" line="270"/>
         <source>Wake test failed: %1</source>
         <translation>起動テスト失敗：%1</translation>
     </message>
     <message>
-        <location filename="../src/ui/WizardController.cpp" line="260"/>
+        <location filename="../src/ui/WizardController.cpp" line="309"/>
         <source>Lumalarm is ready</source>
         <translation>Lumalarmが準備完了</translation>
     </message>
     <message>
-        <location filename="../src/ui/WizardController.cpp" line="261"/>
+        <location filename="../src/ui/WizardController.cpp" line="310"/>
         <source>Notifications are working.</source>
         <translation>通知が機能しています。</translation>
     </message>
     <message>
-        <location filename="../src/ui/WizardController.cpp" line="278"/>
+        <location filename="../src/ui/WizardController.cpp" line="327"/>
         <source>Unknown</source>
         <translation>不明</translation>
     </message>
     <message>
-        <location filename="../src/ui/WizardController.cpp" line="283"/>
+        <location filename="../src/ui/WizardController.cpp" line="332"/>
         <source>Real-time clock wake (rtcwake) — recommended</source>
         <translation>リアルタイムクロック起動（rtcwake） — 推奨</translation>
     </message>
     <message>
-        <location filename="../src/ui/WizardController.cpp" line="285"/>
+        <location filename="../src/ui/WizardController.cpp" line="334"/>
         <source>No hardware wake source — alarms ring only while the machine is awake</source>
         <translation>ハードウェア起動ソースなし — アラームはマシンが起動している間のみ鳴ります</translation>
     </message>
@@ -1200,102 +1326,102 @@
 <context>
     <name>main</name>
     <message>
-        <location filename="../qml/main.qml" line="207"/>
+        <location filename="../qml/main.qml" line="208"/>
         <source>h </source>
         <translation>時間 </translation>
     </message>
     <message>
-        <location filename="../qml/main.qml" line="207"/>
+        <location filename="../qml/main.qml" line="208"/>
         <source>m </source>
         <translation>分 </translation>
     </message>
     <message>
-        <location filename="../qml/main.qml" line="207"/>
+        <location filename="../qml/main.qml" line="208"/>
         <source>s</source>
         <translation>秒</translation>
     </message>
     <message>
-        <location filename="../qml/main.qml" line="261"/>
+        <location filename="../qml/main.qml" line="269"/>
         <source>Alarms</source>
         <translation>アラーム</translation>
     </message>
     <message>
-        <location filename="../qml/main.qml" line="262"/>
+        <location filename="../qml/main.qml" line="270"/>
         <source>Timer</source>
         <translation>タイマー</translation>
     </message>
     <message>
-        <location filename="../qml/main.qml" line="263"/>
+        <location filename="../qml/main.qml" line="271"/>
         <source>Stopwatch</source>
         <translation>ストップウォッチ</translation>
     </message>
     <message>
-        <location filename="../qml/main.qml" line="264"/>
+        <location filename="../qml/main.qml" line="272"/>
         <source>Sounds</source>
         <translation>サウンド</translation>
     </message>
     <message>
-        <location filename="../qml/main.qml" line="265"/>
+        <location filename="../qml/main.qml" line="273"/>
         <source>Settings</source>
         <translation>設定</translation>
     </message>
     <message>
-        <location filename="../qml/main.qml" line="315"/>
+        <location filename="../qml/main.qml" line="323"/>
         <source>Select or create an alarm</source>
         <translation>アラームを選択または作成</translation>
     </message>
     <message>
-        <location filename="../qml/main.qml" line="323"/>
+        <location filename="../qml/main.qml" line="331"/>
         <source>Cancel</source>
         <translation>キャンセル</translation>
     </message>
     <message>
-        <location filename="../qml/main.qml" line="325"/>
+        <location filename="../qml/main.qml" line="333"/>
         <source>Update</source>
         <translation>更新</translation>
     </message>
     <message>
-        <location filename="../qml/main.qml" line="325"/>
+        <location filename="../qml/main.qml" line="333"/>
         <source>Create</source>
         <translation>作成</translation>
     </message>
     <message>
-        <location filename="../qml/main.qml" line="340"/>
+        <location filename="../qml/main.qml" line="348"/>
         <source>No alarm armed</source>
         <translation>アラームはセットされていません</translation>
     </message>
     <message>
-        <location filename="../qml/main.qml" line="342"/>
+        <location filename="../qml/main.qml" line="350"/>
         <source>Arming...</source>
         <translation>セット中...</translation>
     </message>
     <message>
-        <location filename="../qml/main.qml" line="343"/>
+        <location filename="../qml/main.qml" line="351"/>
         <source>Armed ✓</source>
         <translation>セット済み ✓</translation>
     </message>
     <message>
-        <location filename="../qml/main.qml" line="344"/>
+        <location filename="../qml/main.qml" line="352"/>
         <source>Arm FAILED</source>
         <translation>セット失敗</translation>
     </message>
     <message>
-        <location filename="../qml/main.qml" line="345"/>
+        <location filename="../qml/main.qml" line="353"/>
         <source>Arm Wake</source>
         <translation>起動をセット</translation>
     </message>
     <message>
-        <location filename="../qml/main.qml" line="385"/>
+        <location filename="../qml/main.qml" line="393"/>
         <source>Power Off &amp; Wake</source>
         <translation>電源オフ・起動</translation>
     </message>
     <message>
-        <location filename="../qml/main.qml" line="400"/>
+        <location filename="../qml/main.qml" line="408"/>
         <source>RTC alarm armed and verified; power off to wake the machine</source>
         <translation>RTCアラームがセット・検証されました。マシンを起動するには電源を切ってください</translation>
     </message>
     <message>
-        <location filename="../qml/main.qml" line="406"/>
+        <location filename="../qml/main.qml" line="414"/>
         <source>Error: </source>
         <translation>エラー: </translation>
     </message>

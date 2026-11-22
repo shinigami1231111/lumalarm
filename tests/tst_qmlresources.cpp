@@ -67,6 +67,8 @@ private slots:
     void mainTabsUseIconsWithoutEmojiPrefix();       // five tabs already carry an icon
     void windowHandlesAreInvisibleAndSystemDriven(); // frameless move/resize, no visible bar
     void sliderUsersImportQtQuickControls();         // no runtime "Slider is not a type"
+    void runtimeSettingsAreWiredAtStartup();         // rtcwake mode + emoji repaint
+    void recentUiRegressionsAreGuarded();            // timer keys, Classic, preview, 24h
 };
 
 // ----------------------------------------------------------------------------
@@ -388,6 +390,13 @@ void TestQmlResources::emojisAreGatedByEmojiLevel()
                      qPrintable(QStringLiteral("%1:%2: emoji bypasses configManager.emoji()")
                                     .arg(path)
                                     .arg(i + 1)));
+            // A C++ method call does not register a QML dependency on the
+            // emoji level. Each binding must read the property too, otherwise
+            // changing Off/Less/More needs an app restart to take effect.
+            QVERIFY2(line.contains(QStringLiteral("configManager.emojiLevel")),
+                     qPrintable(QStringLiteral("%1:%2: emoji binding is not reactive")
+                                    .arg(path)
+                                    .arg(i + 1)));
             if (line.contains(QStringLiteral(", 2)")))
                 ++moreOnly;
         }
@@ -471,6 +480,54 @@ void TestQmlResources::sliderUsersImportQtQuickControls()
                  qPrintable(QStringLiteral("%1 uses Slider but does not import QtQuick.Controls")
                                 .arg(path)));
     }
+}
+
+// ConfigManager stores settings, but the runtime objects need an explicit
+// bridge. Without these two lines the rtcwake method stayed "mem" forever and
+// emoji glyphs kept their first-frame value until the app was restarted.
+void TestQmlResources::runtimeSettingsAreWiredAtStartup()
+{
+    const QString mainCpp = readSourceFile(sourceRoot() + QStringLiteral("/src/main.cpp"));
+    QVERIFY2(!mainCpp.isEmpty(), "source tree not available for the startup wiring scan");
+    QVERIFY2(mainCpp.contains(QStringLiteral("wakeManager.setSleepMode(configManager.sleepMode())"),
+                             Qt::CaseInsensitive),
+             "RTCwake method must be seeded into WakeManager at startup");
+    QVERIFY2(mainCpp.contains(QStringLiteral("ConfigManager::emojiLevelChanged")),
+             "emoji changes need a dedicated signal");
+    QVERIFY2(mainCpp.contains(QStringLiteral("engine.retranslate()")),
+             "emoji changes must refresh live QML bindings, not need a restart");
+}
+
+// Static guards for defects found together in this release.
+void TestQmlResources::recentUiRegressionsAreGuarded()
+{
+    const QString timer = readSourceFile(sourceRoot() + QStringLiteral("/qml/pages/TimerPage.qml"));
+    QVERIFY2(timer.contains(QStringLiteral("modelData.key")),
+             "Timer fields must be identified by a stable key, not a localized label");
+    QVERIFY2(!timer.contains(QStringLiteral("modelData.label === \"Hours\"")),
+             "localized/emoji-prefixed labels must never select a duration field");
+    QVERIFY2(timer.contains(QStringLiteral("autoStopTimer")),
+             "Timer Auto Stop must end the completion sound");
+
+    const QString settings =
+        readSourceFile(sourceRoot() + QStringLiteral("/qml/pages/SettingsPage.qml"));
+    QVERIFY2(settings.contains(QStringLiteral("qsTr(\"Classic\")")),
+             "the secondary picker must be labelled Classic");
+    QVERIFY2(settings.contains(QStringLiteral("configManager.timeFormat")),
+             "Settings needs the 24-hour / 12-hour format toggle");
+
+    const QString wheel =
+        readSourceFile(sourceRoot() + QStringLiteral("/qml/pickers/WheelTimePicker.qml"));
+    QVERIFY2(wheel.contains(QStringLiteral("is24h")),
+             "the wheel picker must honor the selected time format");
+
+    const QString sound =
+        readSourceFile(sourceRoot() + QStringLiteral("/qml/wizard/pages/AlarmSoundPage.qml"));
+    QVERIFY2(sound.contains(QStringLiteral("previewAlarmVolume"))
+                 && sound.contains(QStringLiteral("previewDefaultAlarmVolume")),
+             "wizard preview must use the alarm volume policy, including first run");
+    QVERIFY2(sound.contains(QStringLiteral("wizard.stopAlarmPreview()")),
+             "the same preview button must be able to stop playback");
 }
 
 QTEST_GUILESS_MAIN(TestQmlResources)
