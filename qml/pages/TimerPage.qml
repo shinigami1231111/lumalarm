@@ -11,10 +11,18 @@ ColumnLayout {
     property bool timerRunning: false
     property string timerSoundFile: ""
     property bool timerPreviewing: false
+    // How long the completion sound may play after the countdown reaches zero.
+    property int autoStopSecs: 120
 
     property var hourField: null
     property var minField: null
     property var secField: null
+    property var autoField: null
+
+    function stopAutoStop() {
+        if (autoStopTimer && autoStopTimer.running)
+            autoStopTimer.stop()
+    }
 
     Connections {
         target: audioPlayer
@@ -24,8 +32,30 @@ ColumnLayout {
     property var timerObj: Timer {
         interval: 1000; repeat: true
         onTriggered: {
-            if (root.remainingSecs > 0) root.remainingSecs--
-            else { stop(); root.timerRunning = false; if (root.timerSoundFile !== "") audioPlayer.play(root.timerSoundFile) }
+            if (root.remainingSecs <= 0) {
+                stop()
+                root.timerRunning = false
+                return
+            }
+            root.remainingSecs--
+            if (root.remainingSecs === 0) {
+                // Sound on the tick that reaches zero, not one tick later.
+                stop()
+                root.timerRunning = false
+                if (root.timerSoundFile !== "") {
+                    audioPlayer.play(root.timerSoundFile)
+                    autoStopTimer.interval = Math.max(1, root.autoStopSecs) * 1000
+                    autoStopTimer.start()
+                }
+            }
+        }
+    }
+
+    property var autoStopTimer: Timer {
+        interval: 120000; repeat: false
+        onTriggered: {
+            audioPlayer.stop()
+            root.timerPreviewing = false
         }
     }
 
@@ -34,7 +64,7 @@ ColumnLayout {
         return ("00"+h).slice(-2) + ":" + ("00"+m).slice(-2) + ":" + ("00"+s).slice(-2)
     }
 
-    Text { text: configManager.emoji("⏳", 1) + qsTr("Timer"); color: configManager.themeTextPrimary; font.pixelSize: 24; font.bold: true }
+    Text { text: (configManager.emojiLevel, configManager.emoji("⏳", 1)) + qsTr("Timer"); color: configManager.themeTextPrimary; font.pixelSize: 24; font.bold: true }
 
     Item { Layout.fillHeight: true }
 
@@ -47,7 +77,7 @@ ColumnLayout {
     }
 
     Text {
-        text: configManager.emoji("⏱️", 2) + (timerRunning ? qsTr("Running") : (remainingSecs > 0 ? qsTr("Paused") : qsTr("Set a duration")))
+        text: (configManager.emojiLevel, configManager.emoji("⏱️", 2)) + (timerRunning ? qsTr("Running") : (remainingSecs > 0 ? qsTr("Paused") : qsTr("Set a duration")))
         color: timerRunning ? Qt.rgba(0.3,1,0.3,0.8) : configManager.themeTextSecondary
         font.pixelSize: 14
         Layout.alignment: Qt.AlignHCenter
@@ -56,29 +86,51 @@ ColumnLayout {
     Item { Layout.fillHeight: true }
 
     RowLayout {
-        spacing: 14
+        spacing: 8
         Layout.alignment: Qt.AlignHCenter
         Repeater {
+            // `key` is a stable identifier: comparing the localized label
+            // (which may carry an emoji prefix) made every field lookup fail
+            // and Start silently do nothing.
             model: [
-                {label: configManager.emoji("🕐", 2) + qsTr("Hours"), max: 99},
-                {label: configManager.emoji("🕑", 2) + qsTr("Min"), max: 59},
-                {label: configManager.emoji("🕒", 2) + qsTr("Sec"), max: 59}
+                {key: "h",     text: "00",  label: (configManager.emojiLevel, configManager.emoji("🕐", 2)) + qsTr("Hours"), max: 99,  min: 0},
+                {key: "m",     text: "00",  label: (configManager.emojiLevel, configManager.emoji("🕑", 2)) + qsTr("Min"), max: 59,  min: 0},
+                {key: "s",     text: "00",  label: (configManager.emojiLevel, configManager.emoji("🕒", 2)) + qsTr("Sec"), max: 59,  min: 0},
+                {key: "auto",  text: "120", label: (configManager.emojiLevel, configManager.emoji("⏱️", 2)) + qsTr("Auto Stop") + " (s)", max: 600, min: 10}
             ]
             ColumnLayout {
-                spacing: 4
-                Label { text: modelData.label; color: configManager.themeTextSecondary; font.pixelSize: 13; Layout.alignment: Qt.AlignHCenter }
+                spacing: 3
+                Label {
+                    text: modelData.label
+                    color: configManager.themeTextSecondary; font.pixelSize: 12
+                    Layout.alignment: Qt.AlignHCenter
+                }
                 TextField {
-                    text: "00"
-                    validator: IntValidator { bottom: 0; top: modelData.max }
+                    text: modelData.text
+                    validator: IntValidator { bottom: modelData.min; top: modelData.max }
                     color: configManager.themeTextPrimary; horizontalAlignment: TextInput.AlignHCenter
                     inputMethodHints: Qt.ImhDigitsOnly
-                    implicitWidth: 64; implicitHeight: 44
-                    font.pixelSize: 18
-                    background: Rectangle { color: Qt.rgba(1,1,1,0.08); radius: 10; border.color: Qt.rgba(1,1,1,0.15); border.width: 1 }
+                    implicitWidth: modelData.key === "auto" ? 62 : 54; implicitHeight: 40
+                    maximumLength: modelData.key === "auto" ? 3 : 2
+                    font.pixelSize: 16
+                    background: Rectangle {
+                        color: Qt.rgba(1,1,1,0.06); radius: 9
+                        border.color: Qt.rgba(1,1,1,0.12); border.width: 1
+                    }
                     Component.onCompleted: {
-                        if (modelData.label === "Hours") hourField = this
-                        else if (modelData.label === "Min") minField = this
-                        else secField = this
+                        if (modelData.key === "h") root.hourField = this
+                        else if (modelData.key === "m") root.minField = this
+                        else if (modelData.key === "s") root.secField = this
+                        else root.autoField = this
+                    }
+                    onEditingFinished: {
+                        const v = parseInt(text, 10)
+                        if (modelData.key === "auto") {
+                            root.autoStopSecs = isNaN(v) ? 120 : Math.max(10, Math.min(600, v))
+                            text = String(root.autoStopSecs)
+                        } else {
+                            text = ("00" + (isNaN(v) ? 0 : Math.max(modelData.min, Math.min(modelData.max, v)))).slice(-2)
+                        }
                     }
                 }
             }
@@ -89,13 +141,14 @@ ColumnLayout {
         spacing: 12
         Layout.alignment: Qt.AlignHCenter
         GlassButton {
-            text: timerRunning ? configManager.emoji("⏸️", 2) + qsTr("Pause") : configManager.emoji("▶️", 2) + qsTr("Start")
+            text: timerRunning ? (configManager.emojiLevel, configManager.emoji("⏸️", 2)) + qsTr("Pause") : (configManager.emojiLevel, configManager.emoji("▶️", 2)) + qsTr("Start")
             pixelSize: 14
             implicitWidth: configManager.emojiLevel >= 2 ? 132 : 110; implicitHeight: 40
             filled: !timerRunning
             baseColor: timerRunning ? Qt.rgba(1,0.6,0,0.22) : Qt.rgba(0.3,1,0.3,0.18)
             hoverColor: timerRunning ? Qt.rgba(1,0.6,0,0.32) : Qt.rgba(0.3,1,0.3,0.3)
             onClicked: {
+                stopAutoStop()
                 if (timerRunning) { timerObj.stop(); timerRunning = false }
                 else {
                     if (remainingSecs === 0) {
@@ -107,12 +160,12 @@ ColumnLayout {
             }
         }
         GlassButton {
-            text: configManager.emoji("🔄", 2) + qsTr("Reset")
+            text: (configManager.emojiLevel, configManager.emoji("🔄", 2)) + qsTr("Reset")
             pixelSize: 14
             implicitWidth: configManager.emojiLevel >= 2 ? 122 : 100; implicitHeight: 40
             baseColor: Qt.rgba(1,0.2,0.2,0.15)
             hoverColor: Qt.rgba(1,0.2,0.2,0.28)
-            onClicked: { timerObj.stop(); timerRunning = false; remainingSecs = 0; audioPlayer.stop() }
+            onClicked: { timerObj.stop(); stopAutoStop(); timerRunning = false; remainingSecs = 0; audioPlayer.stop() }
         }
     }
 
@@ -120,7 +173,7 @@ ColumnLayout {
 
     RowLayout {
         Layout.fillWidth: true; spacing: 10
-        Text { text: configManager.emoji("🔔", 2) + qsTr("Sound when done:"); color: configManager.themeTextSecondary; font.pixelSize: 14; Layout.alignment: Qt.AlignVCenter }
+        Text { text: (configManager.emojiLevel, configManager.emoji("🔔", 2)) + qsTr("Sound when done:"); color: configManager.themeTextSecondary; font.pixelSize: 14; Layout.alignment: Qt.AlignVCenter }
         RoundedCombo {
             id: timerSoundCmb
             Layout.fillWidth: true

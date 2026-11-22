@@ -6,9 +6,9 @@ import GlassAlarm
 // the user choose the sleep mode. Next is always clickable — no test is forced.
 WizardPage {
     id: root
-    title: configManager.emoji("⏰", 2) + qsTr("Wake method")
+    title: (configManager.emojiLevel, configManager.emoji("⏰", 2)) + qsTr("Wake method")
     subtitle: qsTr("For an alarm to bring the machine back from sleep, Lumalarm needs a wake source.")
-    primaryLabel: configManager.emoji("➡️", 2) + qsTr("Next")
+    primaryLabel: (configManager.emojiLevel, configManager.emoji("➡️", 2)) + qsTr("Next")
     primaryEnabled: true
     onPrimaryClicked: wizard.next()
 
@@ -27,7 +27,7 @@ WizardPage {
             spacing: 6
 
             Text {
-                text: configManager.emoji("🔎", 2) + qsTr("Detected")
+                text: (configManager.emojiLevel, configManager.emoji("🔎", 2)) + qsTr("Detected")
                 color: configManager.themeTextSecondary
                 font.pixelSize: 12
             }
@@ -53,7 +53,7 @@ WizardPage {
                 Layout.fillWidth: true
                 spacing: 14
                 Text {
-                    text: configManager.emoji("😴", 2) + qsTr("Sleep mode")
+                    text: (configManager.emojiLevel, configManager.emoji("😴", 2)) + qsTr("Sleep mode")
                     color: configManager.themeTextPrimary
                     font.pixelSize: 14
                     Layout.preferredWidth: 100
@@ -85,13 +85,13 @@ WizardPage {
 
         GlassButton {
             id: testButton
-            text: configManager.emoji("🚀", 2) + qsTr("Test wake")
+            text: (configManager.emojiLevel, configManager.emoji("🚀", 2)) + qsTr("Test wake")
             pixelSize: 13
             enabled: wakeManager.wakeState !== "arming" && wakeManager.wakeState !== "armed"
             onClicked: wizard.testWake()
         }
         GlassButton {
-            text: configManager.emoji("⏭️", 2) + qsTr("Skip this step")
+            text: (configManager.emojiLevel, configManager.emoji("⏭️", 2)) + qsTr("Skip this step")
             pixelSize: 13
             onClicked: wizard.skipWakeStep()
         }

@@ -7,9 +7,9 @@ import GlassAlarm
 // again on the next launch.
 WizardPage {
     id: root
-    title: configManager.emoji("🤩", 1) + qsTr("You are set up")
+    title: (configManager.emojiLevel, configManager.emoji("🤩", 1)) + qsTr("You are set up")
     subtitle: qsTr("Here is what this machine reported. Nothing else needs configuring for the first alarm.")
-    primaryLabel: configManager.emoji("🏁", 2) + qsTr("Finish")
+    primaryLabel: (configManager.emojiLevel, configManager.emoji("🏁", 2)) + qsTr("Finish")
     primaryEnabled: true
     onPrimaryClicked: wizard.finish()
 
@@ -41,7 +41,7 @@ WizardPage {
             RowLayout {
                 Layout.fillWidth: true
                 spacing: 12
-                Text { text: configManager.emoji("🌐", 2) + qsTr("Language"); color: configManager.themeTextSecondary;
+                Text { text: (configManager.emojiLevel, configManager.emoji("🌐", 2)) + qsTr("Language"); color: configManager.themeTextSecondary;
                        font.pixelSize: 13; Layout.preferredWidth: 140 }
                 Text {
                     Layout.fillWidth: true
@@ -56,7 +56,7 @@ WizardPage {
             RowLayout {
                 Layout.fillWidth: true
                 spacing: 12
-                Text { text: configManager.emoji("⏰", 2) + qsTr("Wake method"); color: configManager.themeTextSecondary;
+                Text { text: (configManager.emojiLevel, configManager.emoji("⏰", 2)) + qsTr("Wake method"); color: configManager.themeTextSecondary;
                        font.pixelSize: 13; Layout.preferredWidth: 140 }
                 Text {
                     Layout.fillWidth: true
@@ -70,7 +70,7 @@ WizardPage {
             RowLayout {
                 Layout.fillWidth: true
                 spacing: 12
-                Text { text: configManager.emoji("🔔", 2) + qsTr("Notifications"); color: configManager.themeTextSecondary;
+                Text { text: (configManager.emojiLevel, configManager.emoji("🔔", 2)) + qsTr("Notifications"); color: configManager.themeTextSecondary;
                        font.pixelSize: 13; Layout.preferredWidth: 140 }
                 Text {
                     Layout.fillWidth: true
@@ -84,7 +84,7 @@ WizardPage {
             RowLayout {
                 Layout.fillWidth: true
                 spacing: 12
-                Text { text: configManager.emoji("🔔", 2) + qsTr("Alarm Sound"); color: configManager.themeTextSecondary;
+                Text { text: (configManager.emojiLevel, configManager.emoji("🔔", 2)) + qsTr("Alarm Sound"); color: configManager.themeTextSecondary;
                        font.pixelSize: 13; Layout.preferredWidth: 140 }
                 Text {
                     Layout.fillWidth: true
@@ -99,7 +99,7 @@ WizardPage {
             RowLayout {
                 Layout.fillWidth: true
                 spacing: 12
-                Text { text: configManager.emoji("🔉", 2) + qsTr("Output device"); color: configManager.themeTextSecondary;
+                Text { text: (configManager.emojiLevel, configManager.emoji("🔉", 2)) + qsTr("Output device"); color: configManager.themeTextSecondary;
                        font.pixelSize: 13; Layout.preferredWidth: 140 }
                 Text {
                     Layout.fillWidth: true
@@ -122,7 +122,7 @@ WizardPage {
     }
 
     Text {
-        text: configManager.emoji("🔁", 2) + qsTr("Run again next time")
+        text: (configManager.emojiLevel, configManager.emoji("🔁", 2)) + qsTr("Run again next time")
         color: configManager.themeTextSecondary
         font.pixelSize: 13
         font.underline: true

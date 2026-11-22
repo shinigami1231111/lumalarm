@@ -10,14 +10,15 @@ import GlassAlarm
 // audio controller. Next is never gated — every choice can be changed later.
 WizardPage {
     id: root
-    title: configManager.emoji("🔔", 2) + qsTr("Alarm Sound")
+    title: (configManager.emojiLevel, configManager.emoji("🔔", 2)) + qsTr("Alarm Sound")
     subtitle: qsTr("The alarm rings through this device; other apps keep using the system default.")
-    primaryLabel: configManager.emoji("➡️", 2) + qsTr("Next")
+    primaryLabel: (configManager.emojiLevel, configManager.emoji("➡️", 2)) + qsTr("Next")
     primaryEnabled: true
     onPrimaryClicked: wizard.next()
 
     property var sinkDevices: []
     readonly property var toneNames: configManager.availableTones()
+    property bool previewing: false
 
     Component.onCompleted: {
         root.sinkDevices = wizard.outputDevices
@@ -27,6 +28,14 @@ WizardPage {
         target: wizard
         function onOutputDevicesChanged() { root.sinkDevices = wizard.outputDevices }
     }
+    Connections {
+        target: audioPlayer
+        function onIsPlayingChanged() { root.previewing = audioPlayer.isPlaying }
+    }
+    Component.onDestruction: {
+        if (root.previewing)
+            wizard.stopAlarmPreview()
+    }
 
     // OUTPUT DEVICE — index 0 follows the system default sink. The stored
     // value is the node name, so it survives a backend restart.
@@ -35,7 +44,7 @@ WizardPage {
         spacing: 12
 
         Text {
-            text: configManager.emoji("🔉", 2) + qsTr("Output device")
+            text: (configManager.emojiLevel, configManager.emoji("🔉", 2)) + qsTr("Output device")
             color: configManager.themeTextPrimary
             font.pixelSize: 15
             Layout.fillWidth: true
@@ -71,19 +80,37 @@ WizardPage {
         spacing: 12
 
         Text {
-            text: configManager.emoji("🎵", 2) + qsTr("Alarm Sound")
+            text: (configManager.emojiLevel, configManager.emoji("🎵", 2)) + qsTr("Alarm Sound")
             color: configManager.themeTextPrimary
             font.pixelSize: 15
             Layout.fillWidth: true
         }
 
         GlassButton {
-            text: configManager.emoji("▶️", 2) + qsTr("Preview")
+            text: root.previewing ? (configManager.emojiLevel, configManager.emoji("■", 2)) + qsTr("Stop preview")
+                                  : (configManager.emojiLevel, configManager.emoji("▶️", 2)) + qsTr("Preview")
             pixelSize: 13
-            enabled: root.toneNames.length > 0
+            filled: root.previewing
+            accentColor: root.previewing ? Qt.rgba(1, 0.35, 0.35, 1)
+                                         : configManager.themeAccent
+            baseColor: root.previewing ? Qt.rgba(1, 0.25, 0.25, 0.22)
+                                       : Qt.rgba(0.3, 1, 0.3, 0.18)
+            hoverColor: root.previewing ? Qt.rgba(1, 0.25, 0.25, 0.34)
+                                        : Qt.rgba(0.3, 1, 0.3, 0.3)
             onClicked: {
-                const wanted = configManager.audioDefaultSound
-                wizard.previewSound(wanted !== "" ? wanted : root.toneNames[0])
+                if (root.previewing) {
+                    wizard.stopAlarmPreview()
+                    return
+                }
+                if (root.toneNames.length === 0) {
+                    // New profile: no packaged or imported tone yet. The wizard
+                    // generates a short WAV in a temp dir and plays it through
+                    // the alarm volume policy; nothing is stored on disk.
+                    wizard.previewDefaultAlarmVolume()
+                } else {
+                    const wanted = configManager.audioDefaultSound
+                    wizard.previewAlarmVolume(wanted !== "" ? wanted : root.toneNames[0])
+                }
             }
         }
     }
@@ -92,7 +119,7 @@ WizardPage {
 
     // WHEN AN ALARM RINGS — the same two policies Settings offers.
     Text {
-        text: configManager.emoji("🔔", 2) + qsTr("When an alarm rings")
+        text: (configManager.emojiLevel, configManager.emoji("🔔", 2)) + qsTr("When an alarm rings")
         color: configManager.themeTextSecondary
         font.pixelSize: 13
         font.bold: true
@@ -123,7 +150,7 @@ WizardPage {
         opacity: enabled ? 1.0 : 0.5
 
         Text {
-            text: configManager.emoji("🔈", 2) + qsTr("Minimum volume")
+            text: (configManager.emojiLevel, configManager.emoji("🔈", 2)) + qsTr("Minimum volume")
             color: configManager.themeTextPrimary
             font.pixelSize: 15
             Layout.preferredWidth: 180

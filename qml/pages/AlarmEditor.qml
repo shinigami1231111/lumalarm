@@ -31,12 +31,49 @@ GlassCard {
         }
     }
 
-    // Push edit values into the spin-mode controls. The wheel stays aligned
-    // through its live hour:/minute: bindings instead; SpinBox cannot use a
-    // value: binding because user interaction writes value imperatively.
-    // Writing the same value is a no-op, so this never loops.
-    onEditHourChanged: hourCtrl.value = editHour
-    onEditMinuteChanged: minuteCtrl.value = editMinute
+    // The Classic fields are typed TextFields: writing text would break a
+    // binding, so they are pushed from these properties instead. The wheel
+    // keeps its own live bindings and does not need this.
+    function classicDisplayHour() {
+        if (configManager.timeFormat !== "12h")
+            return editHour
+        const h = editHour % 12
+        return h === 0 ? 12 : h
+    }
+
+    function syncClassicFields() {
+        if (!classicHourField || !classicMinuteField || !classicAutoField || !classicAmPm)
+            return
+        classicHourField.text = ("00" + classicDisplayHour()).slice(-2)
+        classicMinuteField.text = ("00" + editMinute).slice(-2)
+        classicAutoField.text = String(editAutoStop)
+        classicAmPm.currentIndex = editHour >= 12 ? 1 : 0
+    }
+
+    function commitClassicHour() {
+        let v = parseInt(classicHourField.text, 10)
+        if (isNaN(v))
+            v = configManager.timeFormat === "12h" ? 12 : 0
+        if (configManager.timeFormat === "12h") {
+            const h12 = Math.max(1, Math.min(12, v)) % 12
+            v = h12 + (classicAmPm.currentIndex === 1 ? 12 : 0)
+        } else {
+            v = Math.max(0, Math.min(23, v))
+        }
+        editHour = v
+        syncClassicFields()
+    }
+
+    Connections {
+        target: root
+        function onEditHourChanged() { syncClassicFields() }
+        function onEditMinuteChanged() { syncClassicFields() }
+        function onEditAutoStopChanged() { syncClassicFields() }
+    }
+    Connections {
+        target: configManager
+        function onConfigChanged() { syncClassicFields() }
+    }
 
     function loadAlarm(index) {
         // alarmManager.alarms (QVariantList) was replaced by the alarm model;
@@ -116,7 +153,7 @@ GlassCard {
         spacing: 16
 
         Text {
-            text: editIndex >= 0 ? configManager.emoji("✏️", 2) + qsTr("Edit Alarm") : configManager.emoji("➕", 2) + qsTr("New Alarm")
+            text: editIndex >= 0 ? (configManager.emojiLevel, configManager.emoji("✏️", 2)) + qsTr("Edit Alarm") : (configManager.emojiLevel, configManager.emoji("➕", 2)) + qsTr("New Alarm")
             color: configManager.themeTextPrimary
             font.pixelSize: 22
             font.bold: true
@@ -126,7 +163,7 @@ GlassCard {
             spacing: 4
             Layout.fillWidth: true
             Text {
-                text: configManager.emoji("🏷️", 2) + qsTr("Name (optional)")
+                text: (configManager.emojiLevel, configManager.emoji("🏷️", 2)) + qsTr("Name (optional)")
                 color: configManager.themeTextSecondary; font.pixelSize: 12
             }
             TextField {
@@ -145,51 +182,140 @@ GlassCard {
 
         RowLayout {
             spacing: 16
+            Layout.alignment: Qt.AlignHCenter
 
-            ColumnLayout {
-                spacing: 6
+            WheelTimePicker {
+                id: wheelPicker
+                Layout.alignment: Qt.AlignHCenter
+                visible: configManager.timePickerMode === "wheel"
+                hour: editHour
+                minute: editMinute
+                onTimeChanged: function(h, m) { editHour = h; editMinute = m }
+            }
+
+            // Classic mode (Settings -> "Time picker style"): one compact row
+            // of typed hour, minute and Auto Stop fields instead of stacked
+            // arrow controls. Values are still the same editHour/editMinute/
+            // editAutoStop properties, so switching modes never loses an edit.
+            RowLayout {
+                visible: configManager.timePickerMode === "spin"
+                spacing: 8
                 Layout.alignment: Qt.AlignVCenter
+                Component.onCompleted: syncClassicFields()
 
-                WheelTimePicker {
-                    id: wheelPicker
-                    Layout.alignment: Qt.AlignHCenter
-                    visible: configManager.timePickerMode === "wheel"
-                    hour: editHour
-                    minute: editMinute
-                    onTimeChanged: function(h, m) { editHour = h; editMinute = m }
+                ColumnLayout {
+                    spacing: 3
+                    Label {
+                        text: (configManager.emojiLevel, configManager.emoji("🕐", 2)) + qsTr("Hour")
+                        color: configManager.themeTextSecondary; font.pixelSize: 12
+                        Layout.alignment: Qt.AlignHCenter
+                    }
+                    TextField {
+                        id: classicHourField
+                        implicitWidth: 54; implicitHeight: 40
+                        maximumLength: 2
+                        validator: IntValidator {
+                            bottom: configManager.timeFormat === "12h" ? 1 : 0
+                            top: configManager.timeFormat === "12h" ? 12 : 23
+                        }
+                        inputMethodHints: Qt.ImhDigitsOnly
+                        horizontalAlignment: TextInput.AlignHCenter
+                        color: configManager.themeTextPrimary; font.pixelSize: 16
+                        background: Rectangle {
+                            color: Qt.rgba(1, 1, 1, 0.06); radius: 9
+                            border.color: Qt.rgba(1, 1, 1, 0.12); border.width: 1
+                        }
+                        onEditingFinished: commitClassicHour()
+                    }
                 }
 
-                // Secondary time-picker mode (Settings -> "Time picker style",
-                // settings.ini key alarm/timePickerMode: "wheel" | "spin").
-                // Sibling of the wheel — only one is visible at a time, and
-                // both drive the same editHour/editMinute properties. Reuses
-                // the built-in ValueCtrl (same control as "Auto Stop"), so it
-                // follows the app theming from Settings like every other row.
-                // ValueCtrl's `value` is a plain property that clicks write
-                // imperatively (which would break a `value:` binding), so the
-                // controls are pushed to from the outside (onEditHourChanged /
-                // Component.onCompleted) and report back via onValueChanged —
-                // the round trip is idempotent, so no feedback loop.
+                Text {
+                    text: ":"
+                    visible: configManager.timeFormat !== "12h"
+                    color: configManager.themeTextSecondary; font.pixelSize: 18
+                    Layout.alignment: Qt.AlignVCenter; Layout.bottomMargin: 10
+                }
+
                 ColumnLayout {
-                    visible: configManager.timePickerMode === "spin"
-                    Layout.alignment: Qt.AlignHCenter
-                    Layout.preferredWidth: 250
-                    spacing: 10
-
-                    ValueCtrl {
-                        id: hourCtrl
-                        label: configManager.emoji("🕐", 2) + qsTr("Hour"); suffix: ""
-                        minVal: 0; maxVal: 23; step: 1
-                        onValueChanged: editHour = value
-                        Component.onCompleted: value = editHour
+                    spacing: 3
+                    Label {
+                        text: (configManager.emojiLevel, configManager.emoji("🕑", 2)) + qsTr("Minute")
+                        color: configManager.themeTextSecondary; font.pixelSize: 12
+                        Layout.alignment: Qt.AlignHCenter
                     }
+                    TextField {
+                        id: classicMinuteField
+                        implicitWidth: 54; implicitHeight: 40
+                        maximumLength: 2
+                        validator: IntValidator { bottom: 0; top: 59 }
+                        inputMethodHints: Qt.ImhDigitsOnly
+                        horizontalAlignment: TextInput.AlignHCenter
+                        color: configManager.themeTextPrimary; font.pixelSize: 16
+                        background: Rectangle {
+                            color: Qt.rgba(1, 1, 1, 0.06); radius: 9
+                            border.color: Qt.rgba(1, 1, 1, 0.12); border.width: 1
+                        }
+                        onEditingFinished: {
+                            const v = parseInt(text, 10)
+                            editMinute = isNaN(v) ? 0 : Math.max(0, Math.min(59, v))
+                            syncClassicFields()
+                        }
+                    }
+                }
 
-                    ValueCtrl {
-                        id: minuteCtrl
-                        label: configManager.emoji("🕑", 2) + qsTr("Minute"); suffix: ""
-                        minVal: 0; maxVal: 59; step: 1
-                        onValueChanged: editMinute = value
-                        Component.onCompleted: value = editMinute
+                RoundedCombo {
+                    id: classicAmPm
+                    visible: configManager.timeFormat === "12h"
+                    model: [qsTr("AM"), qsTr("PM")]
+                    Layout.preferredWidth: 68
+                    Layout.bottomMargin: 10
+                    currentIndex: editHour >= 12 ? 1 : 0
+                    onActivated: {
+                        const h = parseInt(classicHourField.text, 10)
+                        const h12 = (isNaN(h) ? 12 : Math.max(1, Math.min(12, h))) % 12
+                        editHour = h12 + (currentIndex === 1 ? 12 : 0)
+                        syncClassicFields()
+                    }
+                }
+
+                Text {
+                    text: "·"
+                    color: configManager.themeTextSecondary; font.pixelSize: 18
+                    Layout.alignment: Qt.AlignVCenter; Layout.bottomMargin: 10
+                }
+
+                ColumnLayout {
+                    spacing: 3
+                    Label {
+                        text: (configManager.emojiLevel, configManager.emoji("⏱️", 2)) + qsTr("Auto Stop")
+                        color: configManager.themeTextSecondary; font.pixelSize: 12
+                        Layout.alignment: Qt.AlignHCenter
+                    }
+                    RowLayout {
+                        spacing: 4
+                        TextField {
+                            id: classicAutoField
+                            implicitWidth: 62; implicitHeight: 40
+                            maximumLength: 3
+                            validator: IntValidator { bottom: 10; top: 600 }
+                            inputMethodHints: Qt.ImhDigitsOnly
+                            horizontalAlignment: TextInput.AlignHCenter
+                            color: configManager.themeTextPrimary; font.pixelSize: 16
+                            background: Rectangle {
+                                color: Qt.rgba(1, 1, 1, 0.06); radius: 9
+                                border.color: Qt.rgba(1, 1, 1, 0.12); border.width: 1
+                            }
+                            onEditingFinished: {
+                                const v = parseInt(text, 10)
+                                editAutoStop = isNaN(v) ? 120 : Math.max(10, Math.min(600, v))
+                                syncClassicFields()
+                            }
+                        }
+                        Text {
+                            text: "s"
+                            color: configManager.themeTextSecondary; font.pixelSize: 12
+                            Layout.bottomMargin: 10
+                        }
                     }
                 }
             }
@@ -197,7 +323,7 @@ GlassCard {
 
         GlassCheckBox {
             id: daysCheck
-            labelText: configManager.emoji("📅", 2) + qsTr("Set Days")
+            labelText: (configManager.emojiLevel, configManager.emoji("📅", 2)) + qsTr("Set Days")
             checked: {
                 for (var i = 0; i < 7; i++)
                     if (editDays[i]) return true
@@ -233,10 +359,15 @@ GlassCard {
             }
         }
 
-        ValueCtrl { label: configManager.emoji("⏱️", 2) + qsTr("Auto Stop"); value: editAutoStop; minVal: 10; maxVal: 600; step: 10; suffix: "s"; onValueChanged: editAutoStop = value }
+        ValueCtrl {
+            visible: configManager.timePickerMode === "wheel"
+            label: (configManager.emojiLevel, configManager.emoji("⏱️", 2)) + qsTr("Auto Stop")
+            value: editAutoStop; minVal: 10; maxVal: 600; step: 10; suffix: "s"
+            onValueChanged: editAutoStop = value
+        }
 
         GlassCheckBox {
-            labelText: configManager.emoji("🔔", 2) + qsTr("Enable Sound")
+            labelText: (configManager.emojiLevel, configManager.emoji("🔔", 2)) + qsTr("Enable Sound")
             checked: editEnableSound
             onCheckedChanged: editEnableSound = checked
         }
@@ -291,7 +422,7 @@ GlassCard {
         }
 
         GlassCheckBox {
-            labelText: configManager.emoji("💻", 2) + qsTr("Enable Command")
+            labelText: (configManager.emojiLevel, configManager.emoji("💻", 2)) + qsTr("Enable Command")
             checked: editEnableCommand
             onCheckedChanged: editEnableCommand = checked
         }

@@ -6,9 +6,13 @@ import QtQuick.Controls
 Item {
     id: root
     width: 280; height: 260
-    property int hour: 7          // 0..23 (24h)
+    property int hour: 7          // 0..23 (internal, regardless of display mode)
     property int minute: 0        // 0..59
     signal timeChanged(int hour, int minute)
+
+    // Settings > Time format: 24-hour shows 00-23 and hides the AM/PM wheel;
+    // 12-hour keeps the original 1-12 + AM/PM behavior.
+    readonly property bool is24h: configManager.timeFormat !== "12h"
 
     readonly property color cText: configManager.themeTextPrimary
     readonly property color cMuted: configManager.themeTextSecondary
@@ -43,11 +47,15 @@ Item {
     property bool _ready: false
     property bool _syncing: false
 
-    // 0..23 -> tumbler index 0..11 (the "12" slot lives at index 11).
-    function hourToIndex(h) { return ((h % 12) + 11) % 12 }
+    // 0..23 -> tumbler index: direct in 24h mode, 12-hour slot map otherwise.
+    function hourToIndex(h) {
+        return root.is24h ? Math.max(0, Math.min(23, h)) : ((h % 12) + 11) % 12
+    }
 
-    // Exact inverse of hourToIndex(): tumbler index 0..11 + AM/PM -> 0..23.
+    // Exact inverse of hourToIndex(): index (+ AM/PM in 12h mode) -> 0..23.
     function indexToHour(idx, isPM) {
+        if (root.is24h)
+            return Math.max(0, Math.min(23, idx))
         var h12 = idx + 1            // 1..12, "12" for idx 11
         return isPM ? (h12 % 12) + 12 : h12 % 12
     }
@@ -62,6 +70,10 @@ Item {
     }
     onHourChanged: _syncTumblers()
     onMinuteChanged: _syncTumblers()
+    Connections {
+        target: configManager
+        function onConfigChanged() { _syncTumblers() }
+    }
     Component.onCompleted: { _ready = true; _syncTumblers() }
 
     Row {
@@ -71,9 +83,10 @@ Item {
         Tumbler {
             id: hourTumbler
             width: 70; height: 240
-            model: 12
+            model: root.is24h ? 24 : 12
             delegate: Text {
-                text: String(modelData + 1).padStart(2, '0')
+                text: root.is24h ? String(modelData).padStart(2, '0')
+                                 : String(modelData + 1).padStart(2, '0')
                 font.pixelSize: Tumbler.displacement === 0 ? 22 : 18
                 font.weight: Tumbler.displacement === 0 ? Font.Medium : Font.Normal
                 opacity: Math.max(0.3, 1 - Math.abs(Tumbler.displacement) * 0.4)
@@ -112,6 +125,7 @@ Item {
 
         Tumbler {
             id: periodTumbler
+            visible: !root.is24h
             width: 60; height: 240
             model: [qsTr("AM"), qsTr("PM")]
             delegate: Text {

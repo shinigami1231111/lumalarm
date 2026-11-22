@@ -29,7 +29,7 @@ Window {
     height: 300
     minimumWidth: 320
     minimumHeight: 240
-    title: configManager.emoji("🔔", 2) + qsTr("Alarm")
+    title: (configManager.emojiLevel, configManager.emoji("🔔", 2)) + qsTr("Alarm")
     color: "transparent"
 
     // Dialog so it does not appear in the taskbar as a second app; stays on top

@@ -15,7 +15,7 @@ Rectangle {
     // Content slot — pages drop their own children straight into the column.
     default property alias content: contentColumn.data
 
-    property string primaryLabel: configManager.emoji("➡️", 2) + qsTr("Next")
+    property string primaryLabel: (configManager.emojiLevel, configManager.emoji("➡️", 2)) + qsTr("Next")
     property bool primaryEnabled: wizard.canGoNext
     signal primaryClicked()
 
@@ -62,7 +62,7 @@ Rectangle {
         spacing: 12
 
         GlassButton {
-            text: configManager.emoji("🔙", 2) + qsTr("Back")
+            text: (configManager.emojiLevel, configManager.emoji("🔙", 2)) + qsTr("Back")
             pixelSize: 13
             visible: wizard.canGoBack
             enabled: wizard.canGoBack
@@ -73,7 +73,7 @@ Rectangle {
         // never auto-shows again) and discards whatever was chosen so far.
         Text {
             id: skipLink
-            text: configManager.emoji("⏭️", 2) + qsTr("Skip setup")
+            text: (configManager.emojiLevel, configManager.emoji("⏭️", 2)) + qsTr("Skip setup")
             color: configManager.themeTextSecondary
             font.pixelSize: 13
             font.underline: true

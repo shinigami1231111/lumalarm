@@ -6,9 +6,9 @@ import GlassAlarm
 // daemon; sending one is optional and never blocks progress.
 WizardPage {
     id: root
-    title: configManager.emoji("🔔", 2) + qsTr("Notifications")
+    title: (configManager.emojiLevel, configManager.emoji("🔔", 2)) + qsTr("Notifications")
     subtitle: qsTr("Lumalarm can notify you on the desktop before an alarm rings.")
-    primaryLabel: configManager.emoji("➡️", 2) + qsTr("Next")
+    primaryLabel: (configManager.emojiLevel, configManager.emoji("➡️", 2)) + qsTr("Next")
     primaryEnabled: true
     onPrimaryClicked: wizard.next()
 
@@ -27,7 +27,7 @@ WizardPage {
             spacing: 6
 
             Text {
-                text: configManager.emoji("🔔", 2) + (wizard.notificationsAvailable ? qsTr("Notifications available")
+                text: (configManager.emojiLevel, configManager.emoji("🔔", 2)) + (wizard.notificationsAvailable ? qsTr("Notifications available")
                                                     : qsTr("No notification daemon"))
                 color: configManager.themeTextPrimary
                 font.pixelSize: 15
@@ -53,11 +53,11 @@ WizardPage {
         visible: wizard.notificationsAvailable
 
         GlassButton {
-            text: configManager.emoji("📤", 2) + qsTr("Send test notification")
+            text: (configManager.emojiLevel, configManager.emoji("📤", 2)) + qsTr("Send test notification")
             pixelSize: 13
             onClicked: {
                 const ok = wizard.testNotification()
-                root.probeResult = configManager.emoji("✅", 2) + (ok ? qsTr("Test notification sent.")
+                root.probeResult = (configManager.emojiLevel, configManager.emoji("✅", 2)) + (ok ? qsTr("Test notification sent.")
                                       : qsTr("Could not send the notification."))
             }
         }
