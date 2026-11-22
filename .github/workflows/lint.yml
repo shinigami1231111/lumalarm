@@ -17,7 +17,7 @@ jobs:
   clang-tidy:
     name: clang-tidy
     runs-on: ubuntu-24.04
-    continue-on-error: true   # advisory: .clang-tidy lands in a later phase
+    container: ubuntu:26.04
 
     steps:
       - name: Checkout
@@ -27,8 +27,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
+          # Ubuntu 24.04 ships Qt 6.4.2, below the project's Qt >= 6.5
+          # minimum, so Configure used to fail there. The 26.04 container
+          # provides Qt 6.10; checkout needs git and CA certificates too.
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+            git ca-certificates \
             clang-tidy \
             cmake ninja-build g++ \
             qt6-base-dev qt6-base-dev-tools qt6-declarative-dev \
@@ -42,7 +46,21 @@ jobs:
             -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
             -DLUMALARM_ENABLE_KDE_BLUR=OFF
 
+      # Qt6Targets.cmake exports -mno-direct-extern-access for GNU and
+      # -fno-direct-access-external-data for Clang as an interface pair. A GCC
+      # build bakes the GNU spelling into the compile database, which
+      # clang-tidy rejects as an unknown argument on every TU. Swap it in the
+      # lint database only; the real build keeps the GNU hardening flag.
+      - name: Normalise compile database for clang-tidy
+        shell: bash
+        run: |
+          sed -i 's/-mno-direct-extern-access/-fno-direct-access-external-data/g' \
+            build/compile_commands.json
+
       - name: clang-tidy
+        # Advisory on GitHub: findings must not turn the check red. The local
+        # ci-local.sh gate is deliberately stricter and fails on any finding.
+        continue-on-error: true
         shell: bash
         run: |
           set -euo pipefail

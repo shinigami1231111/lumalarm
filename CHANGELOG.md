@@ -113,6 +113,11 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
   detection no longer assumes only dnf/pacman can run inside containers.
 - `tst_stg1security` no longer fails in a clean checkout when the git-ignored
   developer file `PKGBUILD.local` is absent; it is audited when present.
+- The advisory clang-tidy workflow also runs in an Ubuntu 26.04 container (its
+  Configure step hit the same Qt 6.4 floor), and normalises the GCC-only
+  `-mno-direct-extern-access` flag in the lint compile database before running,
+  matching the local `ci-local.sh` gate. Advisory status is now attached to the
+  clang-tidy step only, so Configure/Install failures are visible as real failures.
 
 ### Verified
 

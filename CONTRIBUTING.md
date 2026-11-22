@@ -134,7 +134,7 @@ CI runs on every push and pull request to `main` via GitHub Actions.
 | Workflow | What it does |
 |---|---|
 | `.github/workflows/ci.yml` | Release build + `ctest` on three Linux environments |
-| `.github/workflows/lint.yml` | advisory `clang-tidy` over `src/` (`continue-on-error: true`) |
+| `.github/workflows/lint.yml` | advisory `clang-tidy` over `src/` in an Ubuntu 26.04 container (advisory is on the clang-tidy step only) |
 
 The build matrix covers **Ubuntu 26.04**, **Fedora 40** and **Arch Linux** (all
 containers on an Ubuntu 24.04 host runner). KDE blur-behind is disabled
