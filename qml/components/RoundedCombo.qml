@@ -6,6 +6,22 @@ import GlassAlarm
 ComboBox {
     id: cmb
 
+    // Optional one-line-per-item hover help. Empty by default so every other
+    // combo keeps its current behaviour; callers with longer explanations
+    // (the RTCwake method picker) supply one string per model row.
+    property var tooltips: []
+
+    function tipAt(i) {
+        return (i >= 0 && i < tooltips.length && tooltips[i]) ? tooltips[i] : ""
+    }
+
+    readonly property string currentTooltip: cmb.tipAt(cmb.currentIndex)
+
+    ToolTip.text: cmb.currentTooltip
+    ToolTip.visible: cmb.currentTooltip.length > 0 && cmb.hovered
+    ToolTip.delay: 300
+    ToolTip.timeout: 8000
+
     background: Rectangle {
         radius: 8
         color: Qt.rgba(1, 1, 1, 0.06)
@@ -35,6 +51,11 @@ ComboBox {
     delegate: ItemDelegate {
         width: cmb.width
         height: 36
+        readonly property string tipText: cmb.tipAt(index)
+        ToolTip.text: tipText
+        ToolTip.visible: tipText.length > 0 && hovered
+        ToolTip.delay: 300
+        ToolTip.timeout: 8000
         contentItem: Text {
             text: modelData
             color: cmb.currentIndex === index ? configManager.themeTextPrimary : configManager.themeTextSecondary

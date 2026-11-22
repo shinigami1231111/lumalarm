@@ -64,11 +64,6 @@ ColumnLayout {
         combo.currentIndex = root.indexOfMode(configManager.sleepMode)
     }
 
-    function currentDetail() {
-        const m = root.methods[combo.currentIndex]
-        return m && m.detail ? m.detail : ""
-    }
-
     Component.onCompleted: root.sync()
     Connections {
         target: configManager
@@ -90,6 +85,9 @@ ColumnLayout {
         RoundedCombo {
             id: combo
             model: root.methods.map(function(m) { return m.label })
+            // Hover help: the full description appears over each method name,
+            // and over the closed combo for the currently selected method.
+            tooltips: root.methods.map(function(m) { return m.detail })
             Layout.preferredWidth: root.comboWidth
             Layout.maximumWidth: root.comboWidth
             onActivated: {
@@ -104,13 +102,4 @@ ColumnLayout {
         }
     }
 
-    Text {
-        text: root.currentDetail()
-        visible: text.length > 0
-        color: configManager.themeTextSecondary
-        font.pixelSize: 11
-        wrapMode: Text.WordWrap
-        Layout.fillWidth: true
-        Layout.leftMargin: 194
-    }
 }

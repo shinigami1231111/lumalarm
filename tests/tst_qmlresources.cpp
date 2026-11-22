@@ -586,6 +586,17 @@ void TestQmlResources::wakeMethodSelectorUsesNewLabels()
     QVERIFY2(wizard.contains(QStringLiteral("WakeMethodPicker {")),
              "the wizard must use the shared wake-method selector");
 
+    // The user wants the descriptions on hover, not as permanent body text.
+    const QString combo =
+        readSourceFile(sourceRoot() + QStringLiteral("/qml/components/RoundedCombo.qml"));
+    QVERIFY2(combo.contains(QStringLiteral("property var tooltips"))
+                 && combo.contains(QStringLiteral("ToolTip.visible")),
+             "RoundedCombo must be able to show per-item hover help");
+    QVERIFY2(picker.contains(QStringLiteral("tooltips: root.methods.map")),
+             "each RTCwake method must supply its description as hover help");
+    QVERIFY2(!picker.contains(QStringLiteral("currentDetail")),
+             "RTCwake descriptions must not be rendered as permanent body text");
+
     const QString config = readSourceFile(sourceRoot() + QStringLiteral("/src/managers/ConfigManager.cpp"));
     QVERIFY2(config.contains(QStringLiteral("WakePolicy::wakeMethodChoices()")),
              "ConfigManager must expose the UI method list, not the raw allow-list");

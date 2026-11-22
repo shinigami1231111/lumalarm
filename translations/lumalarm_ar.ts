@@ -641,8 +641,6 @@
         <source>Corner Radius</source>
         <translation>استدارة الزوايا</translation>
     </message>
-    
-    
     <message>
         <location filename="../qml/pages/SettingsPage.qml" line="156"/>
         <source>Import from pywal</source>
@@ -753,7 +751,6 @@
         <source>Wheel</source>
         <translation>عجلة</translation>
     </message>
-    
     <message>
         <location filename="../qml/pages/SettingsPage.qml" line="331"/>
         <source>When an alarm rings</source>
@@ -799,7 +796,6 @@
         <source>The alarm rings through this device; other apps keep using the system default.</source>
         <translation>يرن المنبه عبر هذا الجهاز، بينما تستخدم بقية التطبيقات جهاز الإخراج الافتراضي.</translation>
     </message>
-    
     <message>
         <location filename="../qml/pages/SettingsPage.qml" line="326"/>
         <source>Arm a real wake without creating an alarm, to check that this machine actually wakes.</source>
@@ -880,7 +876,6 @@
         <source>Arm test alarm</source>
         <translation>تفعيل المنبه التجريبي</translation>
     </message>
-    
     <message>
         <location filename="../qml/pages/SettingsPage.qml" line="572"/>
         <source>Test alarm armed in %1 s</source>
@@ -1130,7 +1125,6 @@
         <source>Sec</source>
         <translation>ثوانٍ</translation>
     </message>
-    
     <message>
         <location filename="../qml/pages/TimerPage.qml" line="120"/>
         <source>Pause</source>
