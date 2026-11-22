@@ -68,6 +68,7 @@ private slots:
     void listedTonesResolveForPlayback();
     void testWakeDurationDefaultsAndClamps();
     void audioSettingsRoundTripAndClamp();
+    void showEmojisDefaultsOnAndPersists();
 
 private:
     void cleanupTones();
@@ -549,6 +550,25 @@ void TestConfigManager::audioSettingsRoundTripAndClamp()
     cm.setAudioStreamPercent(100);
     cm.setAudioDefaultSound(QString());
     cm.setAudioOutputSink(QString());
+}
+
+void TestConfigManager::showEmojisDefaultsOnAndPersists()
+{
+    ConfigManager cm;
+    QVERIFY(cm.showEmojis()); // default on — the option is opt-out, not opt-in
+
+    QSignalSpy spy(&cm, &ConfigManager::configChanged);
+    cm.setShowEmojis(false);
+    QVERIFY(!cm.showEmojis());
+    QCOMPARE(spy.count(), 1);
+    cm.setShowEmojis(false);
+    QCOMPARE(spy.count(), 1); // a no-op write must not re-evaluate every binding
+
+    ConfigManager reloaded;
+    QVERIFY(!reloaded.showEmojis()); // ui/showEmojis survives a restart
+
+    cm.setShowEmojis(true); // leave the shared test profile clean
+    QVERIFY(ConfigManager().showEmojis());
 }
 
 void TestConfigManager::cleanupTones()

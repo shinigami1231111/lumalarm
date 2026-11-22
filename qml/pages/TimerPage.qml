@@ -34,7 +34,7 @@ ColumnLayout {
         return ("00"+h).slice(-2) + ":" + ("00"+m).slice(-2) + ":" + ("00"+s).slice(-2)
     }
 
-    Text { text: qsTr("Timer"); color: configManager.themeTextPrimary; font.pixelSize: 24; font.bold: true }
+    Text { text: (configManager.showEmojis ? "⏳ " : "") + qsTr("Timer"); color: configManager.themeTextPrimary; font.pixelSize: 24; font.bold: true }
 
     Item { Layout.fillHeight: true }
 

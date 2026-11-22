@@ -64,7 +64,7 @@ ColumnLayout {
     }
 
     Text {
-        text: qsTr("Sounds")
+        text: (configManager.showEmojis ? "🎵 " : "") + qsTr("Sounds")
         color: configManager.themeTextPrimary
         font.pixelSize: 24
         font.bold: true

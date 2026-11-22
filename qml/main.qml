@@ -196,7 +196,7 @@ Window {
 
                 RowLayout {
                     anchors.fill: parent; anchors.leftMargin: 20; anchors.rightMargin: 10; spacing: 12
-                    Text { text: "Lumalarm"; color: configManager.themeTextPrimary; font.pixelSize: 22; font.bold: true; Layout.alignment: Qt.AlignVCenter }
+                    Text { text: (configManager.showEmojis ? "❄️ " : "") + "Lumalarm"; color: configManager.themeTextPrimary; font.pixelSize: 22; font.bold: true; Layout.alignment: Qt.AlignVCenter }
                     Item { Layout.fillWidth: true }
                     Text {
                         text: {
@@ -494,7 +494,7 @@ Window {
     Timer { id: audioErrorTimer; interval: 6000; repeat: false; onTriggered: root.audioErrorText = "" }
     Text {
         visible: root.audioErrorText !== ""
-        text: "🔊 " + root.audioErrorText
+        text: (configManager.showEmojis ? "🔊 " : "") + root.audioErrorText
         color: "#ff6b6b"; font.pixelSize: 12
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom; anchors.bottomMargin: 8

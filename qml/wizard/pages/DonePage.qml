@@ -7,7 +7,7 @@ import GlassAlarm
 // again on the next launch.
 WizardPage {
     id: root
-    title: qsTr("You are set up")
+    title: (configManager.showEmojis ? "🤩 " : "") + qsTr("You are set up")
     subtitle: qsTr("Here is what this machine reported. Nothing else needs configuring for the first alarm.")
     primaryLabel: qsTr("Finish")
     primaryEnabled: true

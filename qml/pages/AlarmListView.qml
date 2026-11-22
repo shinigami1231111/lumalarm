@@ -30,12 +30,12 @@ ColumnLayout {
     RowLayout {
         Layout.fillWidth: true
         Layout.margins: 2
-        Text { text: qsTr("Alarms"); color: configManager.themeTextPrimary; font.pixelSize: 20; font.bold: true }
+        Text { text: (configManager.showEmojis ? "⏰ " : "") + qsTr("Alarms"); color: configManager.themeTextPrimary; font.pixelSize: 20; font.bold: true }
         Item { Layout.fillWidth: true }
         GlassButton {
-            text: qsTr("+  New")
+            text: (configManager.showEmojis ? "✨ " : "") + qsTr("+  New")
             pixelSize: 12
-            implicitWidth: 70; implicitHeight: 32
+            implicitWidth: configManager.showEmojis ? 88 : 70; implicitHeight: 32
             filled: true
             onClicked: root.addAlarm()
         }

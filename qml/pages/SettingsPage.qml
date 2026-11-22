@@ -20,7 +20,7 @@ ColumnLayout {
     }
 
     Text {
-        text: qsTr("Settings")
+        text: (configManager.showEmojis ? "⚙️ " : "") + qsTr("Settings")
         color: configManager.themeTextPrimary
         font.pixelSize: 24
         font.bold: true
@@ -547,7 +547,7 @@ ColumnLayout {
                         // wake. armTestWake() already cancels the previous one first
                         // ("Never stack test wakes"), so no relabel is needed: it is
                         // simply the test button.
-                        text: qsTr("Arm test alarm")
+                        text: (configManager.showEmojis ? "🚀 " : "") + qsTr("Arm test alarm")
                         pixelSize: 13
                         onClicked: wakeManager.armTestWake(testAlarmCard.selectedSeconds())
                     }

@@ -63,6 +63,7 @@ private slots:
     void qrcQmlLiteralsInSourcesResolve();           // stale literals in src/ + qml/
     void iconReferencesInQmlResolve();               // literal + dynamic icon refs
     void importDialogFiltersMatchDiscoveryFormats(); // Issue #2: picker <-> discovery
+    void emojisAreGatedByShowEmojis();               // showEmojis is not a dead toggle
 };
 
 // ----------------------------------------------------------------------------
@@ -97,6 +98,20 @@ static QString readSourceFile(const QString &absPath)
     if (!f.open(QIODevice::ReadOnly | QIODevice::Text))
         return {};
     return QString::fromUtf8(f.readAll());
+}
+
+// Emoji code points used by the UI: clocks (U+23F0..U+23F3), misc symbols
+// (U+2600..U+27BF), variation selectors and the pictograph planes.
+static bool containsEmoji(const QString &text)
+{
+    for (uint cp : text.toUcs4()) {
+        // U+2713/U+2714 are plain status checkmarks, not decorative emoji.
+        if (cp == 0xFE0F || (cp >= 0x2300 && cp <= 0x23FF) ||
+            ((cp >= 0x2600 && cp <= 0x27BF) && cp != 0x2713 && cp != 0x2714) ||
+            (cp >= 0x1F300 && cp <= 0x1FAFF))
+            return true;
+    }
+    return false;
 }
 
 // ----------------------------------------------------------------------------
@@ -343,6 +358,31 @@ void TestQmlResources::importDialogFiltersMatchDiscoveryFormats()
 
     QVERIFY2(!dialogGlobs.isEmpty(), "no *.ext globs found in nameFilters");
     QCOMPARE(dialogGlobs, discoveryGlobs);
+}
+
+// showEmojis used to be a dead setting: the wizard and Settings offered it but
+// no label read it. Every emoji literal in QML must therefore sit on a line
+// that checks configManager.showEmojis, so adding a pretty emoji cannot
+// silently bypass the switch (or reintroduce the old hard-coded 🔊).
+void TestQmlResources::emojisAreGatedByShowEmojis()
+{
+    const QStringList files = sourceRootFiles(QStringLiteral("qml"), {QStringLiteral("*.qml")});
+    QVERIFY2(!files.isEmpty(), "QML source tree not available — cannot check emoji gating");
+
+    int checked = 0;
+    for (const QString &path : files) {
+        const QStringList lines = readSourceFile(path).split(QLatin1Char('\n'));
+        for (int i = 0; i < lines.size(); ++i) {
+            if (!containsEmoji(lines.at(i)))
+                continue;
+            ++checked;
+            QVERIFY2(lines.at(i).contains(QStringLiteral("configManager.showEmojis")),
+                     qPrintable(QStringLiteral("%1:%2: emoji is not gated by showEmojis")
+                                    .arg(path)
+                                    .arg(i + 1)));
+        }
+    }
+    QVERIFY2(checked > 0, "no emojis found — the showEmojis feature has no visible effect");
 }
 
 QTEST_GUILESS_MAIN(TestQmlResources)
