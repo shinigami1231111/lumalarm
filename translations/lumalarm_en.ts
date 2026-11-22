@@ -227,7 +227,7 @@
     </message>
     <message>
         <location filename="../qml/wizard/pages/DonePage.qml" line="11"/>
-        <source>Here is what this machine reported. Nothing else needs configuring for the first alarm to work.</source>
+        <source>Here is what this machine reported. Nothing else needs configuring for the first alarm.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -241,52 +241,37 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/DonePage.qml" line="40"/>
+        <location filename="../qml/wizard/pages/DonePage.qml" line="38"/>
         <source>System default</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/DonePage.qml" line="50"/>
+        <location filename="../qml/wizard/pages/DonePage.qml" line="48"/>
         <source>Wake method</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/DonePage.qml" line="63"/>
-        <source>Test alarm</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../qml/wizard/pages/DonePage.qml" line="68"/>
-        <source>Skipped</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../qml/wizard/pages/DonePage.qml" line="78"/>
+        <location filename="../qml/wizard/pages/DonePage.qml" line="62"/>
         <source>Notifications</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/DonePage.qml" line="81"/>
+        <location filename="../qml/wizard/pages/DonePage.qml" line="66"/>
         <source>Available</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/DonePage.qml" line="81"/>
+        <location filename="../qml/wizard/pages/DonePage.qml" line="66"/>
         <source>Not available</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/DonePage.qml" line="91"/>
-        <source>Default sound</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../qml/wizard/pages/DonePage.qml" line="106"/>
+        <location filename="../qml/wizard/pages/DonePage.qml" line="78"/>
         <source>Run this setup again any time from Settings.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/DonePage.qml" line="113"/>
+        <location filename="../qml/wizard/pages/DonePage.qml" line="85"/>
         <source>Run again next time</source>
         <translation type="unfinished"></translation>
     </message>
@@ -294,90 +279,90 @@
 <context>
     <name>LanguagePage</name>
     <message>
-        <location filename="../qml/wizard/pages/LanguagePage.qml" line="13"/>
+        <location filename="../qml/wizard/pages/LanguagePage.qml" line="12"/>
         <source>Language</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/LanguagePage.qml" line="14"/>
-        <source>Choose the language Lumalarm should use. It takes effect right away and can be changed again at any time in Settings.</source>
+        <location filename="../qml/wizard/pages/LanguagePage.qml" line="13"/>
+        <source>Choose the language Lumalarm uses. It takes effect right away.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/LanguagePage.qml" line="15"/>
+        <location filename="../qml/wizard/pages/LanguagePage.qml" line="14"/>
         <source>Next</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/LanguagePage.qml" line="33"/>
+        <location filename="../qml/wizard/pages/LanguagePage.qml" line="31"/>
         <source>Interface language</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/LanguagePage.qml" line="41"/>
+        <location filename="../qml/wizard/pages/LanguagePage.qml" line="39"/>
         <source>System default</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/LanguagePage.qml" line="64"/>
-        <source>Choosing Arabic mirrors the whole window to right-to-left as soon as it is selected.</source>
+        <location filename="../qml/wizard/pages/LanguagePage.qml" line="56"/>
+        <source>Show emojis</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../qml/wizard/pages/LanguagePage.qml" line="72"/>
-        <source>“System default” follows the language your desktop is running in.</source>
+        <source>“System default” follows your desktop language.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>NotificationPage</name>
     <message>
-        <location filename="../qml/wizard/pages/NotificationPage.qml" line="10"/>
+        <location filename="../qml/wizard/pages/NotificationPage.qml" line="9"/>
         <source>Notifications</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/NotificationPage.qml" line="11"/>
-        <source>Lumalarm can notify you on the desktop before an alarm rings. This step checks whether this session has a notification daemon.</source>
+        <location filename="../qml/wizard/pages/NotificationPage.qml" line="10"/>
+        <source>Lumalarm can notify you on the desktop before an alarm rings.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/NotificationPage.qml" line="12"/>
+        <location filename="../qml/wizard/pages/NotificationPage.qml" line="11"/>
         <source>Next</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/NotificationPage.qml" line="33"/>
+        <location filename="../qml/wizard/pages/NotificationPage.qml" line="30"/>
         <source>Notifications available</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/NotificationPage.qml" line="33"/>
+        <location filename="../qml/wizard/pages/NotificationPage.qml" line="31"/>
         <source>No notification daemon</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/NotificationPage.qml" line="46"/>
+        <location filename="../qml/wizard/pages/NotificationPage.qml" line="44"/>
         <source>Alarms can be announced through the desktop notification service.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/NotificationPage.qml" line="47"/>
-        <source>Desktop notifications will not be shown on this session. Alarms still ring normally — this is not blocking.</source>
+        <location filename="../qml/wizard/pages/NotificationPage.qml" line="45"/>
+        <source>Desktop notifications will not be shown. Alarms still ring normally.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/NotificationPage.qml" line="58"/>
+        <location filename="../qml/wizard/pages/NotificationPage.qml" line="56"/>
         <source>Send test notification</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/NotificationPage.qml" line="61"/>
+        <location filename="../qml/wizard/pages/NotificationPage.qml" line="60"/>
         <source>Test notification sent.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/NotificationPage.qml" line="62"/>
+        <location filename="../qml/wizard/pages/NotificationPage.qml" line="61"/>
         <source>Could not send the notification.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -827,47 +812,52 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="665"/>
-        <source>Night Mode</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="667"/>
-        <source>Dim the window before an alarm so it does not light up a dark room.</source>
+        <location filename="../qml/pages/SettingsPage.qml" line="662"/>
+        <source>Show emojis</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../qml/pages/SettingsPage.qml" line="674"/>
+        <source>Night Mode</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/SettingsPage.qml" line="676"/>
+        <source>Dim the window before an alarm so it does not light up a dark room.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/SettingsPage.qml" line="683"/>
         <source>Enable night mode</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="685"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="694"/>
         <source>Dim before alarm</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="698"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="707"/>
         <source> min</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="708"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="717"/>
         <source>Dim strength</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="730"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="739"/>
         <source>Preview</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="740"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="749"/>
         <source>Dimming</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="751"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="760"/>
         <source>Reset to Defaults</source>
         <translation type="unfinished"></translation>
     </message>
@@ -937,44 +927,6 @@
     <message>
         <location filename="../qml/overlays/SoundManager.qml" line="202"/>
         <source>Audio files (*.wav *.mp3 *.ogg *.flac *.aac)</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>SoundPage</name>
-    <message>
-        <location filename="../qml/wizard/pages/SoundPage.qml" line="11"/>
-        <source>Default alarm sound</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../qml/wizard/pages/SoundPage.qml" line="12"/>
-        <source>Pick the tone new alarms start with. You can still change it per alarm in the editor.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../qml/wizard/pages/SoundPage.qml" line="13"/>
-        <source>Next</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../qml/wizard/pages/SoundPage.qml" line="26"/>
-        <source>No tones were found yet. You can add .wav, .mp3, .ogg or .flac files to the tones folder later and pick them per alarm.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../qml/wizard/pages/SoundPage.qml" line="72"/>
-        <source>Preview</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../qml/wizard/pages/SoundPage.qml" line="77"/>
-        <source>Selected</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../qml/wizard/pages/SoundPage.qml" line="77"/>
-        <source>Use</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -1101,61 +1053,48 @@
 <context>
     <name>WakeMethodPage</name>
     <message>
-        <location filename="../qml/wizard/pages/WakeMethodPage.qml" line="10"/>
+        <location filename="../qml/wizard/pages/WakeMethodPage.qml" line="9"/>
         <source>Wake method</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/WakeMethodPage.qml" line="11"/>
-        <source>For an alarm to bring the machine back from sleep, Lumalarm needs a wake source. Here is what this machine offers.</source>
+        <location filename="../qml/wizard/pages/WakeMethodPage.qml" line="10"/>
+        <source>For an alarm to bring the machine back from sleep, Lumalarm needs a wake source.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/WakeMethodPage.qml" line="12"/>
+        <location filename="../qml/wizard/pages/WakeMethodPage.qml" line="11"/>
         <source>Next</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/WakeMethodPage.qml" line="31"/>
+        <location filename="../qml/wizard/pages/WakeMethodPage.qml" line="30"/>
         <source>Detected</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/WakeMethodPage.qml" line="46"/>
-        <source>The test arms a wake 60 seconds ahead and cancels it as soon as the result is in. Nothing else is changed.</source>
+        <location filename="../qml/wizard/pages/WakeMethodPage.qml" line="43"/>
+        <source>Choose how deeply the machine sleeps before the alarm wakes it.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/WakeMethodPage.qml" line="61"/>
+        <location filename="../qml/wizard/pages/WakeMethodPage.qml" line="56"/>
+        <source>Sleep mode</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/pages/WakeMethodPage.qml" line="79"/>
+        <source>Save your work before testing the wake — the machine will sleep.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/pages/WakeMethodPage.qml" line="88"/>
         <source>Test wake</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/WakeMethodPage.qml" line="67"/>
+        <location filename="../qml/wizard/pages/WakeMethodPage.qml" line="94"/>
         <source>Skip this step</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>WelcomePage</name>
-    <message>
-        <location filename="../qml/wizard/pages/WelcomePage.qml" line="7"/>
-        <source>Welcome to Lumalarm</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../qml/wizard/pages/WelcomePage.qml" line="8"/>
-        <source>This short setup picks your language and checks the three things an alarm clock depends on: which sound new alarms use, how this machine wakes up, and whether desktop notifications are available. It takes about a minute.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../qml/wizard/pages/WelcomePage.qml" line="9"/>
-        <source>Get started</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../qml/wizard/pages/WelcomePage.qml" line="18"/>
-        <source>You can run this setup again at any time from Settings, and skip any step along the way.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -1175,37 +1114,37 @@
 <context>
     <name>WizardController</name>
     <message>
-        <location filename="../src/ui/WizardController.cpp" line="197"/>
+        <location filename="../src/ui/WizardController.cpp" line="216"/>
         <source>Wake test succeeded — this machine can wake up.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/WizardController.cpp" line="198"/>
+        <location filename="../src/ui/WizardController.cpp" line="217"/>
         <source>Wake test failed: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/WizardController.cpp" line="237"/>
+        <location filename="../src/ui/WizardController.cpp" line="256"/>
         <source>Lumalarm is ready</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/WizardController.cpp" line="238"/>
+        <location filename="../src/ui/WizardController.cpp" line="257"/>
         <source>Notifications are working.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/WizardController.cpp" line="281"/>
+        <location filename="../src/ui/WizardController.cpp" line="274"/>
         <source>Unknown</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/WizardController.cpp" line="286"/>
+        <location filename="../src/ui/WizardController.cpp" line="279"/>
         <source>Real-time clock wake (rtcwake) — recommended</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/ui/WizardController.cpp" line="288"/>
+        <location filename="../src/ui/WizardController.cpp" line="281"/>
         <source>No hardware wake source — alarms ring only while the machine is awake</source>
         <translation type="unfinished"></translation>
     </message>

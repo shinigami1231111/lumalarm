@@ -171,6 +171,7 @@ if(Qt6LinguistTools_FOUND)
         TS_FILES
             ${CMAKE_CURRENT_SOURCE_DIR}/translations/lumalarm_en.ts
             ${CMAKE_CURRENT_SOURCE_DIR}/translations/lumalarm_ar.ts
+            ${CMAKE_CURRENT_SOURCE_DIR}/translations/lumalarm_ja.ts
         SOURCE_TARGETS lumalarm
         RESOURCE_PREFIX "/i18n"
     )
@@ -528,6 +529,7 @@ if(BUILD_TESTING)
         set_source_files_properties(
             ${CMAKE_CURRENT_BINARY_DIR}/lumalarm_ar.qm
             ${CMAKE_CURRENT_BINARY_DIR}/lumalarm_en.qm
+            ${CMAKE_CURRENT_BINARY_DIR}/lumalarm_ja.qm
             PROPERTIES GENERATED TRUE)
         qt6_add_resources(tst_i18n tst_i18n_res
             PREFIX "/i18n"
@@ -535,6 +537,7 @@ if(BUILD_TESTING)
             FILES
                 ${CMAKE_CURRENT_BINARY_DIR}/lumalarm_ar.qm
                 ${CMAKE_CURRENT_BINARY_DIR}/lumalarm_en.qm
+                ${CMAKE_CURRENT_BINARY_DIR}/lumalarm_ja.qm
         )
     endif()
     target_link_libraries(tst_i18n PRIVATE Qt6::Core Qt6::Test Qt6::Qml Qt6::Gui)

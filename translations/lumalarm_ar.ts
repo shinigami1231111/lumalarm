@@ -227,8 +227,8 @@
     </message>
     <message>
         <location filename="../qml/wizard/pages/DonePage.qml" line="11"/>
-        <source>Here is what this machine reported. Nothing else needs configuring for the first alarm to work.</source>
-        <translation>ما أبلغك به هذا الجهاز. لا يحتاج أي إعداد آخر ليعمل أول منبه.</translation>
+        <source>Here is what this machine reported. Nothing else needs configuring for the first alarm.</source>
+        <translation>ما أبلغك به هذا الجهاز. لا يحتاج أي إعداد آخر لأول منبه.</translation>
     </message>
     <message>
         <location filename="../qml/wizard/pages/DonePage.qml" line="12"/>
@@ -241,52 +241,37 @@
         <translation>اللغة</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/DonePage.qml" line="40"/>
+        <location filename="../qml/wizard/pages/DonePage.qml" line="38"/>
         <source>System default</source>
         <translation>لغة النظام</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/DonePage.qml" line="50"/>
+        <location filename="../qml/wizard/pages/DonePage.qml" line="48"/>
         <source>Wake method</source>
         <translation>طريقة الاستيقاظ</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/DonePage.qml" line="63"/>
-        <source>Test alarm</source>
-        <translation>منبه تجريبي</translation>
-    </message>
-    <message>
-        <location filename="../qml/wizard/pages/DonePage.qml" line="68"/>
-        <source>Skipped</source>
-        <translation>تم التخطي</translation>
-    </message>
-    <message>
-        <location filename="../qml/wizard/pages/DonePage.qml" line="78"/>
+        <location filename="../qml/wizard/pages/DonePage.qml" line="62"/>
         <source>Notifications</source>
         <translation>الإشعارات</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/DonePage.qml" line="81"/>
+        <location filename="../qml/wizard/pages/DonePage.qml" line="66"/>
         <source>Available</source>
         <translation>متاحة</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/DonePage.qml" line="81"/>
+        <location filename="../qml/wizard/pages/DonePage.qml" line="66"/>
         <source>Not available</source>
         <translation>غير متاحة</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/DonePage.qml" line="91"/>
-        <source>Default sound</source>
-        <translation>الصوت الافتراضي</translation>
-    </message>
-    <message>
-        <location filename="../qml/wizard/pages/DonePage.qml" line="106"/>
+        <location filename="../qml/wizard/pages/DonePage.qml" line="78"/>
         <source>Run this setup again any time from Settings.</source>
         <translation>يمكنك تشغيل هذا الإعداد مجدداً في أي وقت من الإعدادات.</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/DonePage.qml" line="113"/>
+        <location filename="../qml/wizard/pages/DonePage.qml" line="85"/>
         <source>Run again next time</source>
         <translation>أعد تشغيله في المرة القادمة</translation>
     </message>
@@ -294,90 +279,90 @@
 <context>
     <name>LanguagePage</name>
     <message>
-        <location filename="../qml/wizard/pages/LanguagePage.qml" line="13"/>
+        <location filename="../qml/wizard/pages/LanguagePage.qml" line="12"/>
         <source>Language</source>
         <translation>اللغة</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/LanguagePage.qml" line="14"/>
-        <source>Choose the language Lumalarm should use. It takes effect right away and can be changed again at any time in Settings.</source>
-        <translation>اختر اللغة التي يستخدمها Lumalarm. تسري فوراً ويمكنك تغييرها في أي وقت من الإعدادات.</translation>
+        <location filename="../qml/wizard/pages/LanguagePage.qml" line="13"/>
+        <source>Choose the language Lumalarm uses. It takes effect right away.</source>
+        <translation>اختر اللغة التي يستخدمها Lumalarm. تسري فوراً.</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/LanguagePage.qml" line="15"/>
+        <location filename="../qml/wizard/pages/LanguagePage.qml" line="14"/>
         <source>Next</source>
         <translation>التالي</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/LanguagePage.qml" line="33"/>
+        <location filename="../qml/wizard/pages/LanguagePage.qml" line="31"/>
         <source>Interface language</source>
         <translation>لغة الواجهة</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/LanguagePage.qml" line="41"/>
+        <location filename="../qml/wizard/pages/LanguagePage.qml" line="39"/>
         <source>System default</source>
         <translation>لغة النظام</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/LanguagePage.qml" line="64"/>
-        <source>Choosing Arabic mirrors the whole window to right-to-left as soon as it is selected.</source>
-        <translation>اختيار العربية يقلب النافذة كلها إلى الاتجاه من اليمين إلى اليسار فور اختيارها.</translation>
+        <location filename="../qml/wizard/pages/LanguagePage.qml" line="56"/>
+        <source>Show emojis</source>
+        <translation>إظهار الرموز التعبيرية</translation>
     </message>
     <message>
         <location filename="../qml/wizard/pages/LanguagePage.qml" line="72"/>
-        <source>“System default” follows the language your desktop is running in.</source>
-        <translation>«لغة النظام» يتبع لغة سطح المكتب الذي تعمل عليه.</translation>
+        <source>“System default” follows your desktop language.</source>
+        <translation>«لغة النظام» تتبع لغة سطح المكتب.</translation>
     </message>
 </context>
 <context>
     <name>NotificationPage</name>
     <message>
-        <location filename="../qml/wizard/pages/NotificationPage.qml" line="10"/>
+        <location filename="../qml/wizard/pages/NotificationPage.qml" line="9"/>
         <source>Notifications</source>
         <translation>الإشعارات</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/NotificationPage.qml" line="11"/>
-        <source>Lumalarm can notify you on the desktop before an alarm rings. This step checks whether this session has a notification daemon.</source>
-        <translation>يمكن لـ Lumalarm إشعارك على سطح المكتب قبل رنين المنبه. يتحقق هذه الخطوة من وجود خدمة إشعارات في هذه الجلسة.</translation>
+        <location filename="../qml/wizard/pages/NotificationPage.qml" line="10"/>
+        <source>Lumalarm can notify you on the desktop before an alarm rings.</source>
+        <translation>يمكن لـ Lumalarm إشعارك على سطح المكتب قبل رنين المنبه.</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/NotificationPage.qml" line="12"/>
+        <location filename="../qml/wizard/pages/NotificationPage.qml" line="11"/>
         <source>Next</source>
         <translation>التالي</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/NotificationPage.qml" line="33"/>
+        <location filename="../qml/wizard/pages/NotificationPage.qml" line="30"/>
         <source>Notifications available</source>
         <translation>الإشعارات متاحة</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/NotificationPage.qml" line="33"/>
+        <location filename="../qml/wizard/pages/NotificationPage.qml" line="31"/>
         <source>No notification daemon</source>
         <translation>لا توجد خدمة إشعارات</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/NotificationPage.qml" line="46"/>
+        <location filename="../qml/wizard/pages/NotificationPage.qml" line="44"/>
         <source>Alarms can be announced through the desktop notification service.</source>
         <translation>يمكن إعلان المنبهات عبر خدمة إشعارات سطح المكتب.</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/NotificationPage.qml" line="47"/>
-        <source>Desktop notifications will not be shown on this session. Alarms still ring normally — this is not blocking.</source>
-        <translation>لن تظهر إشعارات سطح المكتب في هذه الجلسة. سترن المنبهات كالمعتاد — ولا يعيق ذلك العمل.</translation>
+        <location filename="../qml/wizard/pages/NotificationPage.qml" line="45"/>
+        <source>Desktop notifications will not be shown. Alarms still ring normally.</source>
+        <translation>لن تظهر إشعارات سطح المكتب. سترن المنبهات كالمعتاد.</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/NotificationPage.qml" line="58"/>
+        <location filename="../qml/wizard/pages/NotificationPage.qml" line="56"/>
         <source>Send test notification</source>
         <translation>إرسال إشعار تجريبي</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/NotificationPage.qml" line="61"/>
+        <location filename="../qml/wizard/pages/NotificationPage.qml" line="60"/>
         <source>Test notification sent.</source>
         <translation>تم إرسال الإشعار التجريبي.</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/NotificationPage.qml" line="62"/>
+        <location filename="../qml/wizard/pages/NotificationPage.qml" line="61"/>
         <source>Could not send the notification.</source>
         <translation>تعذّر إرسال الإشعار.</translation>
     </message>
@@ -827,47 +812,52 @@
         <translation>لغة النظام</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="665"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="662"/>
+        <source>Show emojis</source>
+        <translation>إظهار الرموز التعبيرية</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/SettingsPage.qml" line="674"/>
         <source>Night Mode</source>
         <translation>الوضع الليلي</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="667"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="676"/>
         <source>Dim the window before an alarm so it does not light up a dark room.</source>
         <translation>خفّض إضاءة النافذة قبل المنبه حتى لا تُضيء غرفة مظلمة.</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="674"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="683"/>
         <source>Enable night mode</source>
         <translation>تفعيل الوضع الليلي</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="685"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="694"/>
         <source>Dim before alarm</source>
         <translation>خفض الإضاءة قبل المنبه</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="698"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="707"/>
         <source> min</source>
         <translation> د</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="708"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="717"/>
         <source>Dim strength</source>
         <translation>قوة الخفض</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="730"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="739"/>
         <source>Preview</source>
         <translation>معاينة</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="740"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="749"/>
         <source>Dimming</source>
         <translation>جارٍ الخفض</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="751"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="760"/>
         <source>Reset to Defaults</source>
         <translation>إعادة إلى الافتراضي</translation>
     </message>
@@ -938,44 +928,6 @@
         <location filename="../qml/overlays/SoundManager.qml" line="202"/>
         <source>Audio files (*.wav *.mp3 *.ogg *.flac *.aac)</source>
         <translation>ملفات الصوت (*.wav *.mp3 *.ogg *.flac *.aac)</translation>
-    </message>
-</context>
-<context>
-    <name>SoundPage</name>
-    <message>
-        <location filename="../qml/wizard/pages/SoundPage.qml" line="11"/>
-        <source>Default alarm sound</source>
-        <translation>صوت المنبه الافتراضي</translation>
-    </message>
-    <message>
-        <location filename="../qml/wizard/pages/SoundPage.qml" line="12"/>
-        <source>Pick the tone new alarms start with. You can still change it per alarm in the editor.</source>
-        <translation>اختر النغمة التي تبدأ بها المنبهات الجديدة. يمكنك تغييرها لكل منبه في المحرر.</translation>
-    </message>
-    <message>
-        <location filename="../qml/wizard/pages/SoundPage.qml" line="13"/>
-        <source>Next</source>
-        <translation>التالي</translation>
-    </message>
-    <message>
-        <location filename="../qml/wizard/pages/SoundPage.qml" line="26"/>
-        <source>No tones were found yet. You can add .wav, .mp3, .ogg or .flac files to the tones folder later and pick them per alarm.</source>
-        <translation>لم يُعثر على نغمات بعد. يمكنك إضافة ملفات ‎.wav أو ‎.mp3 أو ‎.ogg أو ‎.flac إلى مجلد النغمات لاحقاً واختيارها لكل منبه.</translation>
-    </message>
-    <message>
-        <location filename="../qml/wizard/pages/SoundPage.qml" line="72"/>
-        <source>Preview</source>
-        <translation>معاينة</translation>
-    </message>
-    <message>
-        <location filename="../qml/wizard/pages/SoundPage.qml" line="77"/>
-        <source>Selected</source>
-        <translation>محدد</translation>
-    </message>
-    <message>
-        <location filename="../qml/wizard/pages/SoundPage.qml" line="77"/>
-        <source>Use</source>
-        <translation>استخدام</translation>
     </message>
 </context>
 <context>
@@ -1101,62 +1053,49 @@
 <context>
     <name>WakeMethodPage</name>
     <message>
-        <location filename="../qml/wizard/pages/WakeMethodPage.qml" line="10"/>
+        <location filename="../qml/wizard/pages/WakeMethodPage.qml" line="9"/>
         <source>Wake method</source>
         <translation>طريقة الاستيقاظ</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/WakeMethodPage.qml" line="11"/>
-        <source>For an alarm to bring the machine back from sleep, Lumalarm needs a wake source. Here is what this machine offers.</source>
-        <translation>ليتمكن المنبه من إيقاظ الجهاز من السكون، يحتاج Lumalarm إلى مصدر استيقاظ. فيما يلي ما تقدمه هذه الآلة.</translation>
+        <location filename="../qml/wizard/pages/WakeMethodPage.qml" line="10"/>
+        <source>For an alarm to bring the machine back from sleep, Lumalarm needs a wake source.</source>
+        <translation>ليتمكن المنبه من إيقاظ الجهاز من السكون، يحتاج Lumalarm إلى مصدر استيقاظ.</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/WakeMethodPage.qml" line="12"/>
+        <location filename="../qml/wizard/pages/WakeMethodPage.qml" line="11"/>
         <source>Next</source>
         <translation>التالي</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/WakeMethodPage.qml" line="31"/>
+        <location filename="../qml/wizard/pages/WakeMethodPage.qml" line="30"/>
         <source>Detected</source>
         <translation>تم الكشف</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/WakeMethodPage.qml" line="46"/>
-        <source>The test arms a wake 60 seconds ahead and cancels it as soon as the result is in. Nothing else is changed.</source>
-        <translation>يفعّل الاختبار الاستيقاظ بعد 60 ثانية ويُلغيه فور معرفة النتيجة. لا يتغير أي شيء آخر.</translation>
+        <location filename="../qml/wizard/pages/WakeMethodPage.qml" line="43"/>
+        <source>Choose how deeply the machine sleeps before the alarm wakes it.</source>
+        <translation>اختر عمق سكون الجهاز قبل أن يوقظه المنبه.</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/WakeMethodPage.qml" line="61"/>
+        <location filename="../qml/wizard/pages/WakeMethodPage.qml" line="56"/>
+        <source>Sleep mode</source>
+        <translation>وضع السكون</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/pages/WakeMethodPage.qml" line="79"/>
+        <source>Save your work before testing the wake — the machine will sleep.</source>
+        <translation>احفظ عملك قبل اختبار الاستيقاظ — سيُسكن الجهاز.</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/pages/WakeMethodPage.qml" line="88"/>
         <source>Test wake</source>
         <translation>اختبار الاستيقاظ</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/WakeMethodPage.qml" line="67"/>
+        <location filename="../qml/wizard/pages/WakeMethodPage.qml" line="94"/>
         <source>Skip this step</source>
         <translation>تخطَّ هذه الخطوة</translation>
-    </message>
-</context>
-<context>
-    <name>WelcomePage</name>
-    <message>
-        <location filename="../qml/wizard/pages/WelcomePage.qml" line="7"/>
-        <source>Welcome to Lumalarm</source>
-        <translation>مرحباً بك في Lumalarm</translation>
-    </message>
-    <message>
-        <location filename="../qml/wizard/pages/WelcomePage.qml" line="8"/>
-        <source>This short setup picks your language and checks the three things an alarm clock depends on: which sound new alarms use, how this machine wakes up, and whether desktop notifications are available. It takes about a minute.</source>
-        <translation>يختار هذا الإعداد القصير لغتك، ويفحص ثلاثة أمور يعتمد عليها المنبه: أي صوت تستخدمه المنبهات الجديدة، وكيف تستيقظ هذه الآلة، وهل إشعارات سطح المكتب متوفرة. يستغرق نحو دقيقة.</translation>
-    </message>
-    <message>
-        <location filename="../qml/wizard/pages/WelcomePage.qml" line="9"/>
-        <source>Get started</source>
-        <translation>ابدأ</translation>
-    </message>
-    <message>
-        <location filename="../qml/wizard/pages/WelcomePage.qml" line="18"/>
-        <source>You can run this setup again at any time from Settings, and skip any step along the way.</source>
-        <translation>يمكنك تشغيل هذا الإعداد مجدداً في أي وقت من الإعدادات، وتخطي أي خطوة أثناء الطريق.</translation>
     </message>
 </context>
 <context>
@@ -1175,37 +1114,37 @@
 <context>
     <name>WizardController</name>
     <message>
-        <location filename="../src/ui/WizardController.cpp" line="197"/>
+        <location filename="../src/ui/WizardController.cpp" line="216"/>
         <source>Wake test succeeded — this machine can wake up.</source>
         <translation>نجح اختبار الاستيقاظ — تستطيع هذه الآلة الاستيقاظ.</translation>
     </message>
     <message>
-        <location filename="../src/ui/WizardController.cpp" line="198"/>
+        <location filename="../src/ui/WizardController.cpp" line="217"/>
         <source>Wake test failed: %1</source>
         <translation>فشل اختبار الاستيقاظ: %1</translation>
     </message>
     <message>
-        <location filename="../src/ui/WizardController.cpp" line="237"/>
+        <location filename="../src/ui/WizardController.cpp" line="256"/>
         <source>Lumalarm is ready</source>
         <translation>Lumalarm جاهز</translation>
     </message>
     <message>
-        <location filename="../src/ui/WizardController.cpp" line="238"/>
+        <location filename="../src/ui/WizardController.cpp" line="257"/>
         <source>Notifications are working.</source>
         <translation>الإشعارات تعمل.</translation>
     </message>
     <message>
-        <location filename="../src/ui/WizardController.cpp" line="281"/>
+        <location filename="../src/ui/WizardController.cpp" line="274"/>
         <source>Unknown</source>
         <translation>غير معروف</translation>
     </message>
     <message>
-        <location filename="../src/ui/WizardController.cpp" line="286"/>
+        <location filename="../src/ui/WizardController.cpp" line="279"/>
         <source>Real-time clock wake (rtcwake) — recommended</source>
         <translation>استيقاظ عبر ساعة RTC (rtcwake) — مُوصى به</translation>
     </message>
     <message>
-        <location filename="../src/ui/WizardController.cpp" line="288"/>
+        <location filename="../src/ui/WizardController.cpp" line="281"/>
         <source>No hardware wake source — alarms ring only while the machine is awake</source>
         <translation>لا يوجد مصدر استيقاظ عتادي — ترن المنبهات فقط أثناء عمل الجهاز</translation>
     </message>

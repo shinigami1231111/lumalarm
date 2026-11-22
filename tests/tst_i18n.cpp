@@ -1,7 +1,10 @@
 #include <QCoreApplication>
 #include <QFile>
+#include <QList>
+#include <QLocale>
 #include <QQmlComponent>
 #include <QQmlEngine>
+#include <QStringList>
 #include <QTranslator>
 #include <QtTest>
 
@@ -13,10 +16,10 @@
 // What is covered here:
 //   * the English source strings survive with no translator installed, which
 //     is the state a machine without Qt Linguist ends up in;
-//   * the compiled Arabic catalog is embedded at the exact resource path
-//     main.cpp loads (":/i18n/<name>.qm") and really translates strings —
-//     including placeholders and leading/trailing spaces, which the C++
-//     side does .arg() on and concatenates;
+//   * the compiled Arabic and Japanese catalogs are embedded at the exact
+//     resource path main.cpp loads (":/i18n/<name>.qm") and really translate
+//     strings — including placeholders and leading/trailing spaces, which the
+//     C++ side does .arg() on and concatenates;
 //   * a live QML binding that used qsTr() is re-evaluated by
 //     QQmlEngine::retranslate() after a translator is installed *and* after it
 //     is removed, i.e. the round trip the language selector performs;
@@ -33,7 +36,7 @@
 // QStandardPaths test mode is enabled in initTestCase() so nothing here
 // touches the real ~/.config/lumalarm.
 //
-// The Arabic catalog is only embedded when Qt LinguistTools was available at
+// The catalogs are only embedded when Qt LinguistTools was available at
 // configure time; those cases report a skip rather than a false failure.
 // ============================================================================
 
@@ -47,6 +50,17 @@ bool containsArabic(const QString &text)
     for (const QChar &ch : text) {
         const char16_t u = ch.unicode();
         if (u >= 0x0600 && u <= 0x06FF)
+            return true;
+    }
+    return false;
+}
+
+// True when the string contains at least one kana character (U+3040..U+30FF).
+bool containsJapanese(const QString &text)
+{
+    for (const QChar &ch : text) {
+        const char16_t u = ch.unicode();
+        if (u >= 0x3040 && u <= 0x30FF)
             return true;
     }
     return false;
@@ -94,6 +108,8 @@ private slots:
     void sourceFallbackWithoutTranslator();
     void arabicCatalogIsEmbedded();
     void arabicCatalogTranslatesKnownStrings();
+    void japaneseCatalogIsEmbedded();
+    void japaneseCatalogTranslatesKnownStrings();
     void retranslateUpdatesLiveQmlBinding();
     void languageSettingRoundTrips();
     void committedCatalogsAreConsistent();
@@ -167,6 +183,61 @@ void TstI18n::arabicCatalogTranslatesKnownStrings()
     QCoreApplication::removeTranslator(&translator);
 }
 
+void TstI18n::japaneseCatalogIsEmbedded()
+{
+    QFile catalog(QStringLiteral(":/i18n/lumalarm_ja.qm"));
+    if (!catalog.open(QIODevice::ReadOnly))
+        QSKIP("Japanese catalog not embedded (Qt LinguistTools unavailable at configure time)");
+    QVERIFY2(catalog.size() > 1000, "embedded Japanese catalog is suspiciously small");
+}
+
+void TstI18n::japaneseCatalogTranslatesKnownStrings()
+{
+    QFile catalog(QStringLiteral(":/i18n/lumalarm_ja.qm"));
+    if (!catalog.open(QIODevice::ReadOnly))
+        QSKIP("Japanese catalog not embedded (Qt LinguistTools unavailable at configure time)");
+
+    // Load exactly as main.cpp does: the selector writes "ja" and the app asks
+    // QTranslator for that locale, not for a hardcoded file name.
+    QTranslator translator;
+    const QLocale japanese(QStringLiteral("ja"));
+    QVERIFY2(translator.load(japanese, QStringLiteral("lumalarm"), QStringLiteral("_"),
+                             QStringLiteral(":/i18n")),
+             "QTranslator could not resolve the 'ja' selector value to a catalog");
+    // "System default" resolves to a full locale name such as ja_JP.
+    QTranslator systemLocale;
+    QVERIFY2(systemLocale.load(QLocale(QStringLiteral("ja_JP")), QStringLiteral("lumalarm"),
+                               QStringLiteral("_"), QStringLiteral(":/i18n")),
+             "ja_JP did not fall back to the ja catalog");
+    QCoreApplication::installTranslator(&translator);
+
+    // A C++ string with a placeholder and a QML string (context = file base name)
+    // must both come from the catalog, not the English source.
+    const QString failed = QCoreApplication::translate("WizardController", "Wake test failed: %1")
+                               .arg(QStringLiteral("boom"));
+    QVERIFY2(containsJapanese(failed), "Wake test failed is not Japanese");
+    QVERIFY2(failed.contains(QStringLiteral("boom")), "translation dropped the %1 placeholder");
+
+    const QString language = QCoreApplication::translate("LanguagePage", "Show emojis");
+    QVERIFY2(containsJapanese(language), "LanguagePage/Show emojis is not Japanese");
+    QVERIFY2(language != QStringLiteral("Show emojis"), "LanguagePage/Show emojis is untranslated");
+
+    // Whitespace around these fragments is significant: C++ concatenates them
+    // with a number in between, so trimming would corrupt the countdown.
+    const QString hourSuffix = QCoreApplication::translate("main", "h ");
+    QVERIFY2(hourSuffix.endsWith(QLatin1Char(' ')), "trailing space dropped from 'h '");
+    QVERIFY2(hourSuffix != QStringLiteral("h "), "'h ' was left untranslated");
+
+    const QString minutePrefix = QCoreApplication::translate("SettingsPage", " min");
+    QVERIFY2(minutePrefix.startsWith(QLatin1Char(' ')), "leading space dropped from ' min'");
+    QVERIFY2(minutePrefix != QStringLiteral(" min"), "' min' was left untranslated");
+
+    QCOMPARE(QCoreApplication::translate("SettingsPage", "No such string exists here"),
+             QStringLiteral("No such string exists here"));
+
+    QCoreApplication::removeTranslator(&translator);
+}
+
 void TstI18n::retranslateUpdatesLiveQmlBinding()
 {
     QQmlEngine engine;
@@ -207,6 +278,11 @@ void TstI18n::languageSettingRoundTrips()
 
     config.setLanguage(QStringLiteral("ar"));
     QCOMPARE(config.language(), QStringLiteral("ar"));
+    // The wizard and Settings write "ja" — the key must survive unchanged even
+    // though Arabic is no longer offered in the UI.
+    config.setLanguage(QStringLiteral("ja"));
+    QCOMPARE(config.language(), QStringLiteral("ja"));
+    config.setLanguage(QStringLiteral("ar")); // restore the value used below
 
     QSignalSpy changed(&config, &ConfigManager::languageChanged);
     config.setLanguage(QStringLiteral("ar")); // no change -> no signal
@@ -226,32 +302,36 @@ void TstI18n::languageSettingRoundTrips()
 void TstI18n::committedCatalogsAreConsistent()
 {
     const QString dir = QString::fromUtf8(LUMALARM_SOURCE_DIR) + QStringLiteral("/translations/");
+    const QStringList catalogs{QStringLiteral("lumalarm_en.ts"), QStringLiteral("lumalarm_ar.ts"),
+                               QStringLiteral("lumalarm_ja.ts")};
 
-    QFile ar(dir + QStringLiteral("lumalarm_ar.ts"));
-    QFile en(dir + QStringLiteral("lumalarm_en.ts"));
-    QVERIFY2(ar.open(QIODevice::ReadOnly), qPrintable(ar.fileName()));
-    QVERIFY2(en.open(QIODevice::ReadOnly), qPrintable(en.fileName()));
+    QList<int> counts;
+    for (const QString &name : catalogs) {
+        QFile file(dir + name);
+        QVERIFY2(file.open(QIODevice::ReadOnly), qPrintable(file.fileName()));
+        const QByteArray xml = file.readAll();
+        const int messages = countOf(xml, "<message>");
+        QVERIFY2(messages > 0, "lupdate extracted no strings — check the qsTr()/tr() wrappers");
+        counts << messages;
 
-    const QByteArray arXml = ar.readAll();
-    const QByteArray enXml = en.readAll();
+        if (name == QStringLiteral("lumalarm_en.ts"))
+            continue; // the source catalog deliberately has empty translations
 
-    const int arMessages = countOf(arXml, "<message>");
-    const int enMessages = countOf(enXml, "<message>");
-    QVERIFY2(arMessages > 0, "lupdate extracted no strings — check the qsTr()/tr() wrappers");
-    QVERIFY2(enMessages > 0, "lupdate extracted no strings — check the qsTr()/tr() wrappers");
+        // lupdate marks brand-new strings type="unfinished". An unfinished
+        // entry means the string ships untranslated, so the UI silently falls
+        // back to English for it. Fail the test instead.
+        QVERIFY2(
+            !xml.contains("type=\"unfinished\""),
+            qPrintable(name + QStringLiteral(" has untranslated entries — run "
+                                             "`make update_translations` and translate them")));
+        QVERIFY2(!xml.contains("type=\"vanished\""),
+                 qPrintable(name + QStringLiteral(" has obsolete entries")));
+    }
 
-    // The two catalogs track the same source strings; lupdate keeps them in
+    // All three catalogs track the same source strings; lupdate keeps them in
     // step, but a hand-edited or stale catalog shows up here.
-    QCOMPARE(arMessages, enMessages);
-
-    // lupdate marks brand-new strings type="unfinished". An unfinished Arabic
-    // entry means the string ships untranslated, so the UI would silently fall
-    // back to English for it. Fail the test instead.
-    QVERIFY2(!arXml.contains("type=\"unfinished\""),
-             "untranslated entries in lumalarm_ar.ts — run `make update_translations` "
-             "and translate them before committing");
-    // Obsolete entries would mean the .ts was edited by hand.
-    QVERIFY2(!arXml.contains("type=\"vanished\""), "obsolete entries in lumalarm_ar.ts");
+    QCOMPARE(counts.at(0), counts.at(1));
+    QCOMPARE(counts.at(0), counts.at(2));
 }
 
 QTEST_GUILESS_MAIN(TstI18n)
