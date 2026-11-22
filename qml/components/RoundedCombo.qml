@@ -6,6 +6,11 @@ import GlassAlarm
 ComboBox {
     id: cmb
 
+    // Coerce the theme strings to colours once so .r/.g/.b are readable and
+    // the hover help follows the active palette instead of a hard-coded grey.
+    readonly property color themedBg: configManager.themeBg
+    readonly property color themedAccent: configManager.themeAccent
+
     // Optional one-line-per-item hover help. Empty by default so every other
     // combo keeps its current behaviour; callers with longer explanations
     // (the RTCwake method picker) supply one string per model row.
@@ -17,10 +22,28 @@ ComboBox {
 
     readonly property string currentTooltip: cmb.tipAt(cmb.currentIndex)
 
-    ToolTip.text: cmb.currentTooltip
-    ToolTip.visible: cmb.currentTooltip.length > 0 && cmb.hovered
-    ToolTip.delay: 300
-    ToolTip.timeout: 8000
+    // Explicit ToolTip instances are required for one-off styling; the shared
+    // attached ToolTip cannot be restyled outside a custom Qt Quick style.
+    ToolTip {
+        id: comboTip
+        text: cmb.currentTooltip
+        visible: cmb.currentTooltip.length > 0 && cmb.hovered
+        delay: 300
+        timeout: 8000
+        padding: 8
+        contentItem: Text {
+            text: comboTip.text
+            color: configManager.themeTextPrimary
+            font.pixelSize: 12
+            wrapMode: Text.WordWrap
+        }
+        background: Rectangle {
+            color: Qt.rgba(cmb.themedBg.r, cmb.themedBg.g, cmb.themedBg.b, 0.98)
+            border.color: cmb.themedAccent
+            border.width: 1
+            radius: 8
+        }
+    }
 
     background: Rectangle {
         radius: 8
@@ -52,10 +75,26 @@ ComboBox {
         width: cmb.width
         height: 36
         readonly property string tipText: cmb.tipAt(index)
-        ToolTip.text: tipText
-        ToolTip.visible: tipText.length > 0 && hovered
-        ToolTip.delay: 300
-        ToolTip.timeout: 8000
+        ToolTip {
+            id: rowTip
+            text: tipText
+            visible: tipText.length > 0 && hovered
+            delay: 300
+            timeout: 8000
+            padding: 8
+            contentItem: Text {
+                text: rowTip.text
+                color: configManager.themeTextPrimary
+                font.pixelSize: 12
+                wrapMode: Text.WordWrap
+            }
+            background: Rectangle {
+                color: Qt.rgba(cmb.themedBg.r, cmb.themedBg.g, cmb.themedBg.b, 0.98)
+                border.color: cmb.themedAccent
+                border.width: 1
+                radius: 8
+            }
+        }
         contentItem: Text {
             text: modelData
             color: cmb.currentIndex === index ? configManager.themeTextPrimary : configManager.themeTextSecondary

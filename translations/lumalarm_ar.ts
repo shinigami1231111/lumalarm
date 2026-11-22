@@ -1231,65 +1231,40 @@
         <translation>طريقة RTCwake</translation>
     </message>
     <message>
-        <location filename="../qml/components/WakeMethodPicker.qml" line="26"/>
-        <source>MEM — Suspend to RAM</source>
-        <translation>MEM — تعليق إلى الذاكرة العشوائية</translation>
-    </message>
-    <message>
-        <location filename="../qml/components/WakeMethodPicker.qml" line="26"/>
+        <location filename="../qml/components/WakeMethodPicker.qml" line="27"/>
         <source>Recommended</source>
         <translation>موصى به</translation>
     </message>
     <message>
-        <location filename="../qml/components/WakeMethodPicker.qml" line="27"/>
+        <location filename="../qml/components/WakeMethodPicker.qml" line="28"/>
         <source>Keeps your current session in RAM using minimal power. Requires suspend support and RTC wake-up. No automatic login needed.</source>
         <translation>يحافظ على جلستك الحالية في الذاكرة العشوائية مع استهلاك طاقة منخفض. يتطلب دعم الإيقاف المؤقت وإيقاظ RTC. لا حاجة لتسجيل الدخول التلقائي.</translation>
     </message>
     <message>
-        <location filename="../qml/components/WakeMethodPicker.qml" line="31"/>
-        <source>FREEZE — Lightweight Suspend</source>
-        <translation>FREEZE — إيقاف مؤقت خفيف</translation>
-    </message>
-    <message>
-        <location filename="../qml/components/WakeMethodPicker.qml" line="32"/>
+        <location filename="../qml/components/WakeMethodPicker.qml" line="33"/>
         <source>Freezes running processes without deep sleep. Requires kernel and device support. Uses more power than MEM but may offer better compatibility. No automatic login needed.</source>
         <translation>يجمّد العمليات الجارية دون الدخول في سكون عميق. يتطلب دعم النواة والجهاز. يستهلك طاقة أكثر من MEM لكنه قد يوفر توافقًا أفضل. لا حاجة لتسجيل الدخول التلقائي.</translation>
     </message>
     <message>
-        <location filename="../qml/components/WakeMethodPicker.qml" line="36"/>
-        <location filename="../qml/components/WakeMethodPicker.qml" line="41"/>
-        <location filename="../qml/components/WakeMethodPicker.qml" line="46"/>
-        <location filename="../qml/components/WakeMethodPicker.qml" line="51"/>
+        <location filename="../qml/components/WakeMethodPicker.qml" line="37"/>
+        <location filename="../qml/components/WakeMethodPicker.qml" line="43"/>
+        <location filename="../qml/components/WakeMethodPicker.qml" line="49"/>
+        <location filename="../qml/components/WakeMethodPicker.qml" line="55"/>
         <source>Experimental</source>
         <translation>تجريبي</translation>
     </message>
     <message>
-        <location filename="../qml/components/WakeMethodPicker.qml" line="41"/>
-        <source>STANDBY — Hardware Standby (S1)</source>
-        <translation>STANDBY — وضع الاستعداد العتادي (S1)</translation>
-    </message>
-    <message>
-        <location filename="../qml/components/WakeMethodPicker.qml" line="42"/>
+        <location filename="../qml/components/WakeMethodPicker.qml" line="44"/>
         <source>Enters a light hardware standby state. Requires ACPI S1 and RTC wake-up support. Wakes the existing session without automatic login.</source>
         <translation>يدخل حالة استعداد عتادي خفيفة. يتطلب دعم ACPI S1 وإيقاظ RTC. يعيد الجلسة الحالية دون تسجيل دخول تلقائي.</translation>
     </message>
     <message>
-        <location filename="../qml/components/WakeMethodPicker.qml" line="46"/>
-        <source>OFF — Complete Shutdown</source>
-        <translation>OFF — إيقاف كامل</translation>
-    </message>
-    <message>
-        <location filename="../qml/components/WakeMethodPicker.qml" line="47"/>
+        <location filename="../qml/components/WakeMethodPicker.qml" line="50"/>
         <source>Completely powers off the computer and schedules automatic startup. Requires firmware RTC wake-up, automatic system boot, automatic user login, and alarm app auto-start.</source>
         <translation>يوقف تشغيل الجهاز تمامًا ويجدول التشغيل التلقائي. يتطلب إيقاظ RTC من البرنامج الثابت، والتمهيد التلقائي، وتسجيل الدخول التلقائي، وتشغيل تطبيق المنبه تلقائيًا.</translation>
     </message>
     <message>
-        <location filename="../qml/components/WakeMethodPicker.qml" line="51"/>
-        <source>DISK — Hibernate to Disk</source>
-        <translation>DISK — الإسبات إلى القرص</translation>
-    </message>
-    <message>
-        <location filename="../qml/components/WakeMethodPicker.qml" line="52"/>
+        <location filename="../qml/components/WakeMethodPicker.qml" line="56"/>
         <source>Saves your session to disk and powers off. Requires configured hibernation, sufficient swap space, resume support, and RTC wake-up. Restores the saved session without requiring automatic login.</source>
         <translation>يحفظ جلستك على القرص ثم يوقف التشغيل. يتطلب إعداد الإسبات، ومساحة مبادلة كافية، ودعم الاستئناف، وإيقاظ RTC. يستعيد الجلسة المحفوظة دون الحاجة إلى تسجيل دخول تلقائي.</translation>
     </message>

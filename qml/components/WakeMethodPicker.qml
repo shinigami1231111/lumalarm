@@ -23,12 +23,13 @@ ColumnLayout {
     readonly property var methods: [
         {
             key: "mem",
-            label: qsTr("MEM — Suspend to RAM") + " (" + qsTr("Recommended") + ")",
-            detail: qsTr("Keeps your current session in RAM using minimal power. Requires suspend support and RTC wake-up. No automatic login needed.")
+            label: "mem",
+            detail: qsTr("Recommended") + " — "
+                + qsTr("Keeps your current session in RAM using minimal power. Requires suspend support and RTC wake-up. No automatic login needed.")
         },
         {
             key: "freeze",
-            label: qsTr("FREEZE — Lightweight Suspend"),
+            label: "freeze",
             detail: qsTr("Freezes running processes without deep sleep. Requires kernel and device support. Uses more power than MEM but may offer better compatibility. No automatic login needed.")
         },
         {
@@ -38,18 +39,21 @@ ColumnLayout {
         },
         {
             key: "standby",
-            label: qsTr("STANDBY — Hardware Standby (S1)") + " (" + qsTr("Experimental") + ")",
-            detail: qsTr("Enters a light hardware standby state. Requires ACPI S1 and RTC wake-up support. Wakes the existing session without automatic login.")
+            label: "standby",
+            detail: qsTr("Experimental") + " — "
+                + qsTr("Enters a light hardware standby state. Requires ACPI S1 and RTC wake-up support. Wakes the existing session without automatic login.")
         },
         {
             key: "off",
-            label: qsTr("OFF — Complete Shutdown") + " (" + qsTr("Experimental") + ")",
-            detail: qsTr("Completely powers off the computer and schedules automatic startup. Requires firmware RTC wake-up, automatic system boot, automatic user login, and alarm app auto-start.")
+            label: "off",
+            detail: qsTr("Experimental") + " — "
+                + qsTr("Completely powers off the computer and schedules automatic startup. Requires firmware RTC wake-up, automatic system boot, automatic user login, and alarm app auto-start.")
         },
         {
             key: "disk",
-            label: qsTr("DISK — Hibernate to Disk") + " (" + qsTr("Experimental") + ")",
-            detail: qsTr("Saves your session to disk and powers off. Requires configured hibernation, sufficient swap space, resume support, and RTC wake-up. Restores the saved session without requiring automatic login.")
+            label: "disk",
+            detail: qsTr("Experimental") + " — "
+                + qsTr("Saves your session to disk and powers off. Requires configured hibernation, sufficient swap space, resume support, and RTC wake-up. Restores the saved session without requiring automatic login.")
         }
     ]
 

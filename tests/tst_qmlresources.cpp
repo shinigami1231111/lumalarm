@@ -539,20 +539,29 @@ void TestQmlResources::wakeMethodSelectorUsesNewLabels()
         readSourceFile(sourceRoot() + QStringLiteral("/qml/components/WakeMethodPicker.qml"));
     QVERIFY2(!picker.isEmpty(), "WakeMethodPicker.qml is missing from the source tree");
 
+    // The last cleanup: visible names are only the short mode tokens;
+    // "Recommended" / "Experimental" and every explanation live on hover.
     for (const QString &text :
-         {QStringLiteral("MEM — Suspend to RAM"), QStringLiteral("Recommended"),
+         {QStringLiteral("label: \"mem\""), QStringLiteral("label: \"freeze\""),
+          QStringLiteral("label: \"standby\""), QStringLiteral("label: \"off\""),
+          QStringLiteral("label: \"disk\""), QStringLiteral("Recommended"),
           QStringLiteral("Keeps your current session in RAM using minimal power. Requires suspend support and RTC wake-up. No automatic login needed."),
-          QStringLiteral("FREEZE — Lightweight Suspend"),
           QStringLiteral("Freezes running processes without deep sleep. Requires kernel and device support. Uses more power than MEM but may offer better compatibility. No automatic login needed."),
           QStringLiteral("Experimental"),
-          QStringLiteral("STANDBY — Hardware Standby (S1)"),
           QStringLiteral("Enters a light hardware standby state. Requires ACPI S1 and RTC wake-up support. Wakes the existing session without automatic login."),
-          QStringLiteral("OFF — Complete Shutdown"),
           QStringLiteral("Completely powers off the computer and schedules automatic startup. Requires firmware RTC wake-up, automatic system boot, automatic user login, and alarm app auto-start."),
-          QStringLiteral("DISK — Hibernate to Disk"),
           QStringLiteral("Saves your session to disk and powers off. Requires configured hibernation, sufficient swap space, resume support, and RTC wake-up. Restores the saved session without requiring automatic login.")}) {
         QVERIFY2(picker.contains(text),
                  qPrintable(QStringLiteral("WakeMethodPicker is missing: %1").arg(text)));
+    }
+    for (const QString &old :
+         {QStringLiteral("MEM \u2014 Suspend to RAM"),
+          QStringLiteral("FREEZE \u2014 Lightweight Suspend"),
+          QStringLiteral("STANDBY \u2014 Hardware Standby (S1)"),
+          QStringLiteral("OFF \u2014 Complete Shutdown"),
+          QStringLiteral("DISK \u2014 Hibernate to Disk")}) {
+        QVERIFY2(!picker.contains(old),
+                 qPrintable(QStringLiteral("long wake-method label returned: %1").arg(old)));
     }
     QVERIFY2(!picker.contains(QStringLiteral("key: \"no\""))
                  && !picker.contains(QStringLiteral("key: \"on\"")),
@@ -586,12 +595,20 @@ void TestQmlResources::wakeMethodSelectorUsesNewLabels()
     QVERIFY2(wizard.contains(QStringLiteral("WakeMethodPicker {")),
              "the wizard must use the shared wake-method selector");
 
-    // The user wants the descriptions on hover, not as permanent body text.
+    // Hover-only descriptions with explicit, theme-coloured ToolTip controls.
     const QString combo =
         readSourceFile(sourceRoot() + QStringLiteral("/qml/components/RoundedCombo.qml"));
     QVERIFY2(combo.contains(QStringLiteral("property var tooltips"))
-                 && combo.contains(QStringLiteral("ToolTip.visible")),
-             "RoundedCombo must be able to show per-item hover help");
+                 && combo.count(QStringLiteral("ToolTip {")) >= 2,
+             "RoundedCombo must provide dedicated hover tooltips");
+    QVERIFY2(combo.contains(QStringLiteral("configManager.themeTextPrimary"))
+                 && combo.contains(QStringLiteral("themedBg"))
+                 && combo.contains(QStringLiteral("themedAccent"))
+                 && combo.contains(QStringLiteral("configManager.themeBg"))
+                 && combo.contains(QStringLiteral("configManager.themeAccent")),
+             "hover help must follow the application text, background and accent theme colours");
+    QVERIFY2(!combo.contains(QStringLiteral("ToolTip.visible:")),
+             "the unstyleable shared attached ToolTip must not be used");
     QVERIFY2(picker.contains(QStringLiteral("tooltips: root.methods.map")),
              "each RTCwake method must supply its description as hover help");
     QVERIFY2(!picker.contains(QStringLiteral("currentDetail")),

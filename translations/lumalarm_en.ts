@@ -1231,65 +1231,40 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/WakeMethodPicker.qml" line="26"/>
-        <source>MEM — Suspend to RAM</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../qml/components/WakeMethodPicker.qml" line="26"/>
+        <location filename="../qml/components/WakeMethodPicker.qml" line="27"/>
         <source>Recommended</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/WakeMethodPicker.qml" line="27"/>
+        <location filename="../qml/components/WakeMethodPicker.qml" line="28"/>
         <source>Keeps your current session in RAM using minimal power. Requires suspend support and RTC wake-up. No automatic login needed.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/WakeMethodPicker.qml" line="31"/>
-        <source>FREEZE — Lightweight Suspend</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../qml/components/WakeMethodPicker.qml" line="32"/>
+        <location filename="../qml/components/WakeMethodPicker.qml" line="33"/>
         <source>Freezes running processes without deep sleep. Requires kernel and device support. Uses more power than MEM but may offer better compatibility. No automatic login needed.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/WakeMethodPicker.qml" line="36"/>
-        <location filename="../qml/components/WakeMethodPicker.qml" line="41"/>
-        <location filename="../qml/components/WakeMethodPicker.qml" line="46"/>
-        <location filename="../qml/components/WakeMethodPicker.qml" line="51"/>
+        <location filename="../qml/components/WakeMethodPicker.qml" line="37"/>
+        <location filename="../qml/components/WakeMethodPicker.qml" line="43"/>
+        <location filename="../qml/components/WakeMethodPicker.qml" line="49"/>
+        <location filename="../qml/components/WakeMethodPicker.qml" line="55"/>
         <source>Experimental</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/WakeMethodPicker.qml" line="41"/>
-        <source>STANDBY — Hardware Standby (S1)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../qml/components/WakeMethodPicker.qml" line="42"/>
+        <location filename="../qml/components/WakeMethodPicker.qml" line="44"/>
         <source>Enters a light hardware standby state. Requires ACPI S1 and RTC wake-up support. Wakes the existing session without automatic login.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/WakeMethodPicker.qml" line="46"/>
-        <source>OFF — Complete Shutdown</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../qml/components/WakeMethodPicker.qml" line="47"/>
+        <location filename="../qml/components/WakeMethodPicker.qml" line="50"/>
         <source>Completely powers off the computer and schedules automatic startup. Requires firmware RTC wake-up, automatic system boot, automatic user login, and alarm app auto-start.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/WakeMethodPicker.qml" line="51"/>
-        <source>DISK — Hibernate to Disk</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../qml/components/WakeMethodPicker.qml" line="52"/>
+        <location filename="../qml/components/WakeMethodPicker.qml" line="56"/>
         <source>Saves your session to disk and powers off. Requires configured hibernation, sufficient swap space, resume support, and RTC wake-up. Restores the saved session without requiring automatic login.</source>
         <translation type="unfinished"></translation>
     </message>

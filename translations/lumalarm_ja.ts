@@ -1231,65 +1231,40 @@
         <translation>RTC起動方法</translation>
     </message>
     <message>
-        <location filename="../qml/components/WakeMethodPicker.qml" line="26"/>
-        <source>MEM — Suspend to RAM</source>
-        <translation>MEM — RAMにサスペンド</translation>
-    </message>
-    <message>
-        <location filename="../qml/components/WakeMethodPicker.qml" line="26"/>
+        <location filename="../qml/components/WakeMethodPicker.qml" line="27"/>
         <source>Recommended</source>
         <translation>推奨</translation>
     </message>
     <message>
-        <location filename="../qml/components/WakeMethodPicker.qml" line="27"/>
+        <location filename="../qml/components/WakeMethodPicker.qml" line="28"/>
         <source>Keeps your current session in RAM using minimal power. Requires suspend support and RTC wake-up. No automatic login needed.</source>
         <translation>現在のセッションをRAMに保持し、消費電力を最小限に抑えます。サスペンドとRTCウェイクアップに対応している必要があります。自動ログインは不要です。</translation>
     </message>
     <message>
-        <location filename="../qml/components/WakeMethodPicker.qml" line="31"/>
-        <source>FREEZE — Lightweight Suspend</source>
-        <translation>FREEZE — 軽量サスペンド</translation>
-    </message>
-    <message>
-        <location filename="../qml/components/WakeMethodPicker.qml" line="32"/>
+        <location filename="../qml/components/WakeMethodPicker.qml" line="33"/>
         <source>Freezes running processes without deep sleep. Requires kernel and device support. Uses more power than MEM but may offer better compatibility. No automatic login needed.</source>
         <translation>実行中のプロセスを凍結しますが、深い睡眠状態には入りません。カーネルとデバイスのサポートが必要です。MEMより消費電力は多いですが、互換性が高い場合があります。自動ログインは不要です。</translation>
     </message>
     <message>
-        <location filename="../qml/components/WakeMethodPicker.qml" line="36"/>
-        <location filename="../qml/components/WakeMethodPicker.qml" line="41"/>
-        <location filename="../qml/components/WakeMethodPicker.qml" line="46"/>
-        <location filename="../qml/components/WakeMethodPicker.qml" line="51"/>
+        <location filename="../qml/components/WakeMethodPicker.qml" line="37"/>
+        <location filename="../qml/components/WakeMethodPicker.qml" line="43"/>
+        <location filename="../qml/components/WakeMethodPicker.qml" line="49"/>
+        <location filename="../qml/components/WakeMethodPicker.qml" line="55"/>
         <source>Experimental</source>
         <translation>実験的</translation>
     </message>
     <message>
-        <location filename="../qml/components/WakeMethodPicker.qml" line="41"/>
-        <source>STANDBY — Hardware Standby (S1)</source>
-        <translation>STANDBY — ハードウェアスタンバイ (S1)</translation>
-    </message>
-    <message>
-        <location filename="../qml/components/WakeMethodPicker.qml" line="42"/>
+        <location filename="../qml/components/WakeMethodPicker.qml" line="44"/>
         <source>Enters a light hardware standby state. Requires ACPI S1 and RTC wake-up support. Wakes the existing session without automatic login.</source>
         <translation>軽いハードウェアスタンバイ状態に入ります。ACPI S1とRTCウェイクアップのサポートが必要です。既存のセッションを自動ログインなしで復帰します。</translation>
     </message>
     <message>
-        <location filename="../qml/components/WakeMethodPicker.qml" line="46"/>
-        <source>OFF — Complete Shutdown</source>
-        <translation>OFF — 完全シャットダウン</translation>
-    </message>
-    <message>
-        <location filename="../qml/components/WakeMethodPicker.qml" line="47"/>
+        <location filename="../qml/components/WakeMethodPicker.qml" line="50"/>
         <source>Completely powers off the computer and schedules automatic startup. Requires firmware RTC wake-up, automatic system boot, automatic user login, and alarm app auto-start.</source>
         <translation>コンピューターを完全に電源オフし、自動起動をスケジュールします。ファームウェアのRTCウェイクアップ、自動システム起動、自動ユーザーログイン、アラームアプリの自動起動が必要です。</translation>
     </message>
     <message>
-        <location filename="../qml/components/WakeMethodPicker.qml" line="51"/>
-        <source>DISK — Hibernate to Disk</source>
-        <translation>DISK — ディスクへハイバーネート</translation>
-    </message>
-    <message>
-        <location filename="../qml/components/WakeMethodPicker.qml" line="52"/>
+        <location filename="../qml/components/WakeMethodPicker.qml" line="56"/>
         <source>Saves your session to disk and powers off. Requires configured hibernation, sufficient swap space, resume support, and RTC wake-up. Restores the saved session without requiring automatic login.</source>
         <translation>セッションをディスクに保存して電源を切ります。ハイバーネーションの設定、十分なスワップ領域、レジュームサポート、RTCウェイクアップが必要です。自動ログインなしで保存したセッションを復元します。</translation>
     </message>
