@@ -101,7 +101,10 @@ jobs:
 
       - name: Build
         shell: bash
-        run: cmake --build build -j$(nproc)
+        run: |
+          jobs=$(( $(nproc) * 80 / 100 ))
+          [ "$jobs" -lt 1 ] && jobs=1
+          cmake --build build -j"$jobs"
 
       - name: Test
         shell: bash

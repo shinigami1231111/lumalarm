@@ -29,7 +29,8 @@ sudo pacman -S --needed base-devel cmake qt6-base qt6-declarative qt6-multimedia
 
 ```sh
 cmake -B build -DCMAKE_BUILD_TYPE=Release
-cmake --build build -j$(nproc)
+JOBS=$(( $(nproc) * 80 / 100 )); [ "$JOBS" -lt 1 ] && JOBS=1
+cmake --build build -j"$JOBS"
 ```
 
 The KDE blur-behind integration is optional and auto-detected. Force it off with:

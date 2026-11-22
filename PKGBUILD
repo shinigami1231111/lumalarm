@@ -42,7 +42,9 @@ build() {
         -DCMAKE_INSTALL_PREFIX=/usr \
         -DCMAKE_BUILD_TYPE=Release \
         -DCMAKE_CXX_FLAGS="-O2 -pipe"
-    cmake --build build -j$(nproc)
+    local jobs=$(( $(nproc) * 80 / 100 ))
+    [ "$jobs" -lt 1 ] && jobs=1
+    cmake --build build -j"$jobs"
 }
 
 package() {

@@ -9,15 +9,15 @@
 // Raw strings use explicit delimiters because the JSON ends in `)]`.
 // ---------------------------------------------------------------------------
 
-static const char kPactlInfoJson[] = R"JSON({"server_string":"unix:/run/user/1000/pulse/native","library_protocol_version":35,"server_protocol_version":35,"is_local":"yes","client_index":185,"tile_size":"65472","user_name":"dmk","host_name":"dmk","server_name":"PulseAudio (on PipeWire 1.6.9)","server_version":"15.0.0","default_sample_specification":"float32le 2ch 48000Hz","default_channel_map":"front-left,front-right","default_sink_name":"alsa_output.pci-0000_00_1b.0.analog-stereo","default_source_name":"alsa_input.pci-0000_00_1b.0.analog-stereo","cookie":"b1c2:4905"})JSON";
+static const char kPactlInfoJson[] = R"JSON({"server_string":"unix:/run/user/1000/pulse/native","library_protocol_version":35,"server_protocol_version":35,"is_local":"yes","client_index":185,"tile_size":"65472","user_name":"lumalarm","host_name":"testhost","server_name":"PulseAudio (on PipeWire 1.6.9)","server_version":"15.0.0","default_sample_specification":"float32le 2ch 48000Hz","default_channel_map":"front-left,front-right","default_sink_name":"alsa_output.pci-0000_00_1b.0.analog-stereo","default_source_name":"alsa_input.pci-0000_00_1b.0.analog-stereo","cookie":"b1c2:4905"})JSON";
 static const char kPactlInfoText[] = R"TXT(Server String: unix:/run/user/1000/pulse/native
 Library Protocol Version: 35
 Server Protocol Version: 35
 Is Local: yes
 Client Index: 184
 Tile Size: 65472
-User Name: dmk
-Host Name: dmk
+User Name: lumalarm
+Host Name: testhost
 Server Name: PulseAudio (on PipeWire 1.6.9)
 Server Version: 15.0.0
 Default Sample Specification: float32le 2ch 48000Hz

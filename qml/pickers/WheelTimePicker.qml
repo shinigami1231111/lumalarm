@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Controls
 
 // Style 1 — three scrollable wheels (hour / minute / AM-PM).
-// Mirrors /home/dmk/Desktop/1/wheel_time_picker.html.
+// Modelled on the original wheel_time_picker.html prototype.
 Item {
     id: root
     width: 280; height: 260

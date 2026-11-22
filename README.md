@@ -22,7 +22,8 @@ Suspend-to-RAM wake scheduling · anti-oversleep challenges · timer · stopwatc
 
 ```sh
 cmake -B build -DCMAKE_BUILD_TYPE=Release
-cmake --build build -j$(nproc)
+JOBS=$(( $(nproc) * 80 / 100 )); [ "$JOBS" -lt 1 ] && JOBS=1
+cmake --build build -j"$JOBS"
 ctest --test-dir build --output-on-failure
 ```
 
@@ -156,7 +157,8 @@ sudo dnf install cmake qt6-qtbase-devel qt6-qtmultimedia-devel qt6-qtdeclarative
 git clone https://github.com/shinigami1231111/lumalarm.git
 cd lumalarm
 cmake -B build -DCMAKE_BUILD_TYPE=Release
-cmake --build build -j$(nproc)
+JOBS=$(( $(nproc) * 80 / 100 )); [ "$JOBS" -lt 1 ] && JOBS=1
+cmake --build build -j"$JOBS"
 ./build/lumalarm
 ```
 

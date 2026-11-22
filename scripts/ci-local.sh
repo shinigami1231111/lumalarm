@@ -191,12 +191,12 @@ configure() {
 }
 
 build() {
-    # Never let a local build use more than 70% of the CPU. Jobs are CPU-bound
-    # here, so floor(cores * 70 / 100) keeps the cap; a single core still gets
+    # Never let a local build use more than 80% of the CPU. Jobs are CPU-bound
+    # here, so floor(cores * 80 / 100) keeps the cap; a single core still gets
     # one job.
-    local jobs=$(( $(nproc) * 70 / 100 ))
+    local jobs=$(( $(nproc) * 80 / 100 ))
     [ "$jobs" -lt 1 ] && jobs=1
-    echo "[ci-local] building with -j$jobs (70% CPU cap)"
+    echo "[ci-local] building with -j$jobs (80% CPU cap)"
     cmake --build "$BUILD_DIR" -j"$jobs"
 }
 
