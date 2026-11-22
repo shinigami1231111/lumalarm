@@ -10,11 +10,14 @@ Suspend-to-RAM wake scheduling · anti-oversleep challenges · timer · stopwatc
 [![Qt](https://img.shields.io/badge/Qt-6-41CD52?logo=qt)](https://www.qt.io/)
 [![Platform](https://img.shields.io/badge/platform-Linux-informational)]()
 
-<!-- Badges activate after the first push to main; see RELEASE_DEFERRED.md -->
 [![CI](https://github.com/shinigami1231111/lumalarm/actions/workflows/ci.yml/badge.svg)](https://github.com/shinigami1231111/lumalarm/actions/workflows/ci.yml)
 [![Lint](https://github.com/shinigami1231111/lumalarm/actions/workflows/lint.yml/badge.svg)](https://github.com/shinigami1231111/lumalarm/actions/workflows/lint.yml)
 
 </div>
+
+> [!NOTE]
+> **Current release: [v1.0.5](CHANGELOG.md#105---2026-11-22)** — secure D-Bus wake helper,
+> English / Arabic / Japanese UI, emoji density control, and a frameless, mouse-draggable window.
 
 ---
 
@@ -52,10 +55,12 @@ That suspend-to-wake behavior is the core power of Lumalarm. Everything else —
 
 ## Screenshots
 
-**Alarms**
+Captured from v1.0.5.
+
+**Alarms — list and editor**
 
 ![Alarms 1](screenshots/alarms-1.jpeg)
-![Alarms 2](screenshots/alarms-2.jpeg)
+![Alarms 2 — alarm editor](screenshots/alarms-2.jpeg)
 
 **Timer**
 
@@ -94,7 +99,9 @@ That suspend-to-wake behavior is the core power of Lumalarm. Everything else —
 - **Test alarm** — arm a real wake 60 s to 1 h ahead without creating an alarm, to prove the machine actually wakes
 - **Night mode** — dims the window a few minutes before the alarm so it never lights up a dark room
 - **First-run setup wizard** — six skippable steps on the very first launch: language, default sound, test alarm, notifications and a summary. Existing installations are never prompted after an upgrade, and `--show-wizard` reopens it any time
-- **English & Arabic UI** — pick the language in Settings or during setup; Arabic mirrors the layout to right-to-left
+- **English, Arabic & Japanese UI** — pick the language in Settings or during setup; Arabic mirrors the layout right-to-left and Japanese is available as a full catalog
+- **Emoji density** — Off / Less / More, with legacy settings migrated automatically
+- **Frameless window** — drag the title area to move and the edges/corners to resize; no visible bar is added
 
 ---
 
@@ -112,6 +119,7 @@ That suspend-to-wake behavior is the core power of Lumalarm. Everything else —
 - [Theming](#theming)
 - [Wake Setup (D-Bus helper)](#wake-setup-d-bus-helper)
 - [Contributing](#contributing)
+- [Changelog](#changelog)
 - [License](#license)
 
 ---
@@ -301,7 +309,13 @@ journalctl -u lumalarm-wake-helper
 
 ## Contributing
 
-Contributions are welcome! Feel free to open an issue or submit a pull request for bug fixes, new features, or theme presets.
+Contributions are welcome! Feel free to open an issue or submit a pull request for bug fixes, new features, or theme presets. See [CONTRIBUTING.md](CONTRIBUTING.md) for prerequisites, the CI matrix and the release process.
+
+---
+
+## Changelog
+
+Release history and verified changes live in [CHANGELOG.md](CHANGELOG.md). The latest release is [v1.0.5](CHANGELOG.md#105---2026-11-22).
 
 ---
 
