@@ -641,368 +641,353 @@
         <source>Corner Radius</source>
         <translation>استدارة الزوايا</translation>
     </message>
+    
+    
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="155"/>
-        <source>Font Family</source>
-        <translation>عائلة الخط</translation>
-    </message>
-    <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="161"/>
-        <source>system default</source>
-        <translation>إعداد النظام</translation>
-    </message>
-    <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="170"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="156"/>
         <source>Import from pywal</source>
         <translation>استيراد من pywal</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="170"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="156"/>
         <source>pywal not found</source>
         <translation>لم يُعثر على pywal</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="178"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="164"/>
         <source>Reads ~/.cache/wal/colors.json (manual, no auto-apply)</source>
         <translation>يقرأ ‎~/.cache/wal/colors.json (يدوي، دون تطبيق تلقائي)</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="184"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="170"/>
         <source>Theme is stored in ~/.config/lumalarm/theme.conf and reloads live when you edit it.</source>
         <translation>تُخزَّن السِمة في ‎~/.config/lumalarm/theme.conf ويُعاد تحميلها فور تعديلها.</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="193"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="179"/>
         <source>Default</source>
         <translation>افتراضي</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="196"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="182"/>
         <source>Window Controls</source>
         <translation>أدوات النافذة</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="199"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="185"/>
         <source>Show Minimize Button</source>
         <translation>إظهار زر التصغير</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="207"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="193"/>
         <source>Show Maximize Button</source>
         <translation>إظهار زر التكبير</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="215"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="201"/>
         <source>Show Close Button</source>
         <translation>إظهار زر الإغلاق</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="223"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="209"/>
         <source>System Tray</source>
         <translation>صينية النظام</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="226"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="212"/>
         <source>Show system tray icon</source>
         <translation>إظهار أيقونة صينية النظام</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="236"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="222"/>
         <source>When I close the window</source>
         <translation>عند إغلاق النافذة</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="240"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="226"/>
         <source>Ask me</source>
         <translation>اسألني</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="249"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="235"/>
         <source>Hide to tray</source>
         <translation>إخفاء إلى الصينية</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="255"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="241"/>
         <source>Quit</source>
         <translation>إنهاء</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="263"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="249"/>
         <source>“Hide to tray” needs a running tray host. Until one appears, closing will minimize the window instead.</source>
         <translation>خيار «إخفاء في صينية النظام» يحتاج إلى مضيف لصينية النظام قيد التشغيل. وحتى ظهوره، سيؤدي إغلاق النافذة إلى تصغير النافذة بدلاً من إخفائها.</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="273"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="259"/>
         <source>When alarm rings while hidden</source>
         <translation>عند رنين المنبه والواجهة مخفية</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="277"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="263"/>
         <source>Alarm only</source>
         <translation>المنبه فقط</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="282"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="268"/>
         <source>Main window + alarm</source>
         <translation>النافذة الرئيسية + المنبه</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="294"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="280"/>
         <source>Alarm Defaults</source>
         <translation>إعدادات المنبه الافتراضية</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="306"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="293"/>
         <source>Time picker style</source>
         <translation>نمط اختيار الوقت</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="310"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="297"/>
         <source>Wheel</source>
         <translation>عجلة</translation>
     </message>
+    
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="337"/>
-        <source>Alarm Sound</source>
-        <translation>صوت المنبّه</translation>
-    </message>
-    <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="339"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="331"/>
         <source>When an alarm rings</source>
         <translation>عند رنين المنبّه</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="343"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="335"/>
         <source>Raise system volume</source>
         <translation>رفع صوت النظام</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="348"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="340"/>
         <source>Never touch system volume</source>
         <translation>لا تغيير لصوت النظام</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="359"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="351"/>
         <source>Minimum volume</source>
         <translation>الحد الأدنى للصوت</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="379"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="371"/>
         <source>The system volume is raised to this level while an alarm rings, then restored exactly.</source>
         <translation>يُرفع صوت النظام إلى هذا المستوى أثناء رنين المنبّه ثم يُعاد كما كان بالضبط.</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="385"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="377"/>
         <source>Lumalarm plays its own sound only; your system volume is never changed.</source>
         <translation>يشغّل لوم ألام صوته فقط، ولا يُغيَّر صوت نظامك أبدًا.</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="392"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="384"/>
         <source>Output device</source>
         <translation>جهاز الإخراج</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="401"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="393"/>
         <source>Default output device</source>
         <translation>جهاز الإخراج الافتراضي</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="420"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="412"/>
         <source>The alarm rings through this device; other apps keep using the system default.</source>
         <translation>يرن المنبه عبر هذا الجهاز، بينما تستخدم بقية التطبيقات جهاز الإخراج الافتراضي.</translation>
     </message>
+    
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="430"/>
-        <source>Test alarm</source>
-        <translation>منبه تجريبي</translation>
-    </message>
-    <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="432"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="326"/>
         <source>Arm a real wake without creating an alarm, to check that this machine actually wakes.</source>
         <translation>فعّل استيقاظاً حقيقياً دون إنشاء منبه، للتحقق من أن هذه الآلة تستيقظ فعلاً.</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="444"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="427"/>
         <source>Wake in</source>
         <translation>استيقاظ بعد</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="513"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="496"/>
         <source>60 s</source>
         <translation>60 ث</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="513"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="496"/>
         <source>2 min</source>
         <translation>2 د</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="513"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="496"/>
         <source>5 min</source>
         <translation>5 د</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="513"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="496"/>
         <source>10 min</source>
         <translation>10 د</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="513"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="496"/>
         <source>30 min</source>
         <translation>30 د</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="513"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="496"/>
         <source>60 min</source>
         <translation>60 د</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="513"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="496"/>
         <source>Custom…</source>
         <translation>مخصص…</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="480"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="463"/>
         <source>Custom seconds (60-3600)</source>
         <translation>ثوانٍ مخصصة (60-3600)</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="310"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="297"/>
         <source>Classic</source>
         <translation>كلاسيكي</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="319"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="306"/>
         <source>Time format</source>
         <translation>تنسيق الوقت</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="323"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="310"/>
         <source>24-hour</source>
         <translation>24 ساعة</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="323"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="310"/>
         <source>12-hour (AM/PM)</source>
         <translation>12 ساعة (ص/م)</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="547"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="324"/>
+        <source>Alarm Sound &amp; Wake Test</source>
+        <translation>صوت المنبه واختبار الإيقاظ</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/SettingsPage.qml" line="530"/>
         <source>Arm test alarm</source>
         <translation>تفعيل المنبه التجريبي</translation>
     </message>
+    
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="552"/>
-        <source>Cancel test alarm</source>
-        <translation>إلغاء المنبه التجريبي</translation>
-    </message>
-    <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="595"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="572"/>
         <source>Test alarm armed in %1 s</source>
         <translation>تم تفعيل المنبه التجريبي بعد %1 ثانية</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="598"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="575"/>
         <source>Test alarm failed: %1</source>
         <translation>فشل المنبه التجريبي: %1</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="610"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="587"/>
         <source>Behavior</source>
         <translation>السلوك</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="613"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="590"/>
         <source>Show milliseconds in stopwatch</source>
         <translation>إظهار أجزاء الثانية في ساعة الإيقاف</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="621"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="598"/>
         <source>Desktop notifications</source>
         <translation>إشعارات سطح المكتب</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="629"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="606"/>
         <source>Setup wizard</source>
         <translation>معالج الإعداد</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="631"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="608"/>
         <source>Run again</source>
         <translation>تشغيل مجدداً</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="639"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="616"/>
         <source>Language</source>
         <translation>اللغة</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="646"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="623"/>
         <source>System default</source>
         <translation>لغة النظام</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="659"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="636"/>
         <source>Show emojis</source>
         <translation>إظهار الرموز التعبيرية</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="661"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="638"/>
         <source>Off</source>
         <translation>إيقاف</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="661"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="638"/>
         <source>Less</source>
         <translation>أقل</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="661"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="638"/>
         <source>More</source>
         <translation>أكثر</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="673"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="650"/>
         <source>Night Mode</source>
         <translation>الوضع الليلي</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="675"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="652"/>
         <source>Dim the window before an alarm so it does not light up a dark room.</source>
         <translation>خفّض إضاءة النافذة قبل المنبه حتى لا تُضيء غرفة مظلمة.</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="682"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="659"/>
         <source>Enable night mode</source>
         <translation>تفعيل الوضع الليلي</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="693"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="670"/>
         <source>Dim before alarm</source>
         <translation>خفض الإضاءة قبل المنبه</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="706"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="683"/>
         <source> min</source>
         <translation> د</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="716"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="693"/>
         <source>Dim strength</source>
         <translation>قوة الخفض</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="738"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="715"/>
         <source>Preview</source>
         <translation>معاينة</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="748"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="725"/>
         <source>Dimming</source>
         <translation>جارٍ الخفض</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="759"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="736"/>
         <source>Reset to Defaults</source>
         <translation>إعادة إلى الافتراضي</translation>
     </message>
@@ -1111,62 +1096,58 @@
 <context>
     <name>TimerPage</name>
     <message>
-        <location filename="../qml/pages/TimerPage.qml" line="67"/>
+        <location filename="../qml/pages/TimerPage.qml" line="50"/>
         <source>Timer</source>
         <translation>مؤقت</translation>
     </message>
     <message>
-        <location filename="../qml/pages/TimerPage.qml" line="80"/>
+        <location filename="../qml/pages/TimerPage.qml" line="63"/>
         <source>Running</source>
         <translation>قيد التشغيل</translation>
     </message>
     <message>
-        <location filename="../qml/pages/TimerPage.qml" line="80"/>
+        <location filename="../qml/pages/TimerPage.qml" line="63"/>
         <source>Paused</source>
         <translation>متوقف مؤقتاً</translation>
     </message>
     <message>
-        <location filename="../qml/pages/TimerPage.qml" line="80"/>
+        <location filename="../qml/pages/TimerPage.qml" line="63"/>
         <source>Set a duration</source>
         <translation>حدّد مدة</translation>
     </message>
     <message>
-        <location filename="../qml/pages/TimerPage.qml" line="96"/>
+        <location filename="../qml/pages/TimerPage.qml" line="79"/>
         <source>Hours</source>
         <translation>ساعات</translation>
     </message>
     <message>
-        <location filename="../qml/pages/TimerPage.qml" line="97"/>
+        <location filename="../qml/pages/TimerPage.qml" line="80"/>
         <source>Min</source>
         <translation>دقائق</translation>
     </message>
     <message>
-        <location filename="../qml/pages/TimerPage.qml" line="98"/>
+        <location filename="../qml/pages/TimerPage.qml" line="81"/>
         <source>Sec</source>
         <translation>ثوانٍ</translation>
     </message>
+    
     <message>
-        <location filename="../qml/pages/TimerPage.qml" line="99"/>
-        <source>Auto Stop</source>
-        <translation>إيقاف تلقائي</translation>
-    </message>
-    <message>
-        <location filename="../qml/pages/TimerPage.qml" line="144"/>
+        <location filename="../qml/pages/TimerPage.qml" line="120"/>
         <source>Pause</source>
         <translation>إيقاف مؤقت</translation>
     </message>
     <message>
-        <location filename="../qml/pages/TimerPage.qml" line="144"/>
+        <location filename="../qml/pages/TimerPage.qml" line="120"/>
         <source>Start</source>
         <translation>بدء</translation>
     </message>
     <message>
-        <location filename="../qml/pages/TimerPage.qml" line="163"/>
+        <location filename="../qml/pages/TimerPage.qml" line="138"/>
         <source>Reset</source>
         <translation>إعادة تعيين</translation>
     </message>
     <message>
-        <location filename="../qml/pages/TimerPage.qml" line="176"/>
+        <location filename="../qml/pages/TimerPage.qml" line="151"/>
         <source>Sound when done:</source>
         <translation>الصوت عند الانتهاء:</translation>
     </message>
@@ -1256,65 +1237,65 @@
         <translation>طريقة RTCwake</translation>
     </message>
     <message>
-        <location filename="../qml/components/WakeMethodPicker.qml" line="24"/>
+        <location filename="../qml/components/WakeMethodPicker.qml" line="26"/>
         <source>MEM — Suspend to RAM</source>
         <translation>MEM — تعليق إلى الذاكرة العشوائية</translation>
     </message>
     <message>
-        <location filename="../qml/components/WakeMethodPicker.qml" line="24"/>
+        <location filename="../qml/components/WakeMethodPicker.qml" line="26"/>
         <source>Recommended</source>
         <translation>موصى به</translation>
     </message>
     <message>
-        <location filename="../qml/components/WakeMethodPicker.qml" line="25"/>
+        <location filename="../qml/components/WakeMethodPicker.qml" line="27"/>
         <source>Keeps your current session in RAM using minimal power. Requires suspend support and RTC wake-up. No automatic login needed.</source>
         <translation>يحافظ على جلستك الحالية في الذاكرة العشوائية مع استهلاك طاقة منخفض. يتطلب دعم الإيقاف المؤقت وإيقاظ RTC. لا حاجة لتسجيل الدخول التلقائي.</translation>
     </message>
     <message>
-        <location filename="../qml/components/WakeMethodPicker.qml" line="29"/>
+        <location filename="../qml/components/WakeMethodPicker.qml" line="31"/>
         <source>FREEZE — Lightweight Suspend</source>
         <translation>FREEZE — إيقاف مؤقت خفيف</translation>
     </message>
     <message>
-        <location filename="../qml/components/WakeMethodPicker.qml" line="30"/>
+        <location filename="../qml/components/WakeMethodPicker.qml" line="32"/>
         <source>Freezes running processes without deep sleep. Requires kernel and device support. Uses more power than MEM but may offer better compatibility. No automatic login needed.</source>
         <translation>يجمّد العمليات الجارية دون الدخول في سكون عميق. يتطلب دعم النواة والجهاز. يستهلك طاقة أكثر من MEM لكنه قد يوفر توافقًا أفضل. لا حاجة لتسجيل الدخول التلقائي.</translation>
     </message>
     <message>
-        <location filename="../qml/components/WakeMethodPicker.qml" line="34"/>
-        <location filename="../qml/components/WakeMethodPicker.qml" line="39"/>
-        <location filename="../qml/components/WakeMethodPicker.qml" line="44"/>
-        <location filename="../qml/components/WakeMethodPicker.qml" line="49"/>
+        <location filename="../qml/components/WakeMethodPicker.qml" line="36"/>
+        <location filename="../qml/components/WakeMethodPicker.qml" line="41"/>
+        <location filename="../qml/components/WakeMethodPicker.qml" line="46"/>
+        <location filename="../qml/components/WakeMethodPicker.qml" line="51"/>
         <source>Experimental</source>
         <translation>تجريبي</translation>
     </message>
     <message>
-        <location filename="../qml/components/WakeMethodPicker.qml" line="39"/>
+        <location filename="../qml/components/WakeMethodPicker.qml" line="41"/>
         <source>STANDBY — Hardware Standby (S1)</source>
         <translation>STANDBY — وضع الاستعداد العتادي (S1)</translation>
     </message>
     <message>
-        <location filename="../qml/components/WakeMethodPicker.qml" line="40"/>
+        <location filename="../qml/components/WakeMethodPicker.qml" line="42"/>
         <source>Enters a light hardware standby state. Requires ACPI S1 and RTC wake-up support. Wakes the existing session without automatic login.</source>
         <translation>يدخل حالة استعداد عتادي خفيفة. يتطلب دعم ACPI S1 وإيقاظ RTC. يعيد الجلسة الحالية دون تسجيل دخول تلقائي.</translation>
     </message>
     <message>
-        <location filename="../qml/components/WakeMethodPicker.qml" line="44"/>
+        <location filename="../qml/components/WakeMethodPicker.qml" line="46"/>
         <source>OFF — Complete Shutdown</source>
         <translation>OFF — إيقاف كامل</translation>
     </message>
     <message>
-        <location filename="../qml/components/WakeMethodPicker.qml" line="45"/>
+        <location filename="../qml/components/WakeMethodPicker.qml" line="47"/>
         <source>Completely powers off the computer and schedules automatic startup. Requires firmware RTC wake-up, automatic system boot, automatic user login, and alarm app auto-start.</source>
         <translation>يوقف تشغيل الجهاز تمامًا ويجدول التشغيل التلقائي. يتطلب إيقاظ RTC من البرنامج الثابت، والتمهيد التلقائي، وتسجيل الدخول التلقائي، وتشغيل تطبيق المنبه تلقائيًا.</translation>
     </message>
     <message>
-        <location filename="../qml/components/WakeMethodPicker.qml" line="49"/>
+        <location filename="../qml/components/WakeMethodPicker.qml" line="51"/>
         <source>DISK — Hibernate to Disk</source>
         <translation>DISK — الإسبات إلى القرص</translation>
     </message>
     <message>
-        <location filename="../qml/components/WakeMethodPicker.qml" line="50"/>
+        <location filename="../qml/components/WakeMethodPicker.qml" line="52"/>
         <source>Saves your session to disk and powers off. Requires configured hibernation, sufficient swap space, resume support, and RTC wake-up. Restores the saved session without requiring automatic login.</source>
         <translation>يحفظ جلستك على القرص ثم يوقف التشغيل. يتطلب إعداد الإسبات، ومساحة مبادلة كافية، ودعم الاستئناف، وإيقاظ RTC. يستعيد الجلسة المحفوظة دون الحاجة إلى تسجيل دخول تلقائي.</translation>
     </message>

@@ -151,20 +151,6 @@ ColumnLayout {
             }
 
             RowLayout {
-                Layout.fillWidth: true; spacing: 14
-                Text { text: (configManager.emojiLevel, configManager.emoji("🔤", 2)) + qsTr("Font Family"); color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.preferredWidth: 180 }
-                Item { Layout.fillWidth: true }
-                TextField {
-                    Layout.preferredWidth: 220; implicitHeight: 34
-                    text: themeManager.font_family
-                    color: configManager.themeTextPrimary; font.pixelSize: 13
-                    placeholderText: qsTr("system default")
-                    background: Rectangle { radius: 7; color: Qt.rgba(1,1,1,0.06); border.color: Qt.rgba(1,1,1,0.1); border.width: 1 }
-                    onEditingFinished: themeManager.font_family = text.trim()
-                }
-            }
-
-            RowLayout {
                 Layout.fillWidth: true; spacing: 8
                 GlassButton {
                     text: themeManager.pywalAvailable() ? qsTr("Import from pywal") : qsTr("pywal not found")
@@ -329,13 +315,18 @@ ColumnLayout {
             }
 
             // ================================================================
-            // ALARM SOUND — what an alarm ring is allowed to change
-            // (the rebuilt audio system; live, the controller re-reads the
-            // settings on configChanged).
+            // ALARM SOUND & WAKE TEST — playback policy plus the diagnostic
+            // wake. One section because both answer "will my alarm get me up?".
+            // The audio controller re-reads these settings on configChanged.
             // ================================================================
             Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: Qt.rgba(1,1,1,0.07) }
 
-            Text { text: (configManager.emojiLevel, configManager.emoji("🔔", 2)) + qsTr("Alarm Sound"); color: configManager.themeTextSecondary; font.pixelSize: 13; font.bold: true; Layout.bottomMargin: -4 }
+            Text { text: (configManager.emojiLevel, configManager.emoji("🔔", 2)) + qsTr("Alarm Sound & Wake Test"); color: configManager.themeTextSecondary; font.pixelSize: 13; font.bold: true; Layout.bottomMargin: -4 }
+            Text {
+                text: qsTr("Arm a real wake without creating an alarm, to check that this machine actually wakes.")
+                color: configManager.themeTextSecondary; font.pixelSize: 12
+                wrapMode: Text.WordWrap; Layout.fillWidth: true; Layout.bottomMargin: 4
+            }
 
             Text { text: (configManager.emojiLevel, configManager.emoji("🔔", 2)) + qsTr("When an alarm rings"); color: configManager.themeTextPrimary; font.pixelSize: 15 }
             RowLayout {
@@ -423,17 +414,8 @@ ColumnLayout {
                 Layout.fillWidth: true
             }
 
-            // ================================================================
-            // TEST ALARM
-            // ================================================================
-            Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: Qt.rgba(1,1,1,0.07) }
-
-            Text { text: (configManager.emojiLevel, configManager.emoji("🧪", 2)) + qsTr("Test alarm"); color: configManager.themeTextSecondary; font.pixelSize: 13; font.bold: true; Layout.bottomMargin: -4 }
-            Text {
-                text: qsTr("Arm a real wake without creating an alarm, to check that this machine actually wakes.")
-                color: configManager.themeTextSecondary; font.pixelSize: 12
-                wrapMode: Text.WordWrap; Layout.fillWidth: true; Layout.bottomMargin: 4
-            }
+            // The diagnostic wake card lives inside Alarm Sound & Wake Test;
+            // no second heading or divider between the two halves.
 
             ColumnLayout {
                 id: testAlarmCard
@@ -548,12 +530,6 @@ ColumnLayout {
                         text: (configManager.emojiLevel, configManager.emoji("🚀", 1)) + qsTr("Arm test alarm")
                         pixelSize: 13
                         onClicked: wakeManager.armTestWake(testAlarmCard.selectedSeconds())
-                    }
-                    GlassButton {
-                        text: (configManager.emojiLevel, configManager.emoji("🚫", 2)) + qsTr("Cancel test alarm")
-                        pixelSize: 13
-                        enabled: wakeManager.wakeState === "armed"
-                        onClicked: wakeManager.cancelTestWake()
                     }
                     Item { Layout.fillWidth: true }
                     // Raw `wakeState` readout (idle/armed/failed) removed 2026-10-10:
@@ -770,7 +746,6 @@ ColumnLayout {
                         themeManager.border_color = "#3d7fff"
                         themeManager.blur_mode = "compositor"
                         themeManager.blur_radius = 20
-                        themeManager.font_family = ""
                         themeManager.corner_radius = 22
                         themeManager.background_preset = "Dark Glass"
                         themeManager.show_minimize_button = true

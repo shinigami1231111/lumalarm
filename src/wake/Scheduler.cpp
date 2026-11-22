@@ -473,7 +473,7 @@ void Scheduler::onCheckTimer()
     // --- STG-1 truthfulness: an armed claim must stay true ------------------
     // m_wakeState is written once, at arm time, but the wake underneath it can
     // disappear without this object ever being told: Settings' "Arm test alarm"
-    // replaces it, "Cancel test alarm" removes it, a test wake simply expires,
+    // replaces it, the wizard's cancel path removes it, a test wake expires,
     // and a reboot drops the transient systemd timer. Left unexamined the UI
     // keeps advertising "Armed ... power off to wake the machine" over a wake
     // that no longer exists, with the power-off button still enabled. Re-check

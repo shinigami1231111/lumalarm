@@ -321,7 +321,7 @@ void TestSchedulerLogic::rtcFailureRefusesPoweroff()
 
 // A persisted "verified" occurrence records what was true at arm time. The wake
 // underneath can be gone by the time the user acts — Settings' "Arm test alarm"
-// replaces it, "Cancel test alarm" removes it, a test wake expires, a reboot
+// replaces it, the wizard's cancel path removes it, a wake expires, a reboot
 // drops the transient systemd timer — and nothing here scheduled a wake at all.
 void TestSchedulerLogic::poweroffRefusesWhenScheduledWakeIsGone()
 {

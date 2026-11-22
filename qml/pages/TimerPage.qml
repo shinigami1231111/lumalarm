@@ -11,18 +11,10 @@ ColumnLayout {
     property bool timerRunning: false
     property string timerSoundFile: ""
     property bool timerPreviewing: false
-    // How long the completion sound may play after the countdown reaches zero.
-    property int autoStopSecs: 120
 
     property var hourField: null
     property var minField: null
     property var secField: null
-    property var autoField: null
-
-    function stopAutoStop() {
-        if (autoStopTimer && autoStopTimer.running)
-            autoStopTimer.stop()
-    }
 
     Connections {
         target: audioPlayer
@@ -42,20 +34,11 @@ ColumnLayout {
                 // Sound on the tick that reaches zero, not one tick later.
                 stop()
                 root.timerRunning = false
-                if (root.timerSoundFile !== "") {
+                // Auto Stop belongs to alarms only. A timer sound keeps playing
+                // until Reset or another playback action stops it.
+                if (root.timerSoundFile !== "")
                     audioPlayer.play(root.timerSoundFile)
-                    autoStopTimer.interval = Math.max(1, root.autoStopSecs) * 1000
-                    autoStopTimer.start()
-                }
             }
-        }
-    }
-
-    property var autoStopTimer: Timer {
-        interval: 120000; repeat: false
-        onTriggered: {
-            audioPlayer.stop()
-            root.timerPreviewing = false
         }
     }
 
@@ -95,8 +78,7 @@ ColumnLayout {
             model: [
                 {key: "h",     text: "00",  label: (configManager.emojiLevel, configManager.emoji("🕐", 2)) + qsTr("Hours"), max: 99,  min: 0},
                 {key: "m",     text: "00",  label: (configManager.emojiLevel, configManager.emoji("🕑", 2)) + qsTr("Min"), max: 59,  min: 0},
-                {key: "s",     text: "00",  label: (configManager.emojiLevel, configManager.emoji("🕒", 2)) + qsTr("Sec"), max: 59,  min: 0},
-                {key: "auto",  text: "120", label: (configManager.emojiLevel, configManager.emoji("⏱️", 2)) + qsTr("Auto Stop") + " (s)", max: 600, min: 10}
+                {key: "s",     text: "00",  label: (configManager.emojiLevel, configManager.emoji("🕒", 2)) + qsTr("Sec"), max: 59,  min: 0}
             ]
             ColumnLayout {
                 spacing: 3
@@ -110,8 +92,8 @@ ColumnLayout {
                     validator: IntValidator { bottom: modelData.min; top: modelData.max }
                     color: configManager.themeTextPrimary; horizontalAlignment: TextInput.AlignHCenter
                     inputMethodHints: Qt.ImhDigitsOnly
-                    implicitWidth: modelData.key === "auto" ? 62 : 54; implicitHeight: 40
-                    maximumLength: modelData.key === "auto" ? 3 : 2
+                    implicitWidth: 54; implicitHeight: 40
+                    maximumLength: 2
                     font.pixelSize: 16
                     background: Rectangle {
                         color: Qt.rgba(1,1,1,0.06); radius: 9
@@ -121,16 +103,10 @@ ColumnLayout {
                         if (modelData.key === "h") root.hourField = this
                         else if (modelData.key === "m") root.minField = this
                         else if (modelData.key === "s") root.secField = this
-                        else root.autoField = this
                     }
                     onEditingFinished: {
                         const v = parseInt(text, 10)
-                        if (modelData.key === "auto") {
-                            root.autoStopSecs = isNaN(v) ? 120 : Math.max(10, Math.min(600, v))
-                            text = String(root.autoStopSecs)
-                        } else {
-                            text = ("00" + (isNaN(v) ? 0 : Math.max(modelData.min, Math.min(modelData.max, v)))).slice(-2)
-                        }
+                        text = ("00" + (isNaN(v) ? 0 : Math.max(modelData.min, Math.min(modelData.max, v)))).slice(-2)
                     }
                 }
             }
@@ -148,7 +124,6 @@ ColumnLayout {
             baseColor: timerRunning ? Qt.rgba(1,0.6,0,0.22) : Qt.rgba(0.3,1,0.3,0.18)
             hoverColor: timerRunning ? Qt.rgba(1,0.6,0,0.32) : Qt.rgba(0.3,1,0.3,0.3)
             onClicked: {
-                stopAutoStop()
                 if (timerRunning) { timerObj.stop(); timerRunning = false }
                 else {
                     if (remainingSecs === 0) {
@@ -165,7 +140,7 @@ ColumnLayout {
             implicitWidth: configManager.emojiLevel >= 2 ? 122 : 100; implicitHeight: 40
             baseColor: Qt.rgba(1,0.2,0.2,0.15)
             hoverColor: Qt.rgba(1,0.2,0.2,0.28)
-            onClicked: { timerObj.stop(); stopAutoStop(); timerRunning = false; remainingSecs = 0; audioPlayer.stop() }
+            onClicked: { timerObj.stop(); timerRunning = false; remainingSecs = 0; audioPlayer.stop() }
         }
     }
 

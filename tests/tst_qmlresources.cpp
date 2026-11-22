@@ -70,6 +70,7 @@ private slots:
     void runtimeSettingsAreWiredAtStartup();         // rtcwake mode + emoji repaint
     void recentUiRegressionsAreGuarded();            // timer keys, Classic, preview, 24h
     void wakeMethodSelectorUsesNewLabels();          // no/on hidden, mem recommended
+    void settingsSectionsAndTimerScopeAreSimplified(); // one alarm section, no timer Auto Stop
 };
 
 // ----------------------------------------------------------------------------
@@ -508,8 +509,6 @@ void TestQmlResources::recentUiRegressionsAreGuarded()
              "Timer fields must be identified by a stable key, not a localized label");
     QVERIFY2(!timer.contains(QStringLiteral("modelData.label === \"Hours\"")),
              "localized/emoji-prefixed labels must never select a duration field");
-    QVERIFY2(timer.contains(QStringLiteral("autoStopTimer")),
-             "Timer Auto Stop must end the completion sound");
 
     const QString settings =
         readSourceFile(sourceRoot() + QStringLiteral("/qml/pages/SettingsPage.qml"));
@@ -590,6 +589,39 @@ void TestQmlResources::wakeMethodSelectorUsesNewLabels()
     const QString config = readSourceFile(sourceRoot() + QStringLiteral("/src/managers/ConfigManager.cpp"));
     QVERIFY2(config.contains(QStringLiteral("WakePolicy::wakeMethodChoices()")),
              "ConfigManager must expose the UI method list, not the raw allow-list");
+}
+
+// User cleanup (2026-11-22): the Settings page has one combined alarm section,
+// the font-family editor is gone, and the pointless cancel button is gone.
+// Auto Stop is an alarm feature; the countdown timer must not offer it.
+void TestQmlResources::settingsSectionsAndTimerScopeAreSimplified()
+{
+    const QString settings =
+        readSourceFile(sourceRoot() + QStringLiteral("/qml/pages/SettingsPage.qml"));
+    QVERIFY2(settings.contains(QStringLiteral("qsTr(\"Alarm Sound & Wake Test\")")),
+             "alarm sound and the diagnostic wake belong in one named section");
+    for (const QString &gone :
+         {QStringLiteral("qsTr(\"Alarm Sound\")"), QStringLiteral("qsTr(\"Test alarm\")"),
+          QStringLiteral("qsTr(\"Font Family\")"), QStringLiteral("themeManager.font_family"),
+          QStringLiteral("qsTr(\"Cancel test alarm\")")}) {
+        QVERIFY2(!settings.contains(gone),
+                 qPrintable(QStringLiteral("Settings still contains removed UI: %1").arg(gone)));
+    }
+
+    const QString timer = readSourceFile(sourceRoot() + QStringLiteral("/qml/pages/TimerPage.qml"));
+    for (const QString &gone : {QStringLiteral("autoStop"), QStringLiteral("key: \"auto\""),
+                                QStringLiteral("qsTr(\"Auto Stop\")")}) {
+        QVERIFY2(!timer.contains(gone),
+                 qPrintable(QStringLiteral("Timer must not implement alarm-only Auto Stop: %1")
+                                .arg(gone)));
+    }
+    QVERIFY2(timer.contains(QStringLiteral("audioPlayer.play(root.timerSoundFile)")),
+             "the timer must still play its completion sound");
+
+    const QString editor =
+        readSourceFile(sourceRoot() + QStringLiteral("/qml/pages/AlarmEditor.qml"));
+    QVERIFY2(editor.contains(QStringLiteral("qsTr(\"Auto Stop\")")),
+             "Auto Stop remains an alarm-editor setting");
 }
 
 QTEST_GUILESS_MAIN(TestQmlResources)
