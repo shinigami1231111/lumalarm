@@ -2,11 +2,9 @@
 # Contributor: Arch Linux User
 #
 # STG-1 packaging contract:
-#   * builds from THIS source tree — no release tag yet contains the D-Bus
-#     wake helper or the polkit policy (v1.0.0/v1.0.2/v1.0.3 all predate
-#     them), so a tarball recipe would ship a non-STG-1 application. The
-#     repository's current packaging strategy is therefore a local build,
-#     which is also what PKGBUILD.local does.
+#   * builds from THIS source tree so the package is made from the exact
+#     checked-out code (old v1.0.0-v1.0.3 tags predate the D-Bus helper and
+#     polkit policy). PKGBUILD.local follows the same local-build strategy.
 #   * no sudoers rule is ever installed or requested: wake scheduling runs
 #     through /usr/lib/lumalarm/lumalarm-wake-helper + the polkit action
 #     org.lumalarm.schedule.wake (STG-1.6).
@@ -25,7 +23,6 @@ depends=(
     'qt6-base'
     'qt6-multimedia'
     'qt6-declarative'
-    'qt6-quickcontrols2'
     'util-linux'
 )
 makedepends=(

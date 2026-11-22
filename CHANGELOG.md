@@ -114,7 +114,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 <details>
 <summary><b>Verified items and evidence — expand to see the full list</b></summary>
 
-All items below have recorded gate evidence in the project notes (`docs/Lumalarm-Obsidian/Verified.md`).
+All items below have recorded gate evidence in the project's verification notes.
 Items marked *manual* also have user-observed pass evidence.
 
 - **STG-1 Security** — D-Bus wake helper, polkit action, `60 <= seconds <= 86400`,

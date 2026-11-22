@@ -134,7 +134,7 @@ Current UI captures.
 <summary><b>Arch Linux</b></summary>
 
 ```bash
-sudo pacman -S --needed base-devel cmake ninja pkgconf qt6-base qt6-declarative qt6-multimedia qt6-quickcontrols2 qt6-tools kwindowsystem
+sudo pacman -S --needed base-devel cmake ninja pkgconf qt6-base qt6-declarative qt6-multimedia qt6-tools kwindowsystem
 ```
 </details>
 
