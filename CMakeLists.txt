@@ -115,6 +115,7 @@ set(QML_FILES
     qml/pages/StopwatchPage.qml
     qml/pages/SettingsPage.qml
     qml/components/RoundedCombo.qml
+    qml/components/WakeMethodPicker.qml
     qml/components/GlassCheckBox.qml
     qml/pickers/ClockFace.qml
     qml/components/ToggleSwitch.qml

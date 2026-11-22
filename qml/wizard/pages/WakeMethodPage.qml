@@ -48,24 +48,13 @@ WizardPage {
             }
 
             // The same mode selector Settings offers — one value, shared with
-            // the helper as `rtcwake -m <mode>`.
-            RowLayout {
+            // the helper as `rtcwake -m <mode>`. WakeMethodPicker also removes
+            // the old `no` / `on` troubleshooting modes from this wizard page.
+            WakeMethodPicker {
                 Layout.fillWidth: true
-                spacing: 14
-                Text {
-                    text: (configManager.emojiLevel, configManager.emoji("😴", 2)) + qsTr("Sleep mode")
-                    color: configManager.themeTextPrimary
-                    font.pixelSize: 14
-                    Layout.preferredWidth: 100
-                }
-                Item { Layout.fillWidth: true }
-                RoundedCombo {
-                    model: configManager.sleepModeChoices()
-                    currentIndex: Math.max(
-                        0, sleepModeCombo.find(configManager.sleepMode))
-                    Layout.preferredWidth: 140
-                    onActivated: configManager.sleepMode = currentText
-                }
+                caption: qsTr("Sleep mode")
+                captionEmoji: (configManager.emojiLevel, configManager.emoji("😴", 2))
+                comboWidth: 240
             }
         }
     }

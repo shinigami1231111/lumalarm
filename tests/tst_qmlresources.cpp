@@ -69,6 +69,7 @@ private slots:
     void sliderUsersImportQtQuickControls();         // no runtime "Slider is not a type"
     void runtimeSettingsAreWiredAtStartup();         // rtcwake mode + emoji repaint
     void recentUiRegressionsAreGuarded();            // timer keys, Classic, preview, 24h
+    void wakeMethodSelectorUsesNewLabels();          // no/on hidden, mem recommended
 };
 
 // ----------------------------------------------------------------------------
@@ -138,6 +139,7 @@ static const QStringList kQmlFilesFromCmake = {
     QStringLiteral("qml/wizard/pages/DonePage.qml"),
     QStringLiteral("qml/components/GlassButton.qml"),
     QStringLiteral("qml/components/GlassCard.qml"),
+    QStringLiteral("qml/components/WakeMethodPicker.qml"),
     QStringLiteral("qml/components/Tokens.qml"),
     QStringLiteral("qml/pages/AlarmListView.qml"),
     QStringLiteral("qml/pages/AlarmEditor.qml"),
@@ -528,6 +530,66 @@ void TestQmlResources::recentUiRegressionsAreGuarded()
              "wizard preview must use the alarm volume policy, including first run");
     QVERIFY2(sound.contains(QStringLiteral("wizard.stopAlarmPreview()")),
              "the same preview button must be able to stop playback");
+}
+
+// The selector is a sleep-method chooser, not a raw rtcwake flag dump. `no`
+// and `on` stay valid in the security allow-list, but must not be offered.
+void TestQmlResources::wakeMethodSelectorUsesNewLabels()
+{
+    const QString picker =
+        readSourceFile(sourceRoot() + QStringLiteral("/qml/components/WakeMethodPicker.qml"));
+    QVERIFY2(!picker.isEmpty(), "WakeMethodPicker.qml is missing from the source tree");
+
+    for (const QString &text :
+         {QStringLiteral("MEM — Suspend to RAM"), QStringLiteral("Recommended"),
+          QStringLiteral("Keeps your current session in RAM using minimal power. Requires suspend support and RTC wake-up. No automatic login needed."),
+          QStringLiteral("FREEZE — Lightweight Suspend"),
+          QStringLiteral("Freezes running processes without deep sleep. Requires kernel and device support. Uses more power than MEM but may offer better compatibility. No automatic login needed."),
+          QStringLiteral("Experimental"),
+          QStringLiteral("STANDBY — Hardware Standby (S1)"),
+          QStringLiteral("Enters a light hardware standby state. Requires ACPI S1 and RTC wake-up support. Wakes the existing session without automatic login."),
+          QStringLiteral("OFF — Complete Shutdown"),
+          QStringLiteral("Completely powers off the computer and schedules automatic startup. Requires firmware RTC wake-up, automatic system boot, automatic user login, and alarm app auto-start."),
+          QStringLiteral("DISK — Hibernate to Disk"),
+          QStringLiteral("Saves your session to disk and powers off. Requires configured hibernation, sufficient swap space, resume support, and RTC wake-up. Restores the saved session without requiring automatic login.")}) {
+        QVERIFY2(picker.contains(text),
+                 qPrintable(QStringLiteral("WakeMethodPicker is missing: %1").arg(text)));
+    }
+    QVERIFY2(!picker.contains(QStringLiteral("key: \"no\""))
+                 && !picker.contains(QStringLiteral("key: \"on\"")),
+             "no/on are troubleshooting flags, not selectable sleep methods");
+    for (const QString &mode : {QStringLiteral("mem"), QStringLiteral("freeze"),
+                                QStringLiteral("standby"), QStringLiteral("off"),
+                                QStringLiteral("disk")}) {
+        QVERIFY2(picker.contains(QStringLiteral("key: \"%1\"").arg(mode)),
+                 qPrintable(QStringLiteral("WakeMethodPicker is missing mode %1").arg(mode)));
+    }
+
+    // The visual wall must sit between the two ordinary methods and the three
+    // experimental ones; within the experimental group the user chose
+    // standby → off → disk (2026-11-22).
+    const int memPos = picker.indexOf(QStringLiteral("key: \"mem\""));
+    const int freezePos = picker.indexOf(QStringLiteral("key: \"freeze\""));
+    const int wallPos = picker.indexOf(QStringLiteral("separator: true"));
+    const int standbyPos = picker.indexOf(QStringLiteral("key: \"standby\""));
+    const int offPos = picker.indexOf(QStringLiteral("key: \"off\""));
+    const int diskPos = picker.indexOf(QStringLiteral("key: \"disk\""));
+    QVERIFY2(memPos >= 0 && memPos < freezePos && freezePos < wallPos
+                 && wallPos < standbyPos && standbyPos < offPos && offPos < diskPos,
+             "wake method order must be mem, freeze, separator, standby, off, disk");
+
+    const QString settings =
+        readSourceFile(sourceRoot() + QStringLiteral("/qml/pages/SettingsPage.qml"));
+    const QString wizard =
+        readSourceFile(sourceRoot() + QStringLiteral("/qml/wizard/pages/WakeMethodPage.qml"));
+    QVERIFY2(settings.contains(QStringLiteral("WakeMethodPicker {")),
+             "Settings must use the shared wake-method selector");
+    QVERIFY2(wizard.contains(QStringLiteral("WakeMethodPicker {")),
+             "the wizard must use the shared wake-method selector");
+
+    const QString config = readSourceFile(sourceRoot() + QStringLiteral("/src/managers/ConfigManager.cpp"));
+    QVERIFY2(config.contains(QStringLiteral("WakePolicy::wakeMethodChoices()")),
+             "ConfigManager must expose the UI method list, not the raw allow-list");
 }
 
 QTEST_GUILESS_MAIN(TestQmlResources)

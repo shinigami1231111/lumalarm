@@ -4,103 +4,103 @@
 <context>
     <name>AlarmEditor</name>
     <message>
-        <location filename="../qml/pages/AlarmEditor.qml" line="154"/>
+        <location filename="../qml/pages/AlarmEditor.qml" line="156"/>
         <source>Edit Alarm</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/AlarmEditor.qml" line="154"/>
+        <location filename="../qml/pages/AlarmEditor.qml" line="156"/>
         <source>New Alarm</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/AlarmEditor.qml" line="164"/>
+        <location filename="../qml/pages/AlarmEditor.qml" line="166"/>
         <source>Name (optional)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/AlarmEditor.qml" line="171"/>
+        <location filename="../qml/pages/AlarmEditor.qml" line="173"/>
         <source>e.g. Morning, Work, Wake up</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/AlarmEditor.qml" line="207"/>
+        <location filename="../qml/pages/AlarmEditor.qml" line="209"/>
         <source>Hour</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/AlarmEditor.qml" line="240"/>
+        <location filename="../qml/pages/AlarmEditor.qml" line="242"/>
         <source>Minute</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/AlarmEditor.qml" line="267"/>
+        <location filename="../qml/pages/AlarmEditor.qml" line="269"/>
         <source>AM</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/AlarmEditor.qml" line="267"/>
+        <location filename="../qml/pages/AlarmEditor.qml" line="269"/>
         <source>PM</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/AlarmEditor.qml" line="324"/>
+        <location filename="../qml/pages/AlarmEditor.qml" line="326"/>
         <source>Set Days</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/AlarmEditor.qml" line="342"/>
+        <location filename="../qml/pages/AlarmEditor.qml" line="344"/>
         <source>Mon</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/AlarmEditor.qml" line="342"/>
+        <location filename="../qml/pages/AlarmEditor.qml" line="344"/>
         <source>Tue</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/AlarmEditor.qml" line="342"/>
+        <location filename="../qml/pages/AlarmEditor.qml" line="344"/>
         <source>Wed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/AlarmEditor.qml" line="342"/>
+        <location filename="../qml/pages/AlarmEditor.qml" line="344"/>
         <source>Thu</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/AlarmEditor.qml" line="342"/>
+        <location filename="../qml/pages/AlarmEditor.qml" line="344"/>
         <source>Fri</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/AlarmEditor.qml" line="342"/>
+        <location filename="../qml/pages/AlarmEditor.qml" line="344"/>
         <source>Sat</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/AlarmEditor.qml" line="342"/>
+        <location filename="../qml/pages/AlarmEditor.qml" line="344"/>
         <source>Sun</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/AlarmEditor.qml" line="288"/>
-        <location filename="../qml/pages/AlarmEditor.qml" line="362"/>
+        <location filename="../qml/pages/AlarmEditor.qml" line="290"/>
+        <location filename="../qml/pages/AlarmEditor.qml" line="364"/>
         <source>Auto Stop</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/AlarmEditor.qml" line="368"/>
+        <location filename="../qml/pages/AlarmEditor.qml" line="370"/>
         <source>Enable Sound</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/AlarmEditor.qml" line="423"/>
+        <location filename="../qml/pages/AlarmEditor.qml" line="425"/>
         <source>Enable Command</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/AlarmEditor.qml" line="431"/>
+        <location filename="../qml/pages/AlarmEditor.qml" line="433"/>
         <source>e.g. notify-send &apos;Wake up!&apos;</source>
         <translation type="unfinished"></translation>
     </message>
@@ -167,32 +167,32 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/AlarmSoundPage.qml" line="120"/>
+        <location filename="../qml/wizard/pages/AlarmSoundPage.qml" line="122"/>
         <source>When an alarm rings</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/AlarmSoundPage.qml" line="132"/>
+        <location filename="../qml/wizard/pages/AlarmSoundPage.qml" line="134"/>
         <source>Raise system volume</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/AlarmSoundPage.qml" line="137"/>
+        <location filename="../qml/wizard/pages/AlarmSoundPage.qml" line="139"/>
         <source>Never touch system volume</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/AlarmSoundPage.qml" line="151"/>
+        <location filename="../qml/wizard/pages/AlarmSoundPage.qml" line="153"/>
         <source>Minimum volume</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/AlarmSoundPage.qml" line="177"/>
+        <location filename="../qml/wizard/pages/AlarmSoundPage.qml" line="179"/>
         <source>The system volume is raised to this level while an alarm rings, then restored exactly.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/AlarmSoundPage.qml" line="185"/>
+        <location filename="../qml/wizard/pages/AlarmSoundPage.qml" line="187"/>
         <source>Lumalarm plays its own sound only; your system volume is never changed.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -243,57 +243,57 @@
 <context>
     <name>ConfigManager</name>
     <message>
-        <location filename="../src/managers/ConfigManager.cpp" line="293"/>
+        <location filename="../src/managers/ConfigManager.cpp" line="295"/>
         <source>A tone named &quot;%1&quot; already exists.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/managers/ConfigManager.cpp" line="295"/>
+        <location filename="../src/managers/ConfigManager.cpp" line="297"/>
         <source>The selected file no longer exists.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/managers/ConfigManager.cpp" line="297"/>
+        <location filename="../src/managers/ConfigManager.cpp" line="299"/>
         <source>The selected item is not a local file.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/managers/ConfigManager.cpp" line="299"/>
+        <location filename="../src/managers/ConfigManager.cpp" line="301"/>
         <source>Unsupported file. Use .wav, .mp3, .ogg, .flac or .aac.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/managers/ConfigManager.cpp" line="301"/>
+        <location filename="../src/managers/ConfigManager.cpp" line="303"/>
         <source>The tones folder could not be created.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/managers/ConfigManager.cpp" line="303"/>
+        <location filename="../src/managers/ConfigManager.cpp" line="305"/>
         <source>The tones folder is not writable.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/managers/ConfigManager.cpp" line="305"/>
+        <location filename="../src/managers/ConfigManager.cpp" line="307"/>
         <source>The file could not be copied into the tones folder.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/managers/ConfigManager.cpp" line="307"/>
+        <location filename="../src/managers/ConfigManager.cpp" line="309"/>
         <source>The tone &quot;%1&quot; no longer exists.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/managers/ConfigManager.cpp" line="309"/>
+        <location filename="../src/managers/ConfigManager.cpp" line="311"/>
         <source>The tone &quot;%1&quot; is installed system-wide and cannot be deleted.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/managers/ConfigManager.cpp" line="312"/>
+        <location filename="../src/managers/ConfigManager.cpp" line="314"/>
         <source>The tone could not be deleted.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/managers/ConfigManager.cpp" line="313"/>
+        <location filename="../src/managers/ConfigManager.cpp" line="315"/>
         <source>The operation failed.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -752,262 +752,257 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="322"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="306"/>
         <source>Time picker style</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="326"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="310"/>
         <source>Wheel</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="353"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="337"/>
         <source>Alarm Sound</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="355"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="339"/>
         <source>When an alarm rings</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="359"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="343"/>
         <source>Raise system volume</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="364"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="348"/>
         <source>Never touch system volume</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="375"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="359"/>
         <source>Minimum volume</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="395"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="379"/>
         <source>The system volume is raised to this level while an alarm rings, then restored exactly.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="401"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="385"/>
         <source>Lumalarm plays its own sound only; your system volume is never changed.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="408"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="392"/>
         <source>Output device</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="417"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="401"/>
         <source>Default output device</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="436"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="420"/>
         <source>The alarm rings through this device; other apps keep using the system default.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="446"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="430"/>
         <source>Test alarm</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="448"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="432"/>
         <source>Arm a real wake without creating an alarm, to check that this machine actually wakes.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="460"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="444"/>
         <source>Wake in</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="529"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="513"/>
         <source>60 s</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="529"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="513"/>
         <source>2 min</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="529"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="513"/>
         <source>5 min</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="529"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="513"/>
         <source>10 min</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="529"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="513"/>
         <source>30 min</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="529"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="513"/>
         <source>60 min</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="529"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="513"/>
         <source>Custom…</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="496"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="480"/>
         <source>Custom seconds (60-3600)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="309"/>
-        <source>RTCwake method</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="326"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="310"/>
         <source>Classic</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="335"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="319"/>
         <source>Time format</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="339"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="323"/>
         <source>24-hour</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="339"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="323"/>
         <source>12-hour (AM/PM)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="563"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="547"/>
         <source>Arm test alarm</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="568"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="552"/>
         <source>Cancel test alarm</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="611"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="595"/>
         <source>Test alarm armed in %1 s</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="614"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="598"/>
         <source>Test alarm failed: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="626"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="610"/>
         <source>Behavior</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="629"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="613"/>
         <source>Show milliseconds in stopwatch</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="637"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="621"/>
         <source>Desktop notifications</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="645"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="629"/>
         <source>Setup wizard</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="647"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="631"/>
         <source>Run again</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="655"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="639"/>
         <source>Language</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="662"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="646"/>
         <source>System default</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="675"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="659"/>
         <source>Show emojis</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="677"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="661"/>
         <source>Off</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="677"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="661"/>
         <source>Less</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="677"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="661"/>
         <source>More</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="689"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="673"/>
         <source>Night Mode</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="691"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="675"/>
         <source>Dim the window before an alarm so it does not light up a dark room.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="698"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="682"/>
         <source>Enable night mode</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="709"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="693"/>
         <source>Dim before alarm</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="722"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="706"/>
         <source> min</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="732"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="716"/>
         <source>Dim strength</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="754"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="738"/>
         <source>Preview</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="764"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="748"/>
         <source>Dimming</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="775"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="759"/>
         <source>Reset to Defaults</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1116,62 +1111,62 @@
 <context>
     <name>TimerPage</name>
     <message>
-        <location filename="../qml/pages/TimerPage.qml" line="61"/>
+        <location filename="../qml/pages/TimerPage.qml" line="67"/>
         <source>Timer</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/TimerPage.qml" line="74"/>
+        <location filename="../qml/pages/TimerPage.qml" line="80"/>
         <source>Running</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/TimerPage.qml" line="74"/>
+        <location filename="../qml/pages/TimerPage.qml" line="80"/>
         <source>Paused</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/TimerPage.qml" line="74"/>
+        <location filename="../qml/pages/TimerPage.qml" line="80"/>
         <source>Set a duration</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/TimerPage.qml" line="90"/>
+        <location filename="../qml/pages/TimerPage.qml" line="96"/>
         <source>Hours</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/TimerPage.qml" line="91"/>
+        <location filename="../qml/pages/TimerPage.qml" line="97"/>
         <source>Min</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/TimerPage.qml" line="92"/>
+        <location filename="../qml/pages/TimerPage.qml" line="98"/>
         <source>Sec</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/TimerPage.qml" line="93"/>
+        <location filename="../qml/pages/TimerPage.qml" line="99"/>
         <source>Auto Stop</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/TimerPage.qml" line="138"/>
+        <location filename="../qml/pages/TimerPage.qml" line="144"/>
         <source>Pause</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/TimerPage.qml" line="138"/>
+        <location filename="../qml/pages/TimerPage.qml" line="144"/>
         <source>Start</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/TimerPage.qml" line="157"/>
+        <location filename="../qml/pages/TimerPage.qml" line="163"/>
         <source>Reset</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/TimerPage.qml" line="170"/>
+        <location filename="../qml/pages/TimerPage.qml" line="176"/>
         <source>Sound when done:</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1233,23 +1228,94 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/WakeMethodPage.qml" line="56"/>
+        <location filename="../qml/wizard/pages/WakeMethodPage.qml" line="55"/>
         <source>Sleep mode</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/WakeMethodPage.qml" line="79"/>
+        <location filename="../qml/wizard/pages/WakeMethodPage.qml" line="68"/>
         <source>Save your work before testing the wake — the machine will sleep.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/WakeMethodPage.qml" line="88"/>
+        <location filename="../qml/wizard/pages/WakeMethodPage.qml" line="77"/>
         <source>Test wake</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/WakeMethodPage.qml" line="94"/>
+        <location filename="../qml/wizard/pages/WakeMethodPage.qml" line="83"/>
         <source>Skip this step</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>WakeMethodPicker</name>
+    <message>
+        <location filename="../qml/components/WakeMethodPicker.qml" line="15"/>
+        <source>RTCwake method</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/WakeMethodPicker.qml" line="24"/>
+        <source>MEM — Suspend to RAM</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/WakeMethodPicker.qml" line="24"/>
+        <source>Recommended</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/WakeMethodPicker.qml" line="25"/>
+        <source>Keeps your current session in RAM using minimal power. Requires suspend support and RTC wake-up. No automatic login needed.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/WakeMethodPicker.qml" line="29"/>
+        <source>FREEZE — Lightweight Suspend</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/WakeMethodPicker.qml" line="30"/>
+        <source>Freezes running processes without deep sleep. Requires kernel and device support. Uses more power than MEM but may offer better compatibility. No automatic login needed.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/WakeMethodPicker.qml" line="34"/>
+        <location filename="../qml/components/WakeMethodPicker.qml" line="39"/>
+        <location filename="../qml/components/WakeMethodPicker.qml" line="44"/>
+        <location filename="../qml/components/WakeMethodPicker.qml" line="49"/>
+        <source>Experimental</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/WakeMethodPicker.qml" line="39"/>
+        <source>STANDBY — Hardware Standby (S1)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/WakeMethodPicker.qml" line="40"/>
+        <source>Enters a light hardware standby state. Requires ACPI S1 and RTC wake-up support. Wakes the existing session without automatic login.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/WakeMethodPicker.qml" line="44"/>
+        <source>OFF — Complete Shutdown</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/WakeMethodPicker.qml" line="45"/>
+        <source>Completely powers off the computer and schedules automatic startup. Requires firmware RTC wake-up, automatic system boot, automatic user login, and alarm app auto-start.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/WakeMethodPicker.qml" line="49"/>
+        <source>DISK — Hibernate to Disk</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/WakeMethodPicker.qml" line="50"/>
+        <source>Saves your session to disk and powers off. Requires configured hibernation, sufficient swap space, resume support, and RTC wake-up. Restores the saved session without requiring automatic login.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

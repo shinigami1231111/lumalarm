@@ -54,6 +54,20 @@ inline const QStringList &wakeModeChoices()
     return kModes;
 }
 
+// Modes the GUI offers. `no` (arm the RTC alarm but do not sleep) and `on`
+// (device wake only) are still understood by rtcwake and stay in the security
+// allow-list above, but the user asked to remove them from the selector: they
+// are troubleshooting modes, not sleep methods. MEM is first and the default;
+// freeze follows, then the experimental group standby / off / disk
+// (user, 2026-11-22).
+inline const QStringList &wakeMethodChoices()
+{
+    static const QStringList kModes{QStringLiteral("mem"), QStringLiteral("freeze"),
+                                    QStringLiteral("standby"), QStringLiteral("off"),
+                                    QStringLiteral("disk")};
+    return kModes;
+}
+
 inline bool isValidWakeMode(const QString &mode)
 {
     return wakeModeChoices().contains(mode);

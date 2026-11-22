@@ -72,20 +72,22 @@ void ConfigManager::migrateOldConfig()
 // influenced behaviour, so dropping it cannot change what any wake does.
 
 namespace {
-// Display order for the sleep-mode selector — standby sits between mem and
-// disk (user, 2026-10-08). The list itself lives in WakePolicy
-// (wake/WakeSecurity.h) so the Settings UI, the app and the root helper can
-// never drift apart; see WakePolicy::wakeModeChoices().
+// Display order for the sleep-mode selector. The security allow-list in
+// WakeSecurity.h still accepts rtcwake's `no` and `on` for helper/tooling use,
+// but those troubleshooting modes are no longer offered in the GUI. The list
+// itself lives in WakePolicy so Settings, the wizard and ConfigManager cannot
+// drift apart; see WakePolicy::wakeMethodChoices() (user, 2026-11-22).
 const QStringList &sleepModeList()
 {
-    return WakePolicy::wakeModeChoices();
+    return WakePolicy::wakeMethodChoices();
 }
 } // namespace
 
 QString ConfigManager::sleepMode() const
 {
-    // A value written by hand into settings.ini that we do not offer must not
-    // reach the helper: read back as the default instead.
+    // A value written by hand into settings.ini that we do not offer (including
+    // the old `no` / `on` entries) must not reach the helper: read back as the
+    // default instead.
     const QString stored =
         m_settings->value(QStringLiteral("wake/sleepMode"), QStringLiteral("mem")).toString();
     return sleepModeList().contains(stored) ? stored : QStringLiteral("mem");

@@ -294,27 +294,12 @@ ColumnLayout {
             Text { text: (configManager.emojiLevel, configManager.emoji("⏰", 2)) + qsTr("Alarm Defaults"); color: configManager.themeTextSecondary; font.pixelSize: 13; font.bold: true; Layout.bottomMargin: -4 }
 
             // The one and only mode control: this value is what the helper runs
-            // as `rtcwake -m <mode>`.
-            //
-            // It used to be shadowed by a second row, "Default Wake Mode", whose
-            // value NOTHING consumed — the mode handed to the helper comes from
-            // WakeManager::m_sleepMode, fed by this setting alone. That row also
-            // carried a hardcoded model offering "none", which is not a valid
-            // rtcwake mode at all. Removed 2026-10-08 (user report).
-            //
-            // Order comes from ConfigManager::sleepModeChoices(), which keeps
-            // standby between mem and disk (user, 2026-10-08).
-            RowLayout {
-                Layout.fillWidth: true; spacing: 14
-                Text { text: (configManager.emojiLevel, configManager.emoji("⏰", 2)) + qsTr("RTCwake method"); color: configManager.themeTextPrimary; font.pixelSize: 15; Layout.preferredWidth: 180 }
-                Item { Layout.fillWidth: true }
-                RoundedCombo {
-                    id: sleepModeCombo
-                    model: configManager.sleepModeChoices()
-                    currentIndex: Math.max(0, sleepModeCombo.find(configManager.sleepMode))
-                    Layout.preferredWidth: 140
-                    onActivated: configManager.sleepMode = currentText
-                }
+            // as `rtcwake -m <mode>`. Labels, descriptions and the experimental
+            // split live in WakeMethodPicker so the wizard cannot drift from it.
+            WakeMethodPicker {
+                Layout.fillWidth: true
+                comboWidth: 300
+                captionEmoji: (configManager.emojiLevel, configManager.emoji("⏰", 2))
             }
 
             RowLayout {

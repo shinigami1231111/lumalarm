@@ -139,12 +139,16 @@ void TestConfigManager::defaultWakeModeWasRemovedInFavourOfSleepMode()
     ConfigManager cm;
     QSignalSpy spy(&cm, &ConfigManager::configChanged);
 
-    // sleepMode is validated against WakePolicy::wakeModeChoices(), so only a
-    // listed mode can be stored — it is the value the helper runs as
+    // sleepMode is validated against the GUI method list, so only a mode the
+    // selector offers can be stored — it is the value the helper runs as
     // `rtcwake -m <mode>`, and the only mode setting there is. The old
     // `defaultWakeMode` property was rendered in Settings but read by nothing,
     // and offered a hardcoded list containing "none", which is not a valid
     // rtcwake mode at all; it was removed on 2026-10-08.
+    QCOMPARE(cm.sleepModeChoices(),
+             QStringList({QStringLiteral("mem"), QStringLiteral("freeze"),
+                          QStringLiteral("standby"), QStringLiteral("off"),
+                          QStringLiteral("disk")}));
     cm.setSleepMode(QStringLiteral("standby"));
     QCOMPARE(cm.sleepMode(), QStringLiteral("standby"));
     QCOMPARE(spy.count(), 1);
@@ -154,10 +158,15 @@ void TestConfigManager::defaultWakeModeWasRemovedInFavourOfSleepMode()
     ConfigManager reloaded;
     QCOMPARE(reloaded.sleepMode(), QStringLiteral("standby"));
 
-    // An off-list mode is never stored: it falls back to the default, so a
+    // Off-list modes are never stored: they fall back to the default, so a
     // stray or hand-edited ini value cannot reach the privileged helper.
-    cm.setSleepMode(QStringLiteral("none"));
-    QCOMPARE(cm.sleepMode(), QStringLiteral("mem"));
+    // `no` / `on` stay valid in the helper allow-list but were removed from
+    // the selector on 2026-11-22 because they do not select a sleep state.
+    for (const QString &removed : {QStringLiteral("none"), QStringLiteral("no"),
+                                   QStringLiteral("on")}) {
+        cm.setSleepMode(removed);
+        QCOMPARE(cm.sleepMode(), QStringLiteral("mem"));
+    }
 }
 
 void TestConfigManager::timePickerModeIsNormalizedOnRead()
