@@ -24,12 +24,14 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # ── Host runner: Ubuntu 24.04 ───────────────────────────────────
-          # qt6-tools-dev is REQUIRED: qt_add_executable() calls
+          # ── Container: Ubuntu 26.04 ─────────────────────────────────────
+          # Ubuntu 24.04 ships Qt 6.4.2, below the project's Qt >= 6.5
+          # minimum, so Configure failed there. Questing/Resolute ship Qt
+          # 6.9+/6.10. qt6-tools-dev is REQUIRED: qt_add_executable() calls
           # Qt6::WrapCpp (from Qt6CoreTools) for the QML module.
-          - name: Ubuntu 24.04
+          - name: Ubuntu 26.04
             os: ubuntu-24.04
-            container: null
+            container: ubuntu:26.04
             packages: >-
               cmake ninja-build g++
               qt6-base-dev qt6-base-dev-tools qt6-declarative-dev
@@ -62,9 +64,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Container jobs start as root with no package manager primed; the
-      # host runner already has sudo. Run everything through bash so the
-      # command lines are identical for all three environments.
+      # Container jobs start as root; the host runner uses sudo. Detect the
+      # package manager instead of branching on the container field, so apt
+      # works both on the runner and inside the Ubuntu container.
       - name: Install dependencies
         shell: bash
         run: |
@@ -74,22 +76,20 @@ jobs:
             SUDO="sudo"
           fi
 
-          if [ -n "${{ matrix.container }}" ]; then
-            if command -v dnf >/dev/null 2>&1; then
-              dnf install -y dnf-plugins-core
-              $SUDO dnf install -y ${{ matrix.packages }}
-            elif command -v pacman >/dev/null 2>&1; then
-              # Keep in sync with PKGBUILD: update the base system first, then
-              # install the toolchain and Qt 6 packages.
-              $SUDO pacman -Syu --needed --noconfirm
-              $SUDO pacman -S --needed --noconfirm ${{ matrix.packages }}
-            else
-              echo "No supported package manager in container ${{ matrix.container }}" >&2
-              exit 1
-            fi
-          else
+          if command -v dnf >/dev/null 2>&1; then
+            $SUDO dnf install -y dnf-plugins-core
+            $SUDO dnf install -y ${{ matrix.packages }}
+          elif command -v pacman >/dev/null 2>&1; then
+            # Keep in sync with PKGBUILD: update the base system first, then
+            # install the toolchain and Qt 6 packages.
+            $SUDO pacman -Syu --needed --noconfirm
+            $SUDO pacman -S --needed --noconfirm ${{ matrix.packages }}
+          elif command -v apt-get >/dev/null 2>&1; then
             $SUDO apt-get update
             $SUDO apt-get install -y --no-install-recommends ${{ matrix.packages }}
+          else
+            echo "No supported package manager in ${{ matrix.name }}" >&2
+            exit 1
           fi
 
       - name: Configure

@@ -11,14 +11,14 @@ features. Read on for the conventions that keep review cheap.
 - **Qt >= 6.5** with the modules this project uses: `Core`, `Gui`, `Qml`, `Quick`,
   `QuickControls2`, `Multimedia`, `Widgets`, `Test`, `DBus`
 - **CMake >= 3.21**
-- A **C++17** compiler (GCC or Clang); CI covers the toolchains shipped by Ubuntu 24.04,
+- A **C++17** compiler (GCC or Clang); CI covers the toolchains shipped by Ubuntu 26.04,
   Fedora 40 and Arch Linux
 - Optional: **KF6WindowSystem** (KWin), which enables native KDE blur-behind
 - Optional: **Qt Linguist tools** (`lupdate`/`lrelease`, package `qt6-tools` on Arch),
   needed only to compile or refresh translations — see [Translations](#translations).
   Without them the build still succeeds and the UI stays in English.
-- Platforms: developed and tested on Arch Linux. Ubuntu 24.04 and Fedora 40 are
-  expected to work; please report what breaks elsewhere.
+- Platforms: developed and tested on Arch Linux. Ubuntu 26.04 (Qt 6.10) and Fedora 40
+  are covered by CI; Ubuntu 24.04 has Qt 6.4 and is below the supported minimum.
 
 On Arch:
 
@@ -136,9 +136,10 @@ CI runs on every push and pull request to `main` via GitHub Actions.
 | `.github/workflows/ci.yml` | Release build + `ctest` on three Linux environments |
 | `.github/workflows/lint.yml` | advisory `clang-tidy` over `src/` (`continue-on-error: true`) |
 
-The build matrix covers **Ubuntu 24.04** (host runner), **Fedora 40** and **Arch Linux**
-(containers). KDE blur-behind is disabled (`-DLUMALARM_ENABLE_KDE_BLUR=OFF`) in every
-leg so the build stays portable across all three.
+The build matrix covers **Ubuntu 26.04**, **Fedora 40** and **Arch Linux** (all
+containers on an Ubuntu 24.04 host runner). KDE blur-behind is disabled
+(`-DLUMALARM_ENABLE_KDE_BLUR=OFF`) in every leg so the build stays portable across
+all three.
 
 ### Running CI locally
 

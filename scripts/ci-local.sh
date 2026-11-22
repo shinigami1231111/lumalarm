@@ -16,8 +16,8 @@
 # Relationship to .github/workflows/ci.yml:
 #   Same configure flags (CMAKE_BUILD_TYPE=Release,
 #   LUMALARM_ENABLE_KDE_BLUR=OFF) and the same build + ctest invocation. The
-#   workflow additionally builds inside Fedora 40 and Arch containers on an
-#   Ubuntu 24.04 runner; this script covers the host only. The lint step
+#   workflow additionally builds inside Ubuntu 26.04, Fedora 40 and Arch
+#   containers on an Ubuntu 24.04 runner; this script covers the host only. The lint step
 #   reports the same findings as .github/workflows/lint.yml but is stricter:
 #   HERE any finding fails the run (mandatory since 2026-10-15, after the
 #   Qt/GCC-flag noise was eliminated), while lint.yml stays advisory

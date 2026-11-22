@@ -36,7 +36,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
   style, commit conventions and the privileged-components rules — plus
   CI badges in the README.
 - Continuous integration: `.github/workflows/ci.yml` (Release build and
-  `ctest` on Ubuntu 24.04, Fedora 40 and Arch) and
+  `ctest` on Ubuntu 26.04, Fedora 40 and Arch) and
   `.github/workflows/lint.yml` (advisory clang-tidy), with a
   container-free local mirror in `scripts/ci-local.sh` (`make ci`), an
   optional pre-push hook (`scripts/install-hooks.sh`), and
@@ -108,6 +108,11 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 - Toggling an alarm no longer loses its id: `setAlarmEnabled` is
   id-based instead of index-based, so a model refresh between click and
   write could not disable the wrong row.
+- GitHub CI: the Ubuntu leg now builds in an Ubuntu 26.04 container because
+  Ubuntu 24.04 ships Qt 6.4.2, below the project's Qt 6.5 minimum. Package-manager
+  detection no longer assumes only dnf/pacman can run inside containers.
+- `tst_stg1security` no longer fails in a clean checkout when the git-ignored
+  developer file `PKGBUILD.local` is absent; it is audited when present.
 
 ### Verified
 

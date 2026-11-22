@@ -63,6 +63,11 @@ QString readSourceFile(const QString &relative)
     return QString::fromUtf8(f.readAll());
 }
 
+bool sourceFileExists(const QString &relative)
+{
+    return QFileInfo::exists(QString::fromLatin1(STG1_SOURCE_DIR) + QLatin1Char('/') + relative);
+}
+
 QStringList sourceLines(const QString &relative)
 {
     return readSourceFile(relative).split(QLatin1Char('\n'));
@@ -788,6 +793,11 @@ void TestStg1Security::pkgbuildInstallsNoSudoers()
 
 void TestStg1Security::pkgbuildLocalInstallsNoSudoers()
 {
+    // PKGBUILD.local is a developer-only recipe: it is git-ignored, absent from
+    // release archives and CI checkouts, and must never become a CI gate.
+    // Audit it when it exists; the tracked PKGBUILD is always audited.
+    if (!sourceFileExists(QStringLiteral("PKGBUILD.local")))
+        QSKIP("PKGBUILD.local is a local-only developer file and is not part of the source export");
     assertNoSudoersMechanism(QStringLiteral("PKGBUILD.local"));
 }
 
