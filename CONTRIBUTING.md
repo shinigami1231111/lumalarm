@@ -74,11 +74,13 @@ ctest --test-dir build --output-on-failure
 | `tst_thememanager` | `ThemeManager` (managers): seeded defaults, palette presets, theme file round-trip |
 | `tst_blurmanager` | `BlurManager` (ui): construction and null-window contract |
 | `tst_wakemanager` | `WakeManager` (wake): test-alarm range validation plus the arm/cancel surface; the privileged D-Bus cases skip when no helper is present |
+| `tst_stg1security` | wake-helper security contract: polkit action, `60 <= seconds <= 86400` bounds, D-Bus policy and systemd/rtcwake fallback |
+| `tst_wakecaps` | helper capability probe (`GetCapabilities()`) used by the first-run wizard's wake-step gate |
 | `tst_notifier` | `Notifier` (ui): construction, master switch and the no-bus path (live delivery is checked manually with `busctl --user monitor`) |
 | `tst_trayicon` | `TrayIcon` (ui): construction and tooltip text on a headless box (offscreen platform, no system tray) |
 | `tst_nightmode` | `NightMode` (ui): edge-trigger semantics, settings round-trip and lead-window clamping |
 | `tst_wizard` | `WizardController` (ui): step machine, next/back gates, first-run vs. existing-profile detection, the `wizard/completed` flag, language selection, and the guarantee that a wizard run writes no alarm |
-| `tst_i18n` | i18n: English source fallback, the embedded Arabic catalog at `:/i18n`, `QQmlEngine::retranslate()`, the `ui/language` round-trip and `.ts` catalog consistency |
+| `tst_i18n` | i18n: English source fallback, the embedded Arabic and Japanese catalogs at `:/i18n`, `QQmlEngine::retranslate()`, the `ui/language` round-trip and `.ts` catalog consistency |
 
 Any PR must keep all tests green. New behavior should come with a new test.
 
@@ -91,6 +93,7 @@ live in `translations/`:
 |---|---|
 | `translations/lumalarm_en.ts` | source-language template — English *is* the source, so its entries stay `type="unfinished"` by design |
 | `translations/lumalarm_ar.ts` | Arabic catalog, kept at 0 unfinished entries |
+| `translations/lumalarm_ja.ts` | Japanese catalog, kept at 0 unfinished entries |
 
 ```sh
 cmake --build build --target update_translations   # re-run lupdate over the sources
@@ -111,15 +114,16 @@ Rules for string changes:
   `"Tones folder: "`: the UI concatenates them around a countdown, and `tst_i18n`
   asserts they survive translation.
 - After adding a string, run `update_translations` and translate the new entry in the
-  same commit. `tst_i18n` fails on any `type="unfinished"` entry in `lumalarm_ar.ts`,
-  so an untranslated string cannot ship unnoticed.
+  same commit. `tst_i18n` fails on any `type="unfinished"` entry in `lumalarm_ar.ts` or
+  `lumalarm_ja.ts`, so an untranslated string cannot ship unnoticed.
 - `Qt6::LinguistTools` is found **optionally** in `CMakeLists.txt`, so a machine or CI
   image without `lupdate`/`lrelease` still configures, builds and runs; only the
   catalog-dependent cases of `tst_i18n` report a skip there.
 
 Right-to-left: `main.cpp` sets the application layout direction from the *loaded*
 catalog, and `qml/main.qml` enables `LayoutMirroring` from
-`Qt.application.layoutDirection`, so Arabic mirrors the whole window.
+`Qt.application.layoutDirection`, so Arabic mirrors the whole window. The Japanese catalog
+is RTL-safe as well and loads for both `ja` and `ja_JP`.
 
 ## Continuous Integration
 
@@ -192,10 +196,10 @@ qml/
   pickers/      ClockFace, WheelTimePicker
   overlays/     RingingOverlay, SoundManager
   wizard/       WizardOverlay, WizardPage, pages/ (the six setup steps)
-translations/   lumalarm_en.ts, lumalarm_ar.ts
+translations/   lumalarm_en.ts, lumalarm_ar.ts, lumalarm_ja.ts
 helper/    lumalarm-wake-helper.cpp   (privileged D-Bus wake helper)
 data/      D-Bus activation + policy, Polkit action, systemd unit
-tests/     one .cpp per test binary (14 in total)
+tests/     one .cpp per test binary (22 in total)
 resources/ icons, .qrc, .desktop file, app icons
 ```
 
@@ -240,9 +244,21 @@ test: add per-module unit tests
 
 ## Release process
 
-Releases are cut from `main`; the tag is created after all in-flight tasks are merged.
-See `RELEASE_DEFERRED.md` at the repository root for the exact command sequence, and
-`CHANGELOG.md` for what each version contains. Do not tag or push without being asked.
+Releases are cut from `main`; the tag is created after all in-flight tasks are merged and
+`CHANGELOG.md` has a dated section for the version. Version metadata lives in
+`CMakeLists.txt`, `PKGBUILD` and the local-only `PKGBUILD.local`; keep `pkgrel` and the
+`project(... VERSION ...)` in sync. Builds are capped at 80% of available CPUs in every
+tracked build command.
+
+1. Check the local state: `git log --oneline origin/main..HEAD`, `git status --short`, `git tag -l`.
+2. Push commits: `git push origin main`.
+3. Create and push an annotated tag:
+   `git tag -a vX.Y.Z -m "Release X.Y.Z — ..."` then `git push origin vX.Y.Z`.
+4. Optionally publish the release notes straight from the changelog:
+   `gh release create vX.Y.Z --title "vX.Y.Z — ..." --notes-file <(sed -n '/## \[X.Y.Z\]/,/## \[/p' CHANGELOG.md | head -n -1)`
+
+Do not tag, push or create a GitHub release without being asked. Local, git-ignored release
+checklists may be kept outside the source tree; they are not part of the repository.
 
 ## Privileged components (D-Bus helper)
 
