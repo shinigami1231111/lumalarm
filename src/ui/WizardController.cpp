@@ -40,6 +40,12 @@ WizardController::WizardController(ConfigManager *config, WakeManager *wake, Ala
     QObject::connect(m_config, &ConfigManager::configChanged, this,
                      &WizardController::configChangedMirror);
 
+    // The sound page reads the sink list through this controller; forward the
+    // audio backend's signal so QML bindings re-evaluate when it arrives.
+    if (m_audio)
+        QObject::connect(m_audio, &AlarmAudioController::outputDevicesChanged, this,
+                         &WizardController::outputDevicesChanged);
+
     probeNotifications();
 }
 
@@ -136,18 +142,39 @@ bool WizardController::notificationsAvailable() const
     return m_notificationsAvailable;
 }
 
+QVariantList WizardController::outputDevices() const
+{
+    return m_audio ? m_audio->outputDevices() : QVariantList();
+}
+
+void WizardController::refreshOutputDevices()
+{
+    if (m_audio)
+        m_audio->refreshOutputDevices();
+}
+
+void WizardController::previewSound(const QString &toneName)
+{
+    if (m_audio)
+        m_audio->preview(toneName);
+}
+
 void WizardController::next()
 {
     if (!canGoNext())
         return;
     if (m_currentStep >= kStepCount - 1)
-        return; // step 5 is the last one; Next is not offered
+        return; // the summary is the last step; Next is not offered there
     setCurrentStep(m_currentStep + 1);
 
     // Re-probe the session bus when the notification page becomes current so
     // the answer reflects the machine as it is now, not as it was at startup.
     if (m_currentStep == Notifications)
         probeNotifications();
+    // Likewise refresh sinks on entering the sound page so a device plugged in
+    // after startup is already in the combo when the page opens.
+    if (m_currentStep == AlarmSound)
+        refreshOutputDevices();
 }
 
 void WizardController::back()
@@ -162,9 +189,9 @@ void WizardController::skip()
     if (!m_config)
         return;
     // Skipping records completion (so it never auto-shows again) and hides the
-    // overlay, and writes nothing else. The language already persisted itself
-    // the moment it was chosen; the sound and the wake probe are never
-    // persisted, so there is nothing left to roll back.
+    // overlay, and writes nothing else. The language and the alarm-sound
+    // choices persist themselves the moment they are picked (live ConfigManager
+    // writes, exactly as in Settings); the wake probe is never persisted.
     m_config->setWizardCompleted(true);
     setCompleted(true);
 }

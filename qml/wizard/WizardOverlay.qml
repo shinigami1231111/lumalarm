@@ -41,6 +41,7 @@ Item {
             LanguagePage { }
             WakeMethodPage { }
             NotificationPage { }
+            AlarmSoundPage { }
             DonePage { }
         }
 

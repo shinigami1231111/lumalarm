@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import GlassAlarm
 
-// Page 4 — summary and finish. Finish persists wizard/completed=true; the
+// Page 5 — summary and finish. Finish persists wizard/completed=true; the
 // secondary link closes the wizard without writing the flag so it appears
 // again on the next launch.
 WizardPage {
@@ -12,6 +12,17 @@ WizardPage {
     primaryLabel: configManager.emoji("🏁", 2) + qsTr("Finish")
     primaryEnabled: true
     onPrimaryClicked: wizard.finish()
+
+    function outputDeviceLabel() {
+        const wanted = configManager.audioOutputSink
+        if (wanted === "")
+            return qsTr("Default output device")
+        const devices = wizard.outputDevices
+        for (let i = 0; i < devices.length; ++i)
+            if (devices[i].name === wanted)
+                return devices[i].description
+        return wanted // device unplugged since it was chosen
+    }
 
     Rectangle {
         Layout.fillWidth: true
@@ -64,6 +75,35 @@ WizardPage {
                 Text {
                     Layout.fillWidth: true
                     text: wizard.notificationsAvailable ? qsTr("Available") : qsTr("Not available")
+                    color: configManager.themeTextPrimary
+                    font.pixelSize: 13
+                    horizontalAlignment: Text.AlignRight
+                    elide: Text.ElideRight
+                }
+            }
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 12
+                Text { text: configManager.emoji("🔔", 2) + qsTr("Alarm Sound"); color: configManager.themeTextSecondary;
+                       font.pixelSize: 13; Layout.preferredWidth: 140 }
+                Text {
+                    Layout.fillWidth: true
+                    text: configManager.audioPolicy === "guarantee"
+                          ? qsTr("Raise system volume") : qsTr("Never touch system volume")
+                    color: configManager.themeTextPrimary
+                    font.pixelSize: 13
+                    horizontalAlignment: Text.AlignRight
+                    elide: Text.ElideRight
+                }
+            }
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 12
+                Text { text: configManager.emoji("🔉", 2) + qsTr("Output device"); color: configManager.themeTextSecondary;
+                       font.pixelSize: 13; Layout.preferredWidth: 140 }
+                Text {
+                    Layout.fillWidth: true
+                    text: root.outputDeviceLabel()
                     color: configManager.themeTextPrimary
                     font.pixelSize: 13
                     horizontalAlignment: Text.AlignRight

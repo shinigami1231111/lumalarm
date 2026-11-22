@@ -105,6 +105,7 @@ private slots:
     void emojiLevelMirrorsConfiguration();
     void testWakeRunsWithoutGate();
     void testNotificationReportsBusTruthfully();
+    void alarmSoundStepIsReachableAndSafeWithoutBackend();
     void skipLeavesConfigurationIntact();
     void wizardRunNeverTouchesAlarms();
 
@@ -163,7 +164,7 @@ void TestWizard::initialStepIsZeroAndCannotGoBack()
     ProbeableWizard w(m_config, m_wake, m_audio);
     QCOMPARE(w.currentStep(), 0);
     QCOMPARE(w.canGoBack(), false);
-    QCOMPARE(w.stepCount(), 4);
+    QCOMPARE(w.stepCount(), WizardController::kStepCount);
     QCOMPARE(w.wizardCompleted(), false);
     QCOMPARE(w.currentStep(), int(0));
 }
@@ -425,14 +426,46 @@ void TestWizard::testNotificationReportsBusTruthfully()
     }
 }
 
+void TestWizard::alarmSoundStepIsReachableAndSafeWithoutBackend()
+{
+    ProbeableWizard w(m_config, m_wake, m_audio);
+
+    for (int i = 0; i < int(WizardController::AlarmSound); ++i)
+        w.next();
+    QCOMPARE(w.currentStep(), int(WizardController::AlarmSound));
+    QCOMPARE(w.currentStep() + 1, int(WizardController::Done));
+    QVERIFY(w.canGoNext()); // the sound step never gates progress
+
+    // No mixer backend in this test profile: refresh is a no-op, a missing
+    // tone emits a playback error but must never throw or hang, and the device
+    // property stays readable for the QML combo.
+    QSignalSpy devices(&w, &WizardController::outputDevicesChanged);
+    w.refreshOutputDevices();
+    w.previewSound(QString());
+    QVERIFY(devices.isValid());
+
+    w.next();
+    QCOMPARE(w.currentStep(), int(WizardController::Done));
+    w.finish();
+    QVERIFY(w.wizardCompleted());
+}
+
 void TestWizard::skipLeavesConfigurationIntact()
 {
     // Unrelated configuration the wizard has no business touching.
     const QString wakeBefore = m_config->sleepMode();
     const double opacityBefore = m_config->themeOpacity();
     const QString languageBefore = m_config->language();
+    const QString policyBefore = m_config->audioPolicy();
+    const int floorBefore = m_config->audioFloorPercent();
+    const QString sinkBefore = m_config->audioOutputSink();
+    const QString soundBefore = m_config->audioDefaultSound();
     m_config->setSleepMode(QStringLiteral("disk"));
     m_config->setThemeOpacity(0.42);
+    m_config->setAudioPolicy(QStringLiteral("alarmOnly"));
+    m_config->setAudioFloorPercent(35);
+    m_config->setAudioOutputSink(QStringLiteral("wizard-test-sink"));
+    m_config->setAudioDefaultSound(QStringLiteral("wizard-test-tone.wav"));
 
     const bool alarmsExisted = QFile::exists(alarmsPath());
     const QByteArray alarmsBefore = readBytes(alarmsPath());
@@ -454,6 +487,10 @@ void TestWizard::skipLeavesConfigurationIntact()
     QCOMPARE(m_config->sleepMode(), QStringLiteral("disk"));
     QCOMPARE(m_config->themeOpacity(), 0.42);
     QCOMPARE(m_config->language(), QStringLiteral("ja"));
+    QCOMPARE(m_config->audioPolicy(), QStringLiteral("alarmOnly"));
+    QCOMPARE(m_config->audioFloorPercent(), 35);
+    QCOMPARE(m_config->audioOutputSink(), QStringLiteral("wizard-test-sink"));
+    QCOMPARE(m_config->audioDefaultSound(), QStringLiteral("wizard-test-tone.wav"));
 
     // Neither the alarm store nor the theme file was opened for writing.
     QCOMPARE(QFile::exists(alarmsPath()), alarmsExisted);
@@ -464,6 +501,10 @@ void TestWizard::skipLeavesConfigurationIntact()
     m_config->setSleepMode(wakeBefore);
     m_config->setThemeOpacity(opacityBefore);
     m_config->setLanguage(languageBefore);
+    m_config->setAudioPolicy(policyBefore);
+    m_config->setAudioFloorPercent(floorBefore);
+    m_config->setAudioOutputSink(sinkBefore);
+    m_config->setAudioDefaultSound(soundBefore);
 }
 
 void TestWizard::wizardRunNeverTouchesAlarms()

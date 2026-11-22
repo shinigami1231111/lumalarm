@@ -100,6 +100,7 @@ set(QML_FILES
     qml/wizard/pages/LanguagePage.qml
     qml/wizard/pages/WakeMethodPage.qml
     qml/wizard/pages/NotificationPage.qml
+    qml/wizard/pages/AlarmSoundPage.qml
     qml/wizard/pages/DonePage.qml
     qml/components/GlassButton.qml
     qml/components/GlassCard.qml

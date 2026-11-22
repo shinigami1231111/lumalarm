@@ -9,9 +9,9 @@ class ConfigManager;
 class WakeManager;
 class AlarmAudioController;
 
-// First-run wizard (STG-5.5): a four-step guided setup — language chosen,
-// wake method confirmed, notification capability probed — without reading the
-// README.
+// First-run wizard (STG-5.5): a five-step guided setup — language chosen,
+// wake method confirmed, notification capability probed, alarm sound and
+// output device picked — without reading the README.
 //
 // Dependencies are explicit and non-owning (same contract as NightMode);
 // nothing is ever looked up through parent(). All interaction with the QML
@@ -38,7 +38,11 @@ class WizardController : public QObject
     // per call site — QML re-reads it whenever the page becomes visible).
     Q_PROPERTY(
         bool notificationsAvailable READ notificationsAvailable NOTIFY notificationProbeChanged)
-    // Arabic-only UI options persisted with the language.
+    // Output devices reported by the audio backend, for the alarm-sound page.
+    // Mirrors AlarmAudioController::outputDevices so the wizard can refresh
+    // through the same controller it uses for every other step.
+    Q_PROPERTY(QVariantList outputDevices READ outputDevices NOTIFY outputDevicesChanged)
+    // Display options persisted with the language.
     Q_PROPERTY(bool mirrorApp READ mirrorApp WRITE setMirrorApp NOTIFY configChangedMirror)
     Q_PROPERTY(
         bool mirrorWindowButtons READ mirrorWindowButtons WRITE setMirrorWindowButtons
@@ -61,6 +65,7 @@ public:
     QString language() const;
     QString wakeStatus() const;
     bool notificationsAvailable() const;
+    QVariantList outputDevices() const;
     bool mirrorApp() const;
     void setMirrorApp(bool v);
     bool mirrorWindowButtons() const;
@@ -69,7 +74,7 @@ public:
     void setEmojiLevel(int level);
 
     // How many steps the wizard has (kStepCount). QML reads it, never hardcodes.
-    static constexpr int kStepCount = 4;
+    static constexpr int kStepCount = 5;
 
     // WakeManager::armTestWake() accepts only [60, 3600] s, so the shortest
     // non-destructive probe is 60 s — a 5 s request would be refused outright.
@@ -79,9 +84,14 @@ public:
     static constexpr int kWakeProbeSeconds = 60;
 
     // Step indices, so the QML and the tests agree on what "step 1" means.
-    // Language first, then the wake method, then the notification probe,
-    // then the summary.
-    enum Step { Language = 0, WakeMethod = 1, Notifications = 2, Done = 3 };
+    // Language, wake method, notification probe, alarm sound, then the summary.
+    enum Step {
+        Language = 0,
+        WakeMethod = 1,
+        Notifications = 2,
+        AlarmSound = 3,
+        Done = 4
+    };
 
     Q_INVOKABLE void next();
     Q_INVOKABLE void back();
@@ -100,7 +110,7 @@ public:
 
     // Page 1: the language selector. Writes ConfigManager's single ui/language
     // key; main.cpp already swaps the catalog and retranslates on change, so
-    // Arabic takes effect (and mirrors the layout) immediately.
+    // the new language takes effect immediately.
     void setLanguage(const QString &lang);
 
     // Page 2: arm the shortest wake WakeManager accepts, report the outcome,
@@ -112,7 +122,13 @@ public:
     // Page 3: send one benign notification; false when there is no daemon.
     Q_INVOKABLE bool testNotification();
 
-    // Pages 2 and 4: plain-language description of the wake mechanism
+    // Page 4: ask the audio controller for the current sink list, then play
+    // one short tone so the chosen sound can be judged before finishing.
+    // Both delegate to the existing controller; the wizard adds no audio code.
+    Q_INVOKABLE void refreshOutputDevices();
+    Q_INVOKABLE void previewSound(const QString &toneName);
+
+    // Pages 2 and 5: plain-language description of the wake mechanism
     // WakeManager reports for this machine.
     Q_INVOKABLE QString detectWakeMethod() const;
 
@@ -126,6 +142,7 @@ Q_SIGNALS:
     void languageChanged();
     void wakeStatusChanged();
     void notificationProbeChanged();
+    void outputDevicesChanged();
     void configChangedMirror();
 
 protected:
