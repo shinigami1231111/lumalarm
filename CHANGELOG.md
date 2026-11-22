@@ -1,3 +1,13 @@
+# Changelog
+
+All notable changes to Lumalarm are documented here.
+Format based on [Keep a Changelog](https://keepachangelog.com/).
+
+> [!NOTE]
+> **Latest release: [v1.0.5](#105---2026-11-22) — 2026-11-22.** Secure D-Bus wake helper,
+> English / Arabic / Japanese UI, emoji density control, frameless move & resize, and an
+> 80%-CPU-capped build. The full record, including gate evidence, is below.
+
 ## [Unreleased]
 
 ## [1.0.5] - 2026-11-22
@@ -13,14 +23,14 @@
   transparent edge/corner strips use `startSystemResize(Qt.Edge)`, with a clamped
   geometry fallback on Qt 6.5. No visible bar is added; the five main tabs now rely
   on their existing SVG icons only.
-
 - Source tree reorganized into `src/models`, `src/managers`, `src/audio`,
   `src/wake` and `src/ui`, and QML into `qml/components`, `qml/pages`,
   `qml/pickers`, `qml/overlays` and `qml/wizard` (STG-3). Module
   boundaries are now enforced by tests instead of convention.
-- A 14-binary test suite: alarm/wake state machine, alarm model and
+- A 22-binary test suite: alarm/wake state machine, alarm model and
   selection, audio player, config, theme, blur, QML resource layout,
-  test-alarm surface, notifier, tray icon, night mode, wizard and i18n.
+  test-alarm surface, notifier, tray icon, night mode, wizard, i18n,
+  helper security and helper capabilities.
 - `CONTRIBUTING.md` — prerequisites, CI matrix, project layout, code
   style, commit conventions and the privileged-components rules — plus
   CI badges in the README.
@@ -56,7 +66,6 @@
   (default: follow the system locale) and automatic right-to-left
   mirroring when the Arabic catalog loads. Qt Linguist is an optional
   **build** tool — without it the app builds and runs in English.
-
 - D-Bus wake helper (STG-1.1): removes the /etc/sudoers.d/lumalarm
   requirement entirely. Scheduling now goes through a privileged
   helper with strict input validation (60 <= seconds <= 86400).
@@ -70,12 +79,10 @@
   workflow. No tracked build command uses `-j$(nproc)`.
 - Source export hygiene: removed a developer home path from `WheelTimePicker.qml` and
   replaced real user/host names in the system-mixer fixture with generic values.
-
 - `.clang-format` now matches the style actually used in the tree, and
   the two noisiest clang-tidy checks were dropped; 28 `bugprone-*`
   findings were resolved in `src/` (follow-up A1–A4). Lint stays
   advisory in both CI and `ci-local.sh`.
-
 - WakeManager now uses QDBusInterface to reach the helper, falling
   back to direct rtcwake if the helper is unavailable.
 - Wake verification switched from RTC readback to `systemctl list-timers`
@@ -93,7 +100,6 @@
   glyphs, with a static guard against raw emoji literals.
 - The frameless window could not be moved or resized with the mouse without native
   decorations; native system gestures plus invisible handles now provide both.
-
 - WheelTimePicker quirks repaired, and a secondary spin-style time
   picker added as an alternative to the wheels (`timePickerMode`).
 - Toggling an alarm no longer loses its id: `setAlarmEnabled` is
@@ -101,6 +107,9 @@
   write could not disable the wrong row.
 
 ### Verified
+
+<details>
+<summary><b>Verified items and evidence — expand to see the full list</b></summary>
 
 All items below have recorded gate evidence in the project notes (`docs/Lumalarm-Obsidian/Verified.md`).
 Items marked *manual* also have user-observed pass evidence.
@@ -135,12 +144,19 @@ Items marked *manual* also have user-observed pass evidence.
   **manual mouse pass still open**.
 - **Release hygiene** — 80% build cap, local annotated `v1.0.5` tag, pure 156-file source export,
   GitHub deploy key generated.
+- **Screenshots** — all six README gallery images replaced with v1.0.5 captures; the local
+  username visible in the Sounds capture was replaced with a generic `/home/user/` path.
 
 Still open, so not claimed as verified here: the manual mouse drag/resize pass, Japanese visual
-confirmation, refreshed screenshots, GitHub-side CI after the first push, and the remaining
-release gates in `00-Missions.md`.
+confirmation, GitHub-side CI after the first push, and the remaining release gates in
+`00-Missions.md`.
+
+</details>
 
 ### Deviations from original spec (empirically required)
+
+<details>
+<summary><b>D1–D5 — why the implementation differs from the written spec</b></summary>
 
 - **D1:** Added data/org.lumalarm.Helper.conf. The default
   /etc/dbus-1/system.conf denies own/send, so D-Bus activation of the
@@ -160,10 +176,21 @@ release gates in `00-Missions.md`.
   re-scheduling orphaned the previous timer. Both now use the
   fully-qualified unit name and stop the previous timer first.
 
+</details>
+
 ### Known limitations
+
+<details>
+<summary><b>B1 — RTC readback while awake</b></summary>
 
 - **B1 (RTC readback):** systemd's WakeSystem= uses CLOCK_BOOTTIME
   and writes the RTC only at suspend entry. Reading
   /sys/class/rtc/rtc0/wakealarm while the system is awake therefore
   always returns 0. Verification now uses `systemctl list-timers`;
   the RTC check remains in place only for the rtcwake fallback path.
+
+</details>
+
+[Unreleased]: https://github.com/shinigami1231111/lumalarm/compare/v1.0.5...HEAD
+[1.0.5]: https://github.com/shinigami1231111/lumalarm/compare/v1.0.0...v1.0.5
+[1.0.0]: https://github.com/shinigami1231111/lumalarm/releases/tag/v1.0.0
