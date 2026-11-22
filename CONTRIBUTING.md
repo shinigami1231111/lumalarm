@@ -87,8 +87,9 @@ version in `CMakeLists.txt` and `PKGBUILD` in sync.
 1. Check `git status --short`, `git log --oneline origin/main..HEAD`, `git tag -l`
 2. Push with the SSH deploy remote: `git push deploy main` (`origin` is HTTPS)
 3. Tag after CI passes: `git tag -a vX.Y.Z -m "..."` then `git push deploy vX.Y.Z`
-4. Create the GitHub release and upload the built `lumalarm-X.Y.Z-1-x86_64.pkg.tar.zst` asset
-5. Point the AUR `PKGBUILD` at that versioned asset URL and refresh `.SRCINFO`
+4. Push the built `lumalarm-X.Y.Z-1-x86_64.pkg.tar.zst` and its `SHA256SUMS` to the
+   `release-assets` branch
+5. Point the AUR `PKGBUILD` at that versioned raw URL, pin its SHA-256 and refresh `.SRCINFO`
 
 Do not tag, push or publish a release without being asked.
 

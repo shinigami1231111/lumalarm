@@ -15,8 +15,9 @@ All notable changes to Lumalarm are documented here. Format: [Keep a Changelog](
 - Japanese catalog embedded and selectable (`ja` / `ja_JP`), with live retranslation.
 - Three-level emoji density (Off / Less / More), migrated from the old boolean; More is the default.
 - Frameless window: native system move plus eight transparent resize handles; no visible bar.
-- Prebuilt Arch package: the AUR `lumalarm` package and the GitHub release asset install the
-  compiled binary directly with `pacman -U`, with a pinned SHA-256 and no local build.
+- Prebuilt Arch package: the AUR `lumalarm` package and the versioned asset on the
+  `release-assets` branch install the compiled binary directly with `pacman -U`, with a pinned
+  SHA-256 and no local build.
 - First-run wizard (language, wake method, notifications, summary), tray icon, freedesktop
   notifications, test alarm, night mode and a 22-binary test suite.
 - D-Bus wake helper, polkit action `org.lumalarm.schedule.wake` and systemd activation files.

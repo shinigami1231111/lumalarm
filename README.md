@@ -29,9 +29,11 @@ yay -S lumalarm     # or: paru -S lumalarm
 To install the exact same package directly from GitHub:
 
 ```bash
-curl -fLO https://github.com/shinigami1231111/lumalarm/releases/download/v1.0.5/lumalarm-1.0.5-1-x86_64.pkg.tar.zst
+curl -fLO https://raw.githubusercontent.com/shinigami1231111/lumalarm/release-assets/lumalarm-1.0.5-1-x86_64.pkg.tar.zst
 sudo pacman -U lumalarm-1.0.5-1-x86_64.pkg.tar.zst
 ```
+
+The AUR package pins the same file's SHA-256, so AUR helpers verify it before installing.
 
 Runtime dependencies: `qt6-base`, `qt6-multimedia`, `qt6-declarative`, `util-linux`.
 `pacman -U` (directly or through your AUR helper) installs the systemd unit, D-Bus policy and
