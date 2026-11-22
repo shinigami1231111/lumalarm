@@ -1,0 +1,3 @@
+# Release binaries live under assets/ so the version tag can serve them over
+# raw.githubusercontent.com, but they must never enter the pure source archive.
+assets/** export-ignore
