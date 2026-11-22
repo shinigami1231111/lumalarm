@@ -128,6 +128,7 @@ Window {
     }
 
     property bool isMaximized: visibility === Window.Maximized
+    property bool hasSystemMove: typeof root.startSystemMove === "function"
 
     Rectangle {
         id: windowRoot
@@ -243,9 +244,16 @@ Window {
                     anchors.top: parent.top; anchors.left: parent.left
                     anchors.bottom: parent.bottom; anchors.right: parent.right
                     property real lx: 0; property real ly: 0
-                    onPressed: { lx = mouseX; ly = mouseY; if (root.isMaximized) root.showNormal() }
-                    onMouseXChanged: root.x += mouseX - lx
-                    onMouseYChanged: root.y += mouseY - ly
+                    onPressed: {
+                        if (root.hasSystemMove) {
+                            root.startSystemMove()
+                            return
+                        }
+                        lx = mouseX; ly = mouseY
+                        if (root.isMaximized) root.showNormal()
+                    }
+                    onMouseXChanged: if (!root.hasSystemMove) root.x += mouseX - lx
+                    onMouseYChanged: if (!root.hasSystemMove) root.y += mouseY - ly
                     onDoubleClicked: {
                         if (root.isMaximized) root.showNormal(); else root.showMaximized()
                     }
@@ -258,11 +266,11 @@ Window {
                 SegmentedControl {
                     anchors.centerIn: parent
                     items: [
-                        {label: configManager.emoji("🔔", 2) + qsTr("Alarms"), mode: "alarms", icon: "alarms"},
-                        {label: configManager.emoji("⏲️", 2) + qsTr("Timer"), mode: "timer", icon: "timer"},
-                        {label: configManager.emoji("⏱️", 2) + qsTr("Stopwatch"), mode: "stopwatch", icon: "stopwatch"},
-                        {label: configManager.emoji("🎶", 2) + qsTr("Sounds"), mode: "sounds", icon: "sounds"},
-                        {label: configManager.emoji("🛠️", 2) + qsTr("Settings"), mode: "settings", icon: "settings"}
+                        {label: qsTr("Alarms"), mode: "alarms", icon: "alarms"},
+                        {label: qsTr("Timer"), mode: "timer", icon: "timer"},
+                        {label: qsTr("Stopwatch"), mode: "stopwatch", icon: "stopwatch"},
+                        {label: qsTr("Sounds"), mode: "sounds", icon: "sounds"},
+                        {label: qsTr("Settings"), mode: "settings", icon: "settings"}
                     ]
                     current: currentMode
                     onSelected: function(m) { currentMode = m }
@@ -417,6 +425,17 @@ Window {
             }
         }
     }
+
+    // Invisible system resize handles. Eight transparent strips cover the
+    // physical edges and corners; they draw no bar and never cover a control.
+    WindowResizeHandle { target: root; x: 8; y: 0; width: parent.width - 16; height: 8; edge: Qt.TopEdge; cursor: Qt.SizeVerCursor }
+    WindowResizeHandle { target: root; x: 8; y: parent.height - 8; width: parent.width - 16; height: 8; edge: Qt.BottomEdge; cursor: Qt.SizeVerCursor }
+    WindowResizeHandle { target: root; x: 0; y: 8; width: 8; height: parent.height - 16; edge: Qt.LeftEdge; cursor: Qt.SizeHorCursor }
+    WindowResizeHandle { target: root; x: parent.width - 8; y: 8; width: 8; height: parent.height - 16; edge: Qt.RightEdge; cursor: Qt.SizeHorCursor }
+    WindowResizeHandle { target: root; x: 0; y: 0; width: 8; height: 8; edge: Qt.TopEdge | Qt.LeftEdge; cursor: Qt.SizeFDiagCursor }
+    WindowResizeHandle { target: root; x: parent.width - 8; y: 0; width: 8; height: 8; edge: Qt.TopEdge | Qt.RightEdge; cursor: Qt.SizeBDiagCursor }
+    WindowResizeHandle { target: root; x: 0; y: parent.height - 8; width: 8; height: 8; edge: Qt.BottomEdge | Qt.LeftEdge; cursor: Qt.SizeBDiagCursor }
+    WindowResizeHandle { target: root; x: parent.width - 8; y: parent.height - 8; width: 8; height: 8; edge: Qt.BottomEdge | Qt.RightEdge; cursor: Qt.SizeFDiagCursor }
 
     // Night mode veil (STG-5.6): above all pages, below the ringing overlay, so
     // the alarm UI is never dimmed by its own pre-alarm dimming.

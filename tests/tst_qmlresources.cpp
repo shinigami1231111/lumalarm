@@ -64,6 +64,8 @@ private slots:
     void iconReferencesInQmlResolve();               // literal + dynamic icon refs
     void importDialogFiltersMatchDiscoveryFormats(); // Issue #2: picker <-> discovery
     void emojisAreGatedByEmojiLevel();               // emoji density switch controls every glyph
+    void mainTabsUseIconsWithoutEmojiPrefix();       // five tabs already carry an icon
+    void windowHandlesAreInvisibleAndSystemDriven(); // frameless move/resize, no visible bar
 };
 
 // ----------------------------------------------------------------------------
@@ -147,6 +149,7 @@ static const QStringList kQmlFilesFromCmake = {
     QStringLiteral("qml/pickers/ClockFace.qml"),
     QStringLiteral("qml/components/ToggleSwitch.qml"),
     QStringLiteral("qml/components/SegmentedControl.qml"),
+    QStringLiteral("qml/components/WindowResizeHandle.qml"),
     QStringLiteral("qml/pickers/WheelTimePicker.qml"),
 };
 
@@ -390,6 +393,59 @@ void TestQmlResources::emojisAreGatedByEmojiLevel()
     QVERIFY2(checked > 0, "no emojis found — the emoji setting has no visible effect");
     QVERIFY2(moreOnly > 0, "no More-level emojis found — the new option is meaningless");
     QVERIFY2(moreOnly < checked, "every emoji is More-only — the Less level lost its glyphs");
+}
+
+// The five main tabs already draw their own SVG icon; an emoji prefix on top
+// of that is redundant and made the labels noisier in More mode.
+void TestQmlResources::mainTabsUseIconsWithoutEmojiPrefix()
+{
+    const QString mainText = readSourceFile(sourceRoot() + QStringLiteral("/qml/main.qml"));
+    const int start = mainText.indexOf(QStringLiteral("items: ["));
+    const int end = mainText.indexOf(QStringLiteral("]"), start);
+    QVERIFY2(start >= 0 && end > start, "main tab model not found");
+
+    const QString tabs = mainText.mid(start, end - start);
+    QVERIFY2(!containsEmoji(tabs), "main tab labels must rely on their icons, not emoji prefixes");
+    for (const QString &label :
+         {QStringLiteral("Alarms"), QStringLiteral("Timer"), QStringLiteral("Stopwatch"),
+          QStringLiteral("Sounds"), QStringLiteral("Settings")}) {
+        QVERIFY2(tabs.contains(QStringLiteral("qsTr(\"%1\")").arg(label)),
+                 qPrintable(QStringLiteral("main tab missing: %1").arg(label)));
+    }
+}
+
+// Frameless move/resize must not add chrome. The title area asks the window
+// manager for a native move; eight transparent strips do the same for resize,
+// with a geometry fallback for Qt versions that lack startSystemResize().
+void TestQmlResources::windowHandlesAreInvisibleAndSystemDriven()
+{
+    const QString mainText = readSourceFile(sourceRoot() + QStringLiteral("/qml/main.qml"));
+    const QString handleText =
+        readSourceFile(sourceRoot() + QStringLiteral("/qml/components/WindowResizeHandle.qml"));
+    QVERIFY2(!mainText.isEmpty() && !handleText.isEmpty(), "window handle sources not available");
+
+    QVERIFY2(mainText.contains(QStringLiteral("root.startSystemMove()")),
+             "title area must use the native move gesture");
+    QVERIFY2(handleText.contains(QStringLiteral("target.startSystemResize(resizeHandle.edge)")),
+             "resize handles must use the native resize gesture");
+    QVERIFY2(handleText.contains(QStringLiteral("typeof target.startSystemResize")),
+             "Qt 6.5 fallback guard missing");
+    QVERIFY2(handleText.contains(QStringLiteral("target.minimumWidth")),
+             "manual resize fallback must respect minimumWidth");
+    QVERIFY2(handleText.contains(QStringLiteral("color: \"transparent\"")),
+             "resize handles must draw no visible bar");
+    QCOMPARE(mainText.count(QStringLiteral("WindowResizeHandle {")), 8);
+
+    for (const QString &edge :
+         {QStringLiteral("edge: Qt.TopEdge"), QStringLiteral("edge: Qt.BottomEdge"),
+          QStringLiteral("edge: Qt.LeftEdge"), QStringLiteral("edge: Qt.RightEdge"),
+          QStringLiteral("edge: Qt.TopEdge | Qt.LeftEdge"),
+          QStringLiteral("edge: Qt.TopEdge | Qt.RightEdge"),
+          QStringLiteral("edge: Qt.BottomEdge | Qt.LeftEdge"),
+          QStringLiteral("edge: Qt.BottomEdge | Qt.RightEdge")}) {
+        QVERIFY2(mainText.contains(edge),
+                 qPrintable(QStringLiteral("missing resize edge: %1").arg(edge)));
+    }
 }
 
 QTEST_GUILESS_MAIN(TestQmlResources)

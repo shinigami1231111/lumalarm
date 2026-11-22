@@ -118,6 +118,7 @@ set(QML_FILES
     qml/pickers/ClockFace.qml
     qml/components/ToggleSwitch.qml
     qml/components/SegmentedControl.qml
+    qml/components/WindowResizeHandle.qml
     qml/pickers/WheelTimePicker.qml
 )
 
