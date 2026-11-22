@@ -385,7 +385,7 @@ void TestWizard::emojiLevelMirrorsConfiguration()
     w.setEmojiLevel(2); // unchanged -> silent
     QCOMPARE(spy.count(), 1);
 
-    m_config->setEmojiLevel(1); // leave the shared test profile clean
+    m_config->setEmojiLevel(2); // leave the shared test profile at the default
 }
 
 void TestWizard::testWakeRunsWithoutGate()

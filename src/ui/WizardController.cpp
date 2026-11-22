@@ -106,7 +106,7 @@ bool WizardController::mirrorWindowButtons() const
 
 int WizardController::emojiLevel() const
 {
-    return m_config ? m_config->emojiLevel() : 1;
+    return m_config ? m_config->emojiLevel() : 2;
 }
 
 void WizardController::setMirrorApp(bool v)

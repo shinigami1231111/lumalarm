@@ -87,7 +87,8 @@ class ConfigManager : public QObject
         bool mirrorWindowButtons READ mirrorWindowButtons WRITE
             setMirrorWindowButtons NOTIFY configChanged)
     // Emoji density: 0 = off, 1 = a few leading icons, 2 = icons on most
-    // labels and buttons. Stored as an int so the selector has three states.
+    // labels and buttons. Stored as an int so the selector has three states;
+    // 2 (More) is the default for new and migrated profiles.
     Q_PROPERTY(int emojiLevel READ emojiLevel WRITE setEmojiLevel NOTIFY configChanged)
     // ── audio (alarm sound rebuild, Phase 4) ────────────────────────────────
     // The guarantee policy's knobs, read by main.cpp into

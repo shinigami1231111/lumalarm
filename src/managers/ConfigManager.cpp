@@ -549,10 +549,10 @@ int ConfigManager::emojiLevel() const
         return qBound(0, level, 2);
     }
 
-    // Migrate the on/off setting shipped in 017ee5f: "on" becomes the lighter
-    // "Less" level, "off" becomes "Off". A profile with neither key keeps the
-    // same visible labels as before (Less).
-    return m_settings->value(QStringLiteral("ui/showEmojis"), true).toBool() ? 1 : 0;
+    // Migrate the on/off setting shipped in 017ee5f: "on" becomes the new
+    // default "More" level, "off" becomes "Off". A profile with neither key
+    // also starts at More.
+    return m_settings->value(QStringLiteral("ui/showEmojis"), true).toBool() ? 2 : 0;
 }
 
 void ConfigManager::setEmojiLevel(int level)

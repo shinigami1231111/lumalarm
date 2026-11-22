@@ -69,7 +69,7 @@ private slots:
     void listedTonesResolveForPlayback();
     void testWakeDurationDefaultsAndClamps();
     void audioSettingsRoundTripAndClamp();
-    void emojiLevelDefaultsToLessAndPersists();
+    void emojiLevelDefaultsToMoreAndPersists();
 
 private:
     void cleanupTones();
@@ -553,20 +553,24 @@ void TestConfigManager::audioSettingsRoundTripAndClamp()
     cm.setAudioOutputSink(QString());
 }
 
-void TestConfigManager::emojiLevelDefaultsToLessAndPersists()
+void TestConfigManager::emojiLevelDefaultsToMoreAndPersists()
 {
     ConfigManager cm;
-    QCOMPARE(cm.emojiLevel(), 1); // shipped default is the lighter "Less" level
+    QCOMPARE(cm.emojiLevel(), 2); // shipped default is the fuller "More" level
     QCOMPARE(cm.emoji(QStringLiteral("\U0001F514"), 1), QStringLiteral("\U0001F514 "));
-    QVERIFY(cm.emoji(QStringLiteral("\U0001F514"), 2).isEmpty()); // More-only glyph
+    QCOMPARE(cm.emoji(QStringLiteral("\U0001F514"), 2), QStringLiteral("\U0001F514 "));
 
     QSignalSpy spy(&cm, &ConfigManager::configChanged);
+    cm.setEmojiLevel(0);
+    QCOMPARE(cm.emojiLevel(), 0);
+    QVERIFY(cm.emoji(QStringLiteral("\U0001F514"), 1).isEmpty());
+    QCOMPARE(spy.count(), 1);
     cm.setEmojiLevel(2);
     QCOMPARE(cm.emojiLevel(), 2);
     QCOMPARE(cm.emoji(QStringLiteral("\U0001F514"), 2), QStringLiteral("\U0001F514 "));
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spy.count(), 2);
     cm.setEmojiLevel(2);
-    QCOMPARE(spy.count(), 1); // a no-op write must not re-evaluate every binding
+    QCOMPARE(spy.count(), 2); // a no-op write must not re-evaluate every binding
 
     // Out-of-range values (a hand-edited ini) clamp on write and on read.
     cm.setEmojiLevel(9);
@@ -574,7 +578,7 @@ void TestConfigManager::emojiLevelDefaultsToLessAndPersists()
     cm.setEmojiLevel(-3);
     QCOMPARE(cm.emojiLevel(), 0);
     QVERIFY(cm.emoji(QStringLiteral("\U0001F514"), 1).isEmpty());
-    QCOMPARE(spy.count(), 2);
+    QCOMPARE(spy.count(), 3);
 
     ConfigManager reloaded;
     QCOMPARE(reloaded.emojiLevel(), 0); // ui/emojiLevel survives a restart
@@ -585,13 +589,13 @@ void TestConfigManager::emojiLevelDefaultsToLessAndPersists()
     settings.setValue(QStringLiteral("ui/showEmojis"), true);
     settings.sync();
     ConfigManager migratedOn;
-    QCOMPARE(migratedOn.emojiLevel(), 1);
+    QCOMPARE(migratedOn.emojiLevel(), 2); // old "on" maps to the new default
     settings.setValue(QStringLiteral("ui/showEmojis"), false);
     settings.sync();
     ConfigManager migratedOff;
     QCOMPARE(migratedOff.emojiLevel(), 0);
 
-    cm.setEmojiLevel(1); // leave the shared test profile at the shipped default
+    cm.setEmojiLevel(2); // leave the shared test profile at the shipped default
     QSettings after(settingsFilePath(), QSettings::IniFormat);
     QVERIFY(!after.contains(QStringLiteral("ui/showEmojis")));
 }
