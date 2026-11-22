@@ -14,7 +14,7 @@
 
 pkgname=lumalarm
 pkgver=1.0.5
-pkgrel=2
+pkgrel=3
 pkgdesc="A professional glassmorphism alarm clock for Linux with rtcwake support"
 arch=('x86_64' 'aarch64')
 url="https://github.com/shinigami1231111/lumalarm"

@@ -12,14 +12,15 @@ All notable user-facing changes are documented here. Entries follow
 
 ### Changed
 
-- The RTCwake selector is now a sleep-method chooser: **MEM — Suspend to RAM** is first and marked
-  Recommended, **FREEZE** follows, then a visual experimental wall before **STANDBY**, **OFF** and
-  **DISK**. Each method's full description appears as a hover tooltip; `no` and `on` remain valid only
-  in the privileged helper allow-list.
+- The RTCwake selector is now a sleep-method chooser with short visible names (`mem`, `freeze`,
+  `standby`, `off`, `disk`). **mem** is first, then **freeze**, then a visual experimental wall;
+  "Recommended", "Experimental" and every full explanation appear only in hover tooltips, whose text,
+  background and accent follow the application theme. `no` and `on` remain valid only in the
+  privileged helper allow-list.
 - Settings presents alarm playback and the diagnostic wake together as **Alarm Sound & Wake Test**.
   The unused Font Family editor and the redundant Cancel test alarm button were removed.
 - The countdown Timer no longer offers Auto Stop; it remains an alarm-editor setting.
-- The Arch package is rebuilt as `1.0.5-2` from the current source with optional KDE blur disabled.
+- The Arch package is rebuilt as `1.0.5-3` from the current source with optional KDE blur disabled.
 
 ### Fixed
 
