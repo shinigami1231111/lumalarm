@@ -66,6 +66,7 @@ private slots:
     void emojisAreGatedByEmojiLevel();               // emoji density switch controls every glyph
     void mainTabsUseIconsWithoutEmojiPrefix();       // five tabs already carry an icon
     void windowHandlesAreInvisibleAndSystemDriven(); // frameless move/resize, no visible bar
+    void sliderUsersImportQtQuickControls();         // no runtime "Slider is not a type"
 };
 
 // ----------------------------------------------------------------------------
@@ -446,6 +447,29 @@ void TestQmlResources::windowHandlesAreInvisibleAndSystemDriven()
           QStringLiteral("edge: Qt.BottomEdge | Qt.RightEdge")}) {
         QVERIFY2(mainText.contains(edge),
                  qPrintable(QStringLiteral("missing resize edge: %1").arg(edge)));
+    }
+}
+
+// Regression: AlarmSoundPage used Slider without importing QtQuick.Controls.
+// CMake's QML cache compiles that file without resolving every type, so ctest
+// passed while the app exited at engine.load() with "Slider is not a type".
+// Scanning the source tree catches this class of missing import directly.
+void TestQmlResources::sliderUsersImportQtQuickControls()
+{
+    const QStringList qmlFiles = sourceRootFiles(QStringLiteral("qml"), {QStringLiteral("*.qml")});
+    QVERIFY2(!qmlFiles.isEmpty(), "source tree not available for the Slider import scan");
+
+    const QRegularExpression sliderType(QStringLiteral("\\bSlider\\s*\\{"),
+                                        QRegularExpression::MultilineOption);
+    const QRegularExpression controlsImport(QStringLiteral("^\\s*import\\s+QtQuick\\.Controls\\b"),
+                                            QRegularExpression::MultilineOption);
+    for (const QString &path : qmlFiles) {
+        const QString text = readSourceFile(path);
+        if (!text.contains(sliderType))
+            continue;
+        QVERIFY2(text.contains(controlsImport),
+                 qPrintable(QStringLiteral("%1 uses Slider but does not import QtQuick.Controls")
+                                .arg(path)));
     }
 }
 

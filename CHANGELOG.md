@@ -10,6 +10,13 @@ All notable user-facing changes are documented here. Entries follow
 
 ## [Unreleased]
 
+### Fixed
+
+- Desktop notifications no longer block the alarm-trigger signal chain, so the ringing overlay appears
+  even when the notification daemon is slow or unreachable.
+- The wizard's alarm-sound page imports `QtQuick.Controls`, so a rebuilt app no longer exits during QML
+  startup because `Slider` cannot be resolved.
+
 ## [1.0.5] - 2026-11-22
 
 ### Added
