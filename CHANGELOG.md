@@ -10,12 +10,27 @@ All notable user-facing changes are documented here. Entries follow
 
 ## [Unreleased]
 
+### Changed
+
+- The RTCwake selector is now a sleep-method chooser: **MEM — Suspend to RAM** is first and marked
+  Recommended, **FREEZE** follows, then a visual experimental wall before **STANDBY**, **OFF** and
+  **DISK**. Each method's full description appears as a hover tooltip; `no` and `on` remain valid only
+  in the privileged helper allow-list.
+- Settings presents alarm playback and the diagnostic wake together as **Alarm Sound & Wake Test**.
+  The unused Font Family editor and the redundant Cancel test alarm button were removed.
+- The countdown Timer no longer offers Auto Stop; it remains an alarm-editor setting.
+- The Arch package is rebuilt as `1.0.5-2` from the current source with optional KDE blur disabled.
+
 ### Fixed
 
 - Desktop notifications no longer block the alarm-trigger signal chain, so the ringing overlay appears
   even when the notification daemon is slow or unreachable.
 - The wizard's alarm-sound page imports `QtQuick.Controls`, so a rebuilt app no longer exits during QML
   startup because `Slider` cannot be resolved.
+- The saved RTCwake method now reaches `WakeManager` at startup and on change; emoji density changes
+  apply live without a restart; the Classic time picker honours 12/24-hour format; the Timer starts
+  with stable field keys and plays its completion sound on the zero tick; first-run sound preview uses
+  a temporary fallback tone and the alarm-volume policy.
 
 ## [1.0.5] - 2026-11-22
 
@@ -62,8 +77,8 @@ All notable user-facing changes are documented here. Entries follow
   release branch state.
 - The local CI mirror passed with and without clang-tidy; package audits found no personal paths,
   secrets or privileged shell rule in the built artifact.
-- Release checks recorded 247 messages in each catalog, 119 gated emoji glyphs, four wizard steps,
-  seven offered wake modes and frameless move/resize handlers.
+- Release checks now record 278 messages in each catalog, 132 gated emoji glyphs, five wizard steps,
+  five offered wake modes (seven remain accepted by the helper) and frameless move/resize handlers.
 
 </details>
 

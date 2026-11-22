@@ -14,7 +14,7 @@
 
 pkgname=lumalarm
 pkgver=1.0.5
-pkgrel=1
+pkgrel=2
 pkgdesc="A professional glassmorphism alarm clock for Linux with rtcwake support"
 arch=('x86_64' 'aarch64')
 url="https://github.com/shinigami1231111/lumalarm"
@@ -38,7 +38,8 @@ build() {
     cmake -B build \
         -DCMAKE_INSTALL_PREFIX=/usr \
         -DCMAKE_BUILD_TYPE=Release \
-        -DCMAKE_CXX_FLAGS="-O2 -pipe"
+        -DCMAKE_CXX_FLAGS="-O2 -pipe" \
+        -DLUMALARM_ENABLE_KDE_BLUR=OFF
     local jobs=$(( $(nproc) * 80 / 100 ))
     [ "$jobs" -lt 1 ] && jobs=1
     cmake --build build -j"$jobs"
