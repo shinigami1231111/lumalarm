@@ -15,7 +15,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 ### Added
 
 - Japanese catalog (`translations/lumalarm_ja.ts`) embedded and selectable, so
-  `ja` / `ja_JP` load with a live RTL-safe retranslation instead of falling back to English.
+  `ja` / `ja_JP` load a complete left-to-right catalog with live retranslation instead of
+  falling back to English.
 - Three-level emoji density (**Off / Less / More**) wired through
   `ConfigManager::emoji()`, replacing the old boolean; **More** is now the default and
   legacy `ui/showEmojis` values migrate to it.
@@ -24,7 +25,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
   geometry fallback on Qt 6.5. No visible bar is added; the five main tabs now rely
   on their existing SVG icons only.
 - Source tree reorganized into `src/models`, `src/managers`, `src/audio`,
-  `src/wake` and `src/ui`, and QML into `qml/components`, `qml/pages`,
+  `src/wake` and `src/ui` (with `src/app` added later), and QML into `qml/components`, `qml/pages`,
   `qml/pickers`, `qml/overlays` and `qml/wizard` (STG-3). Module
   boundaries are now enforced by tests instead of convention.
 - A 22-binary test suite: alarm/wake state machine, alarm model and
@@ -48,14 +49,14 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
   over `org.freedesktop.Notifications` — no libnotify dependency.
   `Scheduler::alarmApproaching` is the signal behind them.
 - System tray icon (STG-5.4) showing the next alarm in its tooltip, with
-  an Open/Quit menu and a Settings toggle.
+  a **Show Lumalarm** / Quit menu and a Settings toggle.
 - Automatic pre-alarm screen dimming (STG-5.6): `NightMode` plus
   `qml/NightDim.qml` hold a translucent overlay for the configured lead
   time before the next alarm, until it fires or is cancelled, disabled
   or deleted. Per-window only; no backlight or compositor-specific API.
-- First-run setup wizard (STG-5.5): six skippable steps (welcome, language,
-  default sound, wake method with a non-destructive test alarm, notification
-  probe, summary) shown once per installation and re-runnable from Settings.
+- First-run setup wizard (STG-5.5): four skippable steps (language, wake method,
+  notification probe, summary) shown once per installation and re-runnable via
+  `--show-wizard`.
   New key `wizard/completed` and the `--show-wizard` flag. Only a profile with
   no `settings.ini` and no `theme.conf` counts as a first run, so existing
   installations are never prompted after an upgrade.
@@ -81,13 +82,15 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
   replaced real user/host names in the system-mixer fixture with generic values.
 - `.clang-format` now matches the style actually used in the tree, and
   the two noisiest clang-tidy checks were dropped; 28 `bugprone-*`
-  findings were resolved in `src/` (follow-up A1–A4). Lint stays
-  advisory in both CI and `ci-local.sh`.
+  findings were resolved in `src/` (follow-up A1–A4). Lint is advisory in GitHub
+  `lint.yml`; local `ci-local.sh` treats clang-tidy findings as failures unless
+  `--no-lint` is passed.
 - WakeManager now uses QDBusInterface to reach the helper, falling
   back to direct rtcwake if the helper is unavailable.
-- Wake verification switched from RTC readback to `systemctl list-timers`
-  while the system is awake (RTC is only written at suspend entry; see
-  "Known limitations").
+- Wake verification switched from RTC readback to querying systemd timer units
+  with `systemctl list-units --all --no-legend --plain --full 'lumalarm-wake-*.timer'`
+  while the system is awake; the RTC check remains the hardware source of truth
+  for the rtcwake path (see "Known limitations").
 - PKGBUILD hooks moved to lumalarm.install (inline makepkg hooks are no-ops).
 
 ### Removed
@@ -115,7 +118,8 @@ All items below have recorded gate evidence in the project notes (`docs/Lumalarm
 Items marked *manual* also have user-observed pass evidence.
 
 - **STG-1 Security** — D-Bus wake helper, polkit action, `60 <= seconds <= 86400`,
-  systemd/rtcwake fallback, sudoers removal; `tst_stg1security` 22/22 and live manual 7/7.
+  rtcwake-only privileged helper (with a direct unprivileged rtcwake fallback in
+  `WakeManager`), sudoers removal; `tst_stg1security` 22/22 and live manual 7/7.
 - **STG-2 UI / Build** — Qt 6.5 setup, QTP0001 QML paths, id-safe alarm toggle, version 1.0.5,
   manual UI smoke 7/7.
 - **STG-3 Architecture** — `QAbstractListModel` AlarmModel, `src/` and `qml/` reorganization,
@@ -124,8 +128,8 @@ Items marked *manual* also have user-observed pass evidence.
   badges; local runner PASS. GitHub-side CI activates only after the first push.
 - **STG-5.1 Test mode** — arm / cancel / re-arm, custom duration handling and a real 60 s wake,
   confirmed by the user.
-- **STG-5.2 i18n (English + Arabic)** — wrapped strings, runtime retranslation, RTL mirroring,
-  language persistence; manual 3/3.
+- **STG-5.2 i18n (English source + Arabic / Japanese catalogs)** — wrapped strings, runtime
+  retranslation, RTL mirroring for Arabic, language persistence; manual 3/3.
 - **STG-5.4 Close behaviour / tray** — Ask / Hide / Quit, `CloseDialog`, tray **Show** item;
   manual boxes 1–4 pass.
 - **STG-5.6 Night mode** — settings card, preview, dim / undim around an alarm;
@@ -136,11 +140,11 @@ Items marked *manual* also have user-observed pass evidence.
   across 46 files.
 - **UI-C1–C5 constraints** — no new dependencies, Qt modules, Qt5Compat, third-party QML,
   or non-C++17/QML stack.
-- **Japanese catalog** — `ja` / `ja_JP` load the real catalog instead of falling back to English;
-  `tst_i18n` 10/10, 247/247 messages in all three catalogs.
+- **Japanese catalog** — `ja` / `ja_JP` load the real left-to-right catalog instead of falling
+  back to English; `tst_i18n` has 8 test functions, and all three catalogs contain 247 messages.
 - **Emoji density** — Off / Less / More with migration and static guards; More is the default;
   `ctest` 22/22.
-- **Frameless move / resize** — static and gate verified (`ctest` 22/22, `tst_qmlresources` 14/14);
+- **Frameless move / resize** — static and gate verified (`ctest` 22/22, `tst_qmlresources` 12/12);
   **manual mouse pass still open**.
 - **Release hygiene** — 80% build cap, local annotated `v1.0.5` tag, pure 156-file source export,
   GitHub deploy key generated.
@@ -157,6 +161,10 @@ confirmation, GitHub-side CI after the first push, and the remaining release gat
 
 <details>
 <summary><b>D1–D5 — why the implementation differs from the written spec</b></summary>
+
+These are historical deviations recorded during development. The shipped v1.0.5 helper is
+rtcwake-only; the systemd notes below apply to the earlier design that was tested and then
+replaced.
 
 - **D1:** Added data/org.lumalarm.Helper.conf. The default
   /etc/dbus-1/system.conf denies own/send, so D-Bus activation of the
@@ -183,11 +191,12 @@ confirmation, GitHub-side CI after the first push, and the remaining release gat
 <details>
 <summary><b>B1 — RTC readback while awake</b></summary>
 
-- **B1 (RTC readback):** systemd's WakeSystem= uses CLOCK_BOOTTIME
-  and writes the RTC only at suspend entry. Reading
-  /sys/class/rtc/rtc0/wakealarm while the system is awake therefore
-  always returns 0. Verification now uses `systemctl list-timers`;
-  the RTC check remains in place only for the rtcwake fallback path.
+- **B1 (RTC readback):** the original systemd `WakeSystem=` design used
+  CLOCK_BOOTTIME and wrote the RTC only at suspend entry, so
+  /sys/class/rtc/rtc0/wakealarm read 0 while awake. That is historical: the
+  shipped helper arms with detached `rtcwake`, and the RTC check
+  (`rtcwake -m show`) is the primary hardware source of truth. Systemd timer
+  units are queried only to rediscover or stop legacy units after a restart.
 
 </details>
 

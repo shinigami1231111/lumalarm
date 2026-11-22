@@ -1,8 +1,8 @@
 # Contributing to Lumalarm
 
 **Lumalarm** is a smart alarm clock for Linux that wakes your computer from sleep —
-suspend-to-RAM wake scheduling, anti-oversleep challenges, timer, stopwatch and a sound
-manager, written in C++/Qt 6 with a QML front end. Contributions of all kinds are
+`rtcwake` wake scheduling through a privileged D-Bus helper, an alarm editor, timer,
+stopwatch and a sound manager, written in C++/Qt 6 with a QML front end. Contributions of all kinds are
 welcome: bug reports, documentation, UI copy and translations, refactors, tests and
 features. Read on for the conventions that keep review cheap.
 
@@ -11,7 +11,8 @@ features. Read on for the conventions that keep review cheap.
 - **Qt >= 6.5** with the modules this project uses: `Core`, `Gui`, `Qml`, `Quick`,
   `QuickControls2`, `Multimedia`, `Widgets`, `Test`, `DBus`
 - **CMake >= 3.21**
-- A **C++17** compiler — GCC 11+ or Clang 14+
+- A **C++17** compiler (GCC or Clang); CI covers the toolchains shipped by Ubuntu 24.04,
+  Fedora 40 and Arch Linux
 - Optional: **KF6WindowSystem** (KWin), which enables native KDE blur-behind
 - Optional: **Qt Linguist tools** (`lupdate`/`lrelease`, package `qt6-tools` on Arch),
   needed only to compile or refresh translations — see [Translations](#translations).
@@ -22,7 +23,7 @@ features. Read on for the conventions that keep review cheap.
 On Arch:
 
 ```sh
-sudo pacman -S --needed base-devel cmake qt6-base qt6-declarative qt6-multimedia qt6-tools
+sudo pacman -S --needed base-devel cmake ninja pkgconf qt6-base qt6-declarative qt6-multimedia qt6-tools
 ```
 
 ## Building
@@ -62,7 +63,7 @@ ctest --test-dir build --output-on-failure
 | `tst_schedulerlogic` | `Scheduler`, `SchedulerState`, `WakeManager` (wake module) and `AlarmManager` (managers module): alarm/wake state machine |
 | `tst_alarmmodel` | `AlarmModel` (models): rows, signals, roles, sort order, count/get shape |
 | `tst_selectionbehavior` | `AlarmModel` (models): `selectedId` selection semantics |
-| `tst_qmlresources` | every shipped QML file and icon resolves inside the app's embedded QML module resources |
+| `tst_qmlresources` | every QML file listed in `QML_FILES` and every icon referenced from QML resolves under the `GlassAlarm` resource prefix; installed app icons are checked by packaging, not this test |
 | `tst_systemmixer` | `SystemMixer` (audio): backend fallback order, parsers, the async CLI runner with timeout, `FakeMixer` |
 | `tst_volumepolicy` | `VolumePolicy` (audio): raise/clamp decisions, single-factor balance, 3 % override tolerance |
 | `tst_restorejournal` | `RestoreJournal` (audio): write-ahead record, atomic 0600 file, compare-and-set crash recovery |
@@ -74,10 +75,10 @@ ctest --test-dir build --output-on-failure
 | `tst_thememanager` | `ThemeManager` (managers): seeded defaults, palette presets, theme file round-trip |
 | `tst_blurmanager` | `BlurManager` (ui): construction and null-window contract |
 | `tst_wakemanager` | `WakeManager` (wake): test-alarm range validation plus the arm/cancel surface; the privileged D-Bus cases skip when no helper is present |
-| `tst_stg1security` | wake-helper security contract: polkit action, `60 <= seconds <= 86400` bounds, D-Bus policy and systemd/rtcwake fallback |
-| `tst_wakecaps` | helper capability probe (`GetCapabilities()`) used by the first-run wizard's wake-step gate |
+| `tst_stg1security` | wake-helper security contract: polkit action and argument list, `60 <= seconds <= 86400` bounds, D-Bus/polkit/systemd file and install contract, live bounds/replace/restart/denial; the helper itself is rtcwake-only |
+| `tst_wakecaps` | fixture-based `WakePolicy` capability parsing: sleep states, `mem_sleep` default, numeric RTC ordering, wake-capable RTC selection and `capabilitiesToVariantMap()` |
 | `tst_notifier` | `Notifier` (ui): construction, master switch and the no-bus path (live delivery is checked manually with `busctl --user monitor`) |
-| `tst_trayicon` | `TrayIcon` (ui): construction and tooltip text on a headless box (offscreen platform, no system tray) |
+| `tst_trayicon` | `TrayController` (ui): construction, `usable()` contract and tooltip text on a headless box (offscreen platform, no system tray) |
 | `tst_nightmode` | `NightMode` (ui): edge-trigger semantics, settings round-trip and lead-window clamping |
 | `tst_wizard` | `WizardController` (ui): step machine, next/back gates, first-run vs. existing-profile detection, the `wizard/completed` flag, language selection, and the guarantee that a wizard run writes no alarm |
 | `tst_i18n` | i18n: English source fallback, the embedded Arabic and Japanese catalogs at `:/i18n`, `QQmlEngine::retranslate()`, the `ui/language` round-trip and `.ts` catalog consistency |
@@ -110,9 +111,9 @@ Rules for string changes:
   names, and any combo whose `currentText` is stored verbatim as a setting (translating
   those would corrupt the value; combos selected by `currentIndex` are safe to
   translate).
-- Keep the leading/trailing spaces inside fragments such as `"h "`, `" min"` and
-  `"Tones folder: "`: the UI concatenates them around a countdown, and `tst_i18n`
-  asserts they survive translation.
+- Keep the trailing space in `"h "` and the leading space in `" min"` — these countdown
+  fragments are asserted by `tst_i18n`. Keep the trailing space in `"Tones folder: "`,
+  which prefixes the tones directory (not covered by that test).
 - After adding a string, run `update_translations` and translate the new entry in the
   same commit. `tst_i18n` fails on any `type="unfinished"` entry in `lumalarm_ar.ts` or
   `lumalarm_ja.ts`, so an untranslated string cannot ship unnoticed.
@@ -122,8 +123,9 @@ Rules for string changes:
 
 Right-to-left: `main.cpp` sets the application layout direction from the *loaded*
 catalog, and `qml/main.qml` enables `LayoutMirroring` from
-`Qt.application.layoutDirection`, so Arabic mirrors the whole window. The Japanese catalog
-is RTL-safe as well and loads for both `ja` and `ja_JP`.
+`Qt.application.layoutDirection`, so Arabic mirrors the whole window. Japanese is a
+left-to-right catalog and loads for both `ja` and `ja_JP`; RTL mirroring applies to Arabic,
+or whenever `mirrorApp` is enabled.
 
 ## Continuous Integration
 
@@ -141,8 +143,9 @@ leg so the build stays portable across all three.
 ### Running CI locally
 
 `bash scripts/ci-local.sh` runs the same configure + build + `ctest` flow on your host —
-Release build, blur OFF, then the full test suite, then an advisory lint pass. It needs
-no Docker, no containers and no network.
+Release build, blur OFF, then the full test suite, then a **mandatory** clang-tidy pass that
+fails the run on any finding (skip with `--no-lint`). Only GitHub `lint.yml` is advisory.
+It needs no Docker, no containers and no network.
 
 | Command | What it does |
 |---|---|
@@ -169,36 +172,37 @@ deleted, and `--uninstall` refuses to remove a hook that Lumalarm did not instal
 
 ### Formatting and lint configs
 
-`.clang-format` and `.clang-tidy` are at the repository root. The existing code is not
-yet fully reformatted, so treat them as a **target, not a gate** — use them to keep new
-code consistent, and do not reformat untouched files in a pull request. Lint findings
-are advisory everywhere today (`ci-local.sh` reports them, `lint.yml` is
-`continue-on-error: true`).
+`.clang-format` and `.clang-tidy` are at the repository root. `.clang-format` is a target
+for touched code, not a gate. Lint is advisory in GitHub `lint.yml` only; `ci-local.sh`
+treats clang-tidy findings as failures unless `--no-lint` is passed (`.clang-tidy` sets
+`WarningsAsErrors: '*'`). Do not reformat untouched files in a pull request.
 
 ## Project structure
 
 ```
 src/
   main.cpp
+  app/       AppLifecycle, SingleInstance
   models/    Alarm, AlarmModel
-  managers/  AlarmManager, ConfigManager, ThemeManager
+  managers/  AlarmManager, ConfigManager, ThemeManager, TonePaths.h
   audio/     AlarmAudioController, SystemMixer (+ pactl/wpctl/amixer/NULL
-             backends), VolumePolicy, RestoreJournal, SoundResolver,
-             AlarmPlayer, MprisPause
-  wake/      Scheduler, SchedulerState, WakeManager
-  ui/        BlurManager, Notifier, TrayIcon, NightMode, WizardController
+             backends), MixerBackend, FakeMixer, VolumePolicy, RestoreJournal,
+             SoundResolver, AlarmPlayer, MprisPause
+  wake/      Scheduler, SchedulerState, WakeManager, WakeCaps, WakeSecurity.h
+  ui/        BlurManager, Notifier, TrayController, NightMode, WizardController
 qml/
   main.qml
   NightDim.qml
   components/   GlassButton, GlassCard, GlassCheckBox, RoundedCombo,
-                SegmentedControl, ToggleSwitch
+                SegmentedControl, ToggleSwitch, Tokens, WindowResizeHandle
   pages/        AlarmEditor, AlarmListView, SettingsPage, StopwatchPage, TimerPage
   pickers/      ClockFace, WheelTimePicker
-  overlays/     RingingOverlay, SoundManager
-  wizard/       WizardOverlay, WizardPage, pages/ (the six setup steps)
+  overlays/     RingingOverlay, RingingWindow, SoundManager, CloseDialog
+  wizard/       WizardOverlay, WizardPage, pages/ (the four setup steps:
+                Language, WakeMethod, Notification, Done)
 translations/   lumalarm_en.ts, lumalarm_ar.ts, lumalarm_ja.ts
 helper/    lumalarm-wake-helper.cpp   (privileged D-Bus wake helper)
-data/      D-Bus activation + policy, Polkit action, systemd unit
+data/      D-Bus activation + policy + interface XML, Polkit action, systemd unit
 tests/     one .cpp per test binary (22 in total)
 resources/ icons, .qrc, .desktop file, app icons
 ```
@@ -212,14 +216,15 @@ Layout rules:
   policy QTP0001, and the resource paths mirror the source layout: `qml/main.qml`
   ships inside that prefix, `qml/pages/AlarmEditor.qml` likewise under its
   `pages` sub-directory. Any literal resource path you add must be covered by
-  `tests/tst_qmlresources.cpp`, which fails the build if a listed QML file or
+  `tests/tst_qmlresources.cpp`, which fails `ctest` if a listed QML file or
   icon goes missing.
 
 ## Code style
 
 - **C++**: match the surrounding code — 4 spaces, Qt naming (camelCase methods and
-  parameters, `m_` prefix for members, PascalCase classes), one class per file pair
-  (`.h`/`.cpp`).
+  parameters, `m_` prefix for members, PascalCase classes), one class per header/source
+  pair where needed. Header-only value types and policy helpers (`Alarm.h`,
+  `WakeSecurity.h`, `TonePaths.h`) are established exceptions.
 - **QML**: PascalCase file names, camelCase property names, 4-space indent, keep
   components in the right sub-directory.
 - **Formatting**: `.clang-format` and `.clang-tidy` are configured at the repository
@@ -251,9 +256,10 @@ Releases are cut from `main`; the tag is created after all in-flight tasks are m
 tracked build command.
 
 1. Check the local state: `git log --oneline origin/main..HEAD`, `git status --short`, `git tag -l`.
-2. Push commits: `git push origin main`.
+2. Push commits with the SSH deploy remote: `git push deploy main`
+   (`origin` is HTTPS and does not use the generated deploy key).
 3. Create and push an annotated tag:
-   `git tag -a vX.Y.Z -m "Release X.Y.Z — ..."` then `git push origin vX.Y.Z`.
+   `git tag -a vX.Y.Z -m "Release X.Y.Z — ..."` then `git push deploy vX.Y.Z`.
 4. Optionally publish the release notes straight from the changelog:
    `gh release create vX.Y.Z --title "vX.Y.Z — ..." --notes-file <(sed -n '/## \[X.Y.Z\]/,/## \[/p' CHANGELOG.md | head -n -1)`
 
