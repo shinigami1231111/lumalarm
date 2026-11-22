@@ -42,6 +42,7 @@ private slots:
     void startRecoversLeftoverJournal();
     void qmlSurfacePlayPreviewStop();
     void unknownNameReportsErrorAndPlaysNothing();
+    void fallbackTonePreviewWorksWithAlarmVolumePolicy();
     void refreshOutputDevicesListsNamedSinksAndWarmsRouting();
 };
 
@@ -436,6 +437,38 @@ void TestAudioController::unknownNameReportsErrorAndPlaysNothing()
     QCOMPARE(f.player.startCount, 0);
     QCOMPARE(errors.count(), 1);
     QCOMPARE(f.mixer.applyVolumeCallCount(), 0);
+}
+
+void TestAudioController::fallbackTonePreviewWorksWithAlarmVolumePolicy()
+{
+    Fixture f;
+    // A brand-new profile has no tone files at all.
+    QVERIFY(f.resolver.resolve(QStringLiteral("tone.wav"), QString()).isEmpty());
+    f.mixer.setSink(makeSink({32768, 32768}));
+    f.controller.applySettings(f.settings()); // guarantee, floor 60 %
+
+    QSignalSpy errors(&f.controller, &AlarmAudioController::playbackError);
+    f.controller.previewDefaultToneWithAlarmVolume();
+
+    // The generated WAV is a real PCM file in a temp folder (not the tones
+    // dir), and playback goes through the ring path, so the sink is raised.
+    QCOMPARE(errors.count(), 0);
+    QCOMPARE(f.player.startCount, 1);
+    QVERIFY(QFile::exists(f.player.lastPath));
+    QVERIFY(!f.player.lastPath.startsWith(f.tones.path()));
+    QFile wav(f.player.lastPath);
+    QVERIFY(wav.open(QIODevice::ReadOnly));
+    const QByteArray header = wav.read(12);
+    QCOMPARE(header.mid(0, 4), QByteArray("RIFF"));
+    QCOMPARE(header.mid(8, 4), QByteArray("WAVE"));
+    QVERIFY(wav.size() > 44);
+    QCOMPARE(f.mixer.applyVolumeCallCount(), 1);
+    QVERIFY(f.controller.isPlaying());
+
+    f.controller.stopRing();
+    QVERIFY(!f.controller.isPlaying());
+    QCOMPARE(f.mixer.sink().volumes, (QVector<int>{32768, 32768}));
+    QVERIFY(!QFile::exists(f.journal.path()));
 }
 
 void TestAudioController::refreshOutputDevicesListsNamedSinksAndWarmsRouting()

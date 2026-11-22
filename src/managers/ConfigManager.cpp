@@ -118,6 +118,21 @@ void ConfigManager::setTimePickerMode(const QString &mode)
     emit configChanged();
 }
 
+QString ConfigManager::timeFormat() const
+{
+    const QString format = m_settings->value("alarm/timeFormat", "24h").toString();
+    return format == "12h" ? QStringLiteral("12h") : QStringLiteral("24h");
+}
+
+void ConfigManager::setTimeFormat(const QString &format)
+{
+    const QString clean = format == "12h" ? QStringLiteral("12h") : QStringLiteral("24h");
+    if (timeFormat() == clean)
+        return;
+    m_settings->setValue("alarm/timeFormat", clean);
+    emit configChanged();
+}
+
 QString ConfigManager::tonesDirectory() const
 {
     return m_tonesDir;
@@ -558,17 +573,26 @@ int ConfigManager::emojiLevel() const
 void ConfigManager::setEmojiLevel(int level)
 {
     const int clamped = qBound(0, level, 2);
+    const int previous = emojiLevel();
     const bool hadOldKey = m_settings->contains(QStringLiteral("ui/showEmojis"));
-    if (emojiLevel() == clamped) {
+
+    // Always persist the new scale, even when the effective level is already
+    // the selected one. A legacy profile with only showEmojis=false otherwise
+    // loses its choice on a no-op write (Off is removed, then the default
+    // becomes More on the next start).
+    if (previous != clamped || !m_settings->contains(QStringLiteral("ui/emojiLevel"))) {
+        m_settings->setValue(QStringLiteral("ui/emojiLevel"), clamped);
         if (hadOldKey)
             m_settings->remove(QStringLiteral("ui/showEmojis"));
+        if (previous != clamped) {
+            emit configChanged();
+            emit emojiLevelChanged(clamped);
+        }
         return;
     }
 
-    m_settings->setValue(QStringLiteral("ui/emojiLevel"), clamped);
     if (hadOldKey)
         m_settings->remove(QStringLiteral("ui/showEmojis"));
-    emit configChanged();
 }
 
 QString ConfigManager::emoji(const QString &symbol, int minLevel) const

@@ -58,6 +58,7 @@ private slots:
     void constructionCreatesConfigPathsAndDefaults();
     void defaultWakeModeWasRemovedInFavourOfSleepMode();
     void timePickerModeIsNormalizedOnRead();
+    void timeFormatIsNormalizedOnRead();
     void availableTonesReflectsTonesDirectory();
     void availableTonesIncludesSystemToneFolder();
     void availableTonesCoversEveryAdvertisedFormat();
@@ -70,6 +71,7 @@ private slots:
     void testWakeDurationDefaultsAndClamps();
     void audioSettingsRoundTripAndClamp();
     void emojiLevelDefaultsToMoreAndPersists();
+    void emojiLevelChangeHasDedicatedSignalAndMigratesLegacyOff();
 
 private:
     void cleanupTones();
@@ -171,6 +173,20 @@ void TestConfigManager::timePickerModeIsNormalizedOnRead()
     QCOMPARE(cm.timePickerMode(), QStringLiteral("wheel"));
     cm.setTimePickerMode(QString());
     QCOMPARE(cm.timePickerMode(), QStringLiteral("wheel"));
+}
+
+void TestConfigManager::timeFormatIsNormalizedOnRead()
+{
+    ConfigManager cm;
+    QCOMPARE(cm.timeFormat(), QStringLiteral("24h")); // general numbers by default
+
+    cm.setTimeFormat(QStringLiteral("12h"));
+    QCOMPARE(cm.timeFormat(), QStringLiteral("12h"));
+    ConfigManager reloaded;
+    QCOMPARE(reloaded.timeFormat(), QStringLiteral("12h"));
+
+    cm.setTimeFormat(QStringLiteral("am/pm")); // anything else is 24-hour
+    QCOMPARE(cm.timeFormat(), QStringLiteral("24h"));
 }
 
 void TestConfigManager::availableTonesReflectsTonesDirectory()
@@ -598,6 +614,35 @@ void TestConfigManager::emojiLevelDefaultsToMoreAndPersists()
     cm.setEmojiLevel(2); // leave the shared test profile at the shipped default
     QSettings after(settingsFilePath(), QSettings::IniFormat);
     QVERIFY(!after.contains(QStringLiteral("ui/showEmojis")));
+}
+
+void TestConfigManager::emojiLevelChangeHasDedicatedSignalAndMigratesLegacyOff()
+{
+    QSettings settings(settingsFilePath(), QSettings::IniFormat);
+    settings.remove(QStringLiteral("ui/emojiLevel"));
+    settings.setValue(QStringLiteral("ui/showEmojis"), false);
+    settings.sync();
+
+    ConfigManager cm;
+    QCOMPARE(cm.emojiLevel(), 0);
+    QSignalSpy levelChanged(&cm, &ConfigManager::emojiLevelChanged);
+
+    // Selecting the same effective level used to remove the only key and let
+    // the next start fall back to More. It must persist Off instead.
+    cm.setEmojiLevel(0);
+    QSettings after(settingsFilePath(), QSettings::IniFormat);
+    QVERIFY(after.contains(QStringLiteral("ui/emojiLevel")));
+    QCOMPARE(after.value(QStringLiteral("ui/emojiLevel")).toInt(), 0);
+    QVERIFY(!after.contains(QStringLiteral("ui/showEmojis")));
+    ConfigManager reloaded;
+    QCOMPARE(reloaded.emojiLevel(), 0);
+    QCOMPARE(levelChanged.count(), 0); // no effective change -> no UI refresh
+
+    cm.setEmojiLevel(1);
+    QCOMPARE(levelChanged.count(), 1);
+    QCOMPARE(levelChanged.at(0).at(0).toInt(), 1);
+    cm.setEmojiLevel(2); // leave the shared profile at the default
+    QCOMPARE(levelChanged.count(), 2);
 }
 
 void TestConfigManager::cleanupTones()

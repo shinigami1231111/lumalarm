@@ -114,6 +114,16 @@ int main(int argc, char *argv[])
     BlurManager blurManager;
     Scheduler scheduler(&alarmManager, &wakeManager);
 
+    // The RTCwake method is a ConfigManager setting, but the helper call uses
+    // WakeManager's runtime copy. Seed it from the persisted value and keep it
+    // live: changing the method in Settings must reach the next ScheduleWake.
+    const auto wakeModeFromConfig = [&configManager, &wakeManager]() {
+        wakeManager.setSleepMode(configManager.sleepMode());
+    };
+    wakeModeFromConfig();
+    QObject::connect(&configManager, &ConfigManager::configChanged, &wakeManager,
+                     wakeModeFromConfig);
+
     // Audio settings: seed once, then follow config changes (Phase 5 edits
     // them through ConfigManager; the controller re-reads on configChanged).
     const auto audioSettingsFrom = [&configManager]() {
@@ -263,6 +273,13 @@ int main(int argc, char *argv[])
         applyLanguage(configManager.language());
         engine.retranslate();
     });
+
+    // Glyph bindings call configManager.emoji(), which is a method call: QML
+    // does not track its internal emojiLevel read as a dependency. A dedicated
+    // signal refreshes every binding when the density changes (the same engine
+    // primitive used for language changes).
+    QObject::connect(&configManager, &ConfigManager::emojiLevelChanged, &engine,
+                     [&engine]() { engine.retranslate(); });
 
     // Re-apply layout direction when mirrorApp changes at runtime.
     QObject::connect(&configManager, &ConfigManager::configChanged, &app, [&]() {

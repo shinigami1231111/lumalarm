@@ -21,6 +21,9 @@ class ConfigManager : public QObject
     Q_PROPERTY(QString sleepMode READ sleepMode WRITE setSleepMode NOTIFY configChanged)
     Q_PROPERTY(
         QString timePickerMode READ timePickerMode WRITE setTimePickerMode NOTIFY configChanged)
+    // Hour display system shared by the alarm editor's pickers:
+    // "24h" (00-23) or "12h" (01-12 with an AM/PM selector).
+    Q_PROPERTY(QString timeFormat READ timeFormat WRITE setTimeFormat NOTIFY configChanged)
     Q_PROPERTY(QString tonesDirectory READ tonesDirectory NOTIFY configChanged)
     // Package-installed, read-only tone folder (the first existing XDG data
     // location carrying lumalarm/tones — /usr/share/lumalarm/tones on an Arch
@@ -89,7 +92,7 @@ class ConfigManager : public QObject
     // Emoji density: 0 = off, 1 = a few leading icons, 2 = icons on most
     // labels and buttons. Stored as an int so the selector has three states;
     // 2 (More) is the default for new and migrated profiles.
-    Q_PROPERTY(int emojiLevel READ emojiLevel WRITE setEmojiLevel NOTIFY configChanged)
+    Q_PROPERTY(int emojiLevel READ emojiLevel WRITE setEmojiLevel NOTIFY emojiLevelChanged)
     // ── audio (alarm sound rebuild, Phase 4) ────────────────────────────────
     // The guarantee policy's knobs, read by main.cpp into
     // AlarmAudioController::applySettings(). Values are validated on read, so
@@ -125,9 +128,14 @@ public:
     // for the QML model and for the validity check in sleepMode().
     Q_INVOKABLE QStringList sleepModeChoices() const;
 
-    // Alarm-editor time picker style: "wheel" (default) | "spin".
+    // Alarm-editor time picker style: "wheel" (default) | "spin" (Classic).
     QString timePickerMode() const;
     void setTimePickerMode(const QString &mode);
+
+    // "24h" (default) or "12h". Alarm hours are always stored internally as
+    // 0-23; only the editor's presentation follows this setting.
+    QString timeFormat() const;
+    void setTimeFormat(const QString &format);
 
     QString tonesDirectory() const;
     QString systemTonesDirectory() const;
@@ -241,6 +249,10 @@ public:
 
 signals:
     void configChanged();
+    // Emitted only when the emoji density actually changes. QML glyph bindings
+    // call emoji(), so a plain configChanged() cannot register as a dependency;
+    // main.cpp answers this signal with engine.retranslate() to refresh them.
+    void emojiLevelChanged(int level);
     // Emitted only by setLanguage(); lets main.cpp reload the catalog without
     // re-running for every unrelated configChanged().
     void languageChanged();

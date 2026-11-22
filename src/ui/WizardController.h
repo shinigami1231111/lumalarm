@@ -127,6 +127,14 @@ public:
     // Both delegate to the existing controller; the wizard adds no audio code.
     Q_INVOKABLE void refreshOutputDevices();
     Q_INVOKABLE void previewSound(const QString &toneName);
+    // First-run only: play the locally generated chime when no tone files are
+    // installed yet, so the sound page's Preview button always works.
+    Q_INVOKABLE void previewDefaultTone();
+    // Setup preview through the real alarm volume policy. stopRing() restores
+    // the sink when the same button is pressed again.
+    Q_INVOKABLE void previewAlarmVolume(const QString &toneName);
+    Q_INVOKABLE void previewDefaultAlarmVolume();
+    Q_INVOKABLE void stopAlarmPreview();
 
     // Pages 2 and 5: plain-language description of the wake mechanism
     // WakeManager reports for this machine.

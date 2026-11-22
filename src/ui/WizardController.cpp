@@ -159,6 +159,30 @@ void WizardController::previewSound(const QString &toneName)
         m_audio->preview(toneName);
 }
 
+void WizardController::previewDefaultTone()
+{
+    if (m_audio)
+        m_audio->previewDefaultTone();
+}
+
+void WizardController::previewAlarmVolume(const QString &toneName)
+{
+    if (m_audio)
+        m_audio->previewWithAlarmVolume(toneName);
+}
+
+void WizardController::previewDefaultAlarmVolume()
+{
+    if (m_audio)
+        m_audio->previewDefaultToneWithAlarmVolume();
+}
+
+void WizardController::stopAlarmPreview()
+{
+    if (m_audio)
+        m_audio->stopRing();
+}
+
 void WizardController::next()
 {
     if (!canGoNext())

@@ -8,11 +8,13 @@
 #include "audio/VolumePolicy.h"
 
 #include <QObject>
+#include <QScopedPointer>
 #include <QString>
 #include <QStringList>
 #include <QVariant>
 
 class MprisPause;
+class QTemporaryDir;
 
 // The single owner of everything the alarm sound does at runtime. Replaces
 // AudioPlayer (deleted with Issue #1) and wires the rebuilt layers together:
@@ -73,6 +75,16 @@ public:
     // --- QML surface (old AudioPlayer API; resolves tone names) -----------
     Q_INVOKABLE void play(const QString &toneName);    // looped, no sink policy
     Q_INVOKABLE void preview(const QString &toneName); // one shot
+    // First-run fallback used only by the wizard's alarm-sound preview: when
+    // no tone files are installed yet, generate a short WAV in a temporary
+    // directory and play it through the same preview path. No external command
+    // and no file in the user's tones folder.
+    Q_INVOKABLE void previewDefaultTone();
+    // Setup preview variants: same volume policy as a real alarm ring, so the
+    // chosen "Raise system volume" / minimum-volume settings can be judged.
+    // stopRing() ends them and restores the sink exactly.
+    Q_INVOKABLE void previewWithAlarmVolume(const QString &toneName);
+    Q_INVOKABLE void previewDefaultToneWithAlarmVolume();
     Q_INVOKABLE void stop();
     Q_INVOKABLE void stopRing();
     Q_INVOKABLE void reinitializeAudio(); // system resume
@@ -100,6 +112,7 @@ signals:
 
 private:
     void connectMixer(SystemMixer *mixer);
+    QString ensureFallbackTonePath();
     void onBackendDetected(const QString &backendName,
                            const MixerCapabilities &capabilities);
     void onSinksReady(const QList<SinkState> &sinks);
@@ -123,6 +136,7 @@ private:
     bool m_ownsJournal = false;
 
     QVariantList m_outputDevices; // last listSinks() answer
+    QScopedPointer<QTemporaryDir> m_fallbackToneDir; // wizard preview WAV
 
     QStringList m_backendCandidates; // guide order, minus what failed
     QString m_currentBackendName;

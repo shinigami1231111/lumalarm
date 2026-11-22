@@ -1,11 +1,53 @@
 #include "audio/AlarmAudioController.h"
 #include "audio/MprisPause.h"
 
+#include <QDataStream>
 #include <QDebug>
+#include <QDir>
 #include <QEventLoop>
+#include <QFile>
+#include <QTemporaryDir>
 #include <QTimer>
 
+#include <cmath>
 #include <utility>
+
+namespace {
+// A 1.5 s, 8 kHz, mono 16-bit PCM chime. Generated locally so a brand-new
+// profile can preview a sound before any tone file has been imported; no
+// external command and nothing written into the user's tones folder.
+constexpr int kFallbackSampleRate = 8000;
+constexpr int kFallbackFrames = 12000;
+
+bool writeFallbackTone(const QString &path)
+{
+    QFile file(path);
+    if (!file.open(QIODevice::WriteOnly))
+        return false;
+
+    const int dataBytes = kFallbackFrames * 2;
+    QDataStream out(&file);
+    out.setByteOrder(QDataStream::LittleEndian);
+    out.writeRawData("RIFF", 4);
+    out << quint32(36 + dataBytes);
+    out.writeRawData("WAVE", 4);
+    out.writeRawData("fmt ", 4);
+    out << quint32(16) << quint16(1) << quint16(1) << quint32(kFallbackSampleRate)
+        << quint32(kFallbackSampleRate * 2) << quint16(2) << quint16(16);
+    out.writeRawData("data", 4);
+    out << quint32(dataBytes);
+
+    constexpr double Pi = 3.14159265358979323846;
+    for (int i = 0; i < kFallbackFrames; ++i) {
+        const double t = static_cast<double>(i) / kFallbackSampleRate;
+        const double freq = t < 0.5 ? 880.0 : (t < 1.0 ? 660.0 : 880.0);
+        const double envelope = qMin(1.0, qMin(t * 20.0, (1.5 - t) * 20.0));
+        const double sample = 12000.0 * envelope * std::sin(2.0 * Pi * freq * t);
+        out << static_cast<qint16>(sample);
+    }
+    return out.status() == QDataStream::Ok && file.flush();
+}
+} // namespace
 
 AlarmAudioController::AlarmAudioController(QObject *parent)
     : QObject(parent)
@@ -174,6 +216,49 @@ void AlarmAudioController::preview(const QString &toneName)
     }
     m_player->setStreamVolume(m_settings.streamPercent);
     m_player->preview(resolved);
+}
+
+QString AlarmAudioController::ensureFallbackTonePath()
+{
+    if (!m_fallbackToneDir) {
+        m_fallbackToneDir.reset(new QTemporaryDir(
+            QDir::tempPath() + QStringLiteral("/lumalarm-preview-XXXXXX")));
+        if (!m_fallbackToneDir->isValid()) {
+            emit playbackError(QStringLiteral("Could not create a temporary preview tone"));
+            return {};
+        }
+    }
+
+    QString path = m_fallbackToneDir->filePath(QStringLiteral("alarm.wav"));
+    if (!QFile::exists(path) && !writeFallbackTone(path)) {
+        emit playbackError(QStringLiteral("Could not generate a preview tone"));
+        return {};
+    }
+    return path;
+}
+
+void AlarmAudioController::previewDefaultTone()
+{
+    const QString path = ensureFallbackTonePath();
+    if (!path.isEmpty())
+        preview(path);
+}
+
+void AlarmAudioController::previewWithAlarmVolume(const QString &toneName)
+{
+    const QString resolved = m_resolver.resolve(toneName, m_settings.defaultSound);
+    if (resolved.isEmpty()) {
+        emit playbackError(QStringLiteral("Sound file not found: ") + toneName);
+        return;
+    }
+    ring(resolved);
+}
+
+void AlarmAudioController::previewDefaultToneWithAlarmVolume()
+{
+    const QString path = ensureFallbackTonePath();
+    if (!path.isEmpty())
+        ring(path);
 }
 
 void AlarmAudioController::stop()
