@@ -1,12 +1,22 @@
 #include "ui/Notifier.h"
 
-#include <QDBusConnection>
-#include <QDBusInterface>
 #include <QDBusMessage>
-#include <QDBusReply>
+#include <QDBusPendingCallWatcher>
+#include <QDBusPendingReply>
 #include <QVariantMap>
+#include <QtLogging>
 
-Notifier::Notifier(bool enabled, QObject *parent) : QObject(parent), m_enabled(enabled) {}
+namespace {
+// The pending-call lifetime, not a wait imposed on the GUI thread. asyncCall()
+// returns immediately; the watcher is freed when the daemon answers or when
+// this timeout expires.
+constexpr int kNotifyPendingTimeoutMs = 5000;
+} // namespace
+
+Notifier::Notifier(bool enabled, const QDBusConnection &bus, QObject *parent)
+    : QObject(parent), m_enabled(enabled), m_bus(bus)
+{
+}
 
 bool Notifier::isEnabled() const
 {
@@ -18,25 +28,22 @@ void Notifier::setEnabled(bool enabled)
     m_enabled = enabled;
 }
 
+void Notifier::warnUnavailable(const QString &detail)
+{
+    if (m_warnedUnavailable)
+        return;
+    qWarning() << "[Notifier] notification daemon unreachable:" << detail;
+    m_warnedUnavailable = true;
+}
+
 bool Notifier::deliver(const QString &title, const QString &body, int timeoutMs)
 {
     // Disabled: no bus work, no logging, warn flag untouched (D4/F3).
     if (!m_enabled)
         return false;
 
-    // Built per call and never cached, so a daemon that appears later is
-    // picked up without a restart (D3).
-    QDBusInterface iface(QStringLiteral("org.freedesktop.Notifications"),
-                         QStringLiteral("/org/freedesktop/Notifications"),
-                         QStringLiteral("org.freedesktop.Notifications"),
-                         QDBusConnection::sessionBus());
-    if (!iface.isValid()) {
-        const QDBusError err = iface.lastError();
-        if (!m_warnedUnavailable) {
-            qWarning() << "[Notifier] notification daemon unreachable:" << err.name() << "-"
-                       << err.message();
-            m_warnedUnavailable = true;
-        }
+    if (!m_bus.isConnected()) {
+        warnUnavailable(QStringLiteral("no session bus connection"));
         return false;
     }
 
@@ -45,33 +52,33 @@ bool Notifier::deliver(const QString &title, const QString &body, int timeoutMs)
     //          as actions, a{sv} hints, i expire_timeout) -> (u id)
     // expire_timeout -1 = server default; anything <= 0 from a caller means
     // "use the default" (0 would otherwise mean "never expire").
-    const QDBusMessage raw = iface.call(QStringLiteral("Notify"), QStringLiteral("Lumalarm"),
-                                        uint(0),                    // replaces_id
-                                        QStringLiteral("lumalarm"), // app_icon
-                                        title, body,
-                                        QStringList(), // actions
-                                        QVariantMap(), // hints
-                                        timeoutMs <= 0 ? -1 : timeoutMs);
-    if (raw.type() == QDBusMessage::ErrorMessage) {
-        if (!m_warnedUnavailable) {
-            qWarning() << "[Notifier] Notify rejected:" << raw.errorName() << raw.errorMessage();
-            m_warnedUnavailable = true;
-        }
-        return false;
-    }
+    //
+    // This must never use QDBusInterface::call() here: a blocking D-Bus call
+    // inside the alarmTriggered signal chain stalls the GUI thread before QML
+    // can show the ringing overlay. asyncCall() queues the message and returns.
+    QDBusMessage msg = QDBusMessage::createMethodCall(
+        QStringLiteral("org.freedesktop.Notifications"),
+        QStringLiteral("/org/freedesktop/Notifications"),
+        QStringLiteral("org.freedesktop.Notifications"), QStringLiteral("Notify"));
+    msg << QStringLiteral("Lumalarm") << quint32(0) << QStringLiteral("lumalarm") << title << body
+        << QStringList() << QVariantMap() << (timeoutMs <= 0 ? -1 : timeoutMs);
 
-    const QDBusReply<uint> reply(raw);
-    if (!reply.isValid()) {
-        if (!m_warnedUnavailable) {
-            qWarning() << "[Notifier] Notify returned an invalid reply";
-            m_warnedUnavailable = true;
-        }
-        return false;
-    }
-
-    // A daemon answered: clear the suppression so a later failure is reported.
-    m_warnedUnavailable = false;
+    const QDBusPendingCall pending = m_bus.asyncCall(msg, kNotifyPendingTimeoutMs);
+    auto *watcher = new QDBusPendingCallWatcher(pending, this);
+    connect(watcher, &QDBusPendingCallWatcher::finished, this, &Notifier::onNotifyFinished);
     return true;
+}
+
+void Notifier::onNotifyFinished(QDBusPendingCallWatcher *watcher)
+{
+    const QDBusPendingReply<quint32> reply(*watcher);
+    if (reply.isError()) {
+        warnUnavailable(reply.error().name() + QStringLiteral(" - ") + reply.error().message());
+    } else {
+        // A daemon answered: clear the suppression so a later failure is reported.
+        m_warnedUnavailable = false;
+    }
+    watcher->deleteLater();
 }
 
 void Notifier::notify(const QString &title, const QString &body, int timeoutMs)
