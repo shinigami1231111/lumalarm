@@ -43,7 +43,7 @@ class WizardController : public QObject
     Q_PROPERTY(
         bool mirrorWindowButtons READ mirrorWindowButtons WRITE setMirrorWindowButtons
             NOTIFY configChangedMirror)
-    Q_PROPERTY(bool showEmojis READ showEmojis WRITE setShowEmojis NOTIFY configChangedMirror)
+    Q_PROPERTY(int emojiLevel READ emojiLevel WRITE setEmojiLevel NOTIFY configChangedMirror)
 
 public:
     // Three non-owning dependencies; all MUST be non-null and outlive this
@@ -65,8 +65,8 @@ public:
     void setMirrorApp(bool v);
     bool mirrorWindowButtons() const;
     void setMirrorWindowButtons(bool v);
-    bool showEmojis() const;
-    void setShowEmojis(bool v);
+    int emojiLevel() const;
+    void setEmojiLevel(int level);
 
     // How many steps the wizard has (kStepCount). QML reads it, never hardcodes.
     static constexpr int kStepCount = 4;

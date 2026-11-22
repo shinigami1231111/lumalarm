@@ -116,7 +116,7 @@ GlassCard {
         spacing: 16
 
         Text {
-            text: editIndex >= 0 ? qsTr("Edit Alarm") : qsTr("New Alarm")
+            text: editIndex >= 0 ? configManager.emoji("✏️", 2) + qsTr("Edit Alarm") : configManager.emoji("➕", 2) + qsTr("New Alarm")
             color: configManager.themeTextPrimary
             font.pixelSize: 22
             font.bold: true
@@ -126,7 +126,7 @@ GlassCard {
             spacing: 4
             Layout.fillWidth: true
             Text {
-                text: qsTr("Name (optional)")
+                text: configManager.emoji("🏷️", 2) + qsTr("Name (optional)")
                 color: configManager.themeTextSecondary; font.pixelSize: 12
             }
             TextField {
@@ -178,7 +178,7 @@ GlassCard {
 
                     ValueCtrl {
                         id: hourCtrl
-                        label: qsTr("Hour"); suffix: ""
+                        label: configManager.emoji("🕐", 2) + qsTr("Hour"); suffix: ""
                         minVal: 0; maxVal: 23; step: 1
                         onValueChanged: editHour = value
                         Component.onCompleted: value = editHour
@@ -186,7 +186,7 @@ GlassCard {
 
                     ValueCtrl {
                         id: minuteCtrl
-                        label: qsTr("Minute"); suffix: ""
+                        label: configManager.emoji("🕑", 2) + qsTr("Minute"); suffix: ""
                         minVal: 0; maxVal: 59; step: 1
                         onValueChanged: editMinute = value
                         Component.onCompleted: value = editMinute
@@ -197,7 +197,7 @@ GlassCard {
 
         GlassCheckBox {
             id: daysCheck
-            labelText: qsTr("Set Days")
+            labelText: configManager.emoji("📅", 2) + qsTr("Set Days")
             checked: {
                 for (var i = 0; i < 7; i++)
                     if (editDays[i]) return true
@@ -233,10 +233,10 @@ GlassCard {
             }
         }
 
-        ValueCtrl { label: qsTr("Auto Stop"); value: editAutoStop; minVal: 10; maxVal: 600; step: 10; suffix: "s"; onValueChanged: editAutoStop = value }
+        ValueCtrl { label: configManager.emoji("⏱️", 2) + qsTr("Auto Stop"); value: editAutoStop; minVal: 10; maxVal: 600; step: 10; suffix: "s"; onValueChanged: editAutoStop = value }
 
         GlassCheckBox {
-            labelText: qsTr("Enable Sound")
+            labelText: configManager.emoji("🔔", 2) + qsTr("Enable Sound")
             checked: editEnableSound
             onCheckedChanged: editEnableSound = checked
         }
@@ -291,7 +291,7 @@ GlassCard {
         }
 
         GlassCheckBox {
-            labelText: qsTr("Enable Command")
+            labelText: configManager.emoji("💻", 2) + qsTr("Enable Command")
             checked: editEnableCommand
             onCheckedChanged: editEnableCommand = checked
         }

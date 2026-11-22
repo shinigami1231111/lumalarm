@@ -24,7 +24,7 @@ ColumnLayout {
         return ("00"+h).slice(-2)+":"+("00"+m).slice(-2)+":"+("00"+s).slice(-2)
     }
 
-    Text { text: (configManager.showEmojis ? "⚡ " : "") + qsTr("Stopwatch"); color: configManager.themeTextPrimary; font.pixelSize: 24; font.bold: true }
+    Text { text: configManager.emoji("⚡", 1) + qsTr("Stopwatch"); color: configManager.themeTextPrimary; font.pixelSize: 24; font.bold: true }
 
     Item { Layout.fillHeight: true }
 
@@ -40,7 +40,7 @@ ColumnLayout {
         spacing: 12
         Layout.alignment: Qt.AlignHCenter
         GlassButton {
-            text: swRunning ? qsTr("Pause") : qsTr("Start")
+            text: swRunning ? configManager.emoji("⏸️", 2) + qsTr("Pause") : configManager.emoji("▶️", 2) + qsTr("Start")
             pixelSize: 14
             implicitWidth: 110; implicitHeight: 40
             filled: !swRunning
@@ -49,13 +49,13 @@ ColumnLayout {
             onClicked: { if (swRunning) { swTimer.stop(); swRunning=false } else { swRunning=true; swTimer.start() } }
         }
         GlassButton {
-            text: qsTr("Lap")
+            text: configManager.emoji("🏁", 2) + qsTr("Lap")
             pixelSize: 14; implicitWidth: 100; implicitHeight: 40
             enabled: swRunning
             onClicked: { laps = laps.concat([elapsedMs]); lapView.positionViewAtEnd() }
         }
         GlassButton {
-            text: qsTr("Reset")
+            text: configManager.emoji("🔄", 2) + qsTr("Reset")
             pixelSize: 14; implicitWidth: 100; implicitHeight: 40
             baseColor: Qt.rgba(1,0.2,0.2,0.15)
             hoverColor: Qt.rgba(1,0.2,0.2,0.28)
@@ -82,7 +82,7 @@ ColumnLayout {
                 border.color: Qt.rgba(1,1,1,0.06); border.width: 1
                 RowLayout {
                     anchors.fill: parent; anchors.margins: 12; spacing: 12
-                    Text { text: qsTr("Lap ") + (index+1); color: configManager.themeTextSecondary; font.pixelSize: 14 }
+                    Text { text: configManager.emoji("🏁", 2) + qsTr("Lap ") + (index+1); color: configManager.themeTextSecondary; font.pixelSize: 14 }
                     Item { Layout.fillWidth: true }
                     Text { text: fmt(modelData); color: configManager.themeTextPrimary; font.pixelSize: 15; font.bold: true }
                     Text {

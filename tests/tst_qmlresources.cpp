@@ -63,7 +63,7 @@ private slots:
     void qrcQmlLiteralsInSourcesResolve();           // stale literals in src/ + qml/
     void iconReferencesInQmlResolve();               // literal + dynamic icon refs
     void importDialogFiltersMatchDiscoveryFormats(); // Issue #2: picker <-> discovery
-    void emojisAreGatedByShowEmojis();               // showEmojis is not a dead toggle
+    void emojisAreGatedByEmojiLevel();               // emoji density switch controls every glyph
 };
 
 // ----------------------------------------------------------------------------
@@ -360,29 +360,36 @@ void TestQmlResources::importDialogFiltersMatchDiscoveryFormats()
     QCOMPARE(dialogGlobs, discoveryGlobs);
 }
 
-// showEmojis used to be a dead setting: the wizard and Settings offered it but
-// no label read it. Every emoji literal in QML must therefore sit on a line
-// that checks configManager.showEmojis, so adding a pretty emoji cannot
-// silently bypass the switch (or reintroduce the old hard-coded 🔊).
-void TestQmlResources::emojisAreGatedByShowEmojis()
+// Emoji density used to be a dead setting: the wizard and Settings offered it
+// but no label read it. Every decorative glyph in QML must therefore go through
+// configManager.emoji(symbol, level), which applies the Off / Less / More
+// switch. A raw literal cannot silently bypass the selector (or reintroduce
+// the old hard-coded 🔊).
+void TestQmlResources::emojisAreGatedByEmojiLevel()
 {
     const QStringList files = sourceRootFiles(QStringLiteral("qml"), {QStringLiteral("*.qml")});
     QVERIFY2(!files.isEmpty(), "QML source tree not available — cannot check emoji gating");
 
     int checked = 0;
+    int moreOnly = 0;
     for (const QString &path : files) {
         const QStringList lines = readSourceFile(path).split(QLatin1Char('\n'));
         for (int i = 0; i < lines.size(); ++i) {
             if (!containsEmoji(lines.at(i)))
                 continue;
             ++checked;
-            QVERIFY2(lines.at(i).contains(QStringLiteral("configManager.showEmojis")),
-                     qPrintable(QStringLiteral("%1:%2: emoji is not gated by showEmojis")
+            const QString line = lines.at(i);
+            QVERIFY2(line.contains(QStringLiteral("configManager.emoji(")),
+                     qPrintable(QStringLiteral("%1:%2: emoji bypasses configManager.emoji()")
                                     .arg(path)
                                     .arg(i + 1)));
+            if (line.contains(QStringLiteral(", 2)")))
+                ++moreOnly;
         }
     }
-    QVERIFY2(checked > 0, "no emojis found — the showEmojis feature has no visible effect");
+    QVERIFY2(checked > 0, "no emojis found — the emoji setting has no visible effect");
+    QVERIFY2(moreOnly > 0, "no More-level emojis found — the new option is meaningless");
+    QVERIFY2(moreOnly < checked, "every emoji is More-only — the Less level lost its glyphs");
 }
 
 QTEST_GUILESS_MAIN(TestQmlResources)

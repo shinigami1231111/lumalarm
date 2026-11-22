@@ -34,7 +34,7 @@ ColumnLayout {
         return ("00"+h).slice(-2) + ":" + ("00"+m).slice(-2) + ":" + ("00"+s).slice(-2)
     }
 
-    Text { text: (configManager.showEmojis ? "⏳ " : "") + qsTr("Timer"); color: configManager.themeTextPrimary; font.pixelSize: 24; font.bold: true }
+    Text { text: configManager.emoji("⏳", 1) + qsTr("Timer"); color: configManager.themeTextPrimary; font.pixelSize: 24; font.bold: true }
 
     Item { Layout.fillHeight: true }
 
@@ -47,7 +47,7 @@ ColumnLayout {
     }
 
     Text {
-        text: timerRunning ? qsTr("Running") : (remainingSecs > 0 ? qsTr("Paused") : qsTr("Set a duration"))
+        text: configManager.emoji("⏱️", 2) + (timerRunning ? qsTr("Running") : (remainingSecs > 0 ? qsTr("Paused") : qsTr("Set a duration")))
         color: timerRunning ? Qt.rgba(0.3,1,0.3,0.8) : configManager.themeTextSecondary
         font.pixelSize: 14
         Layout.alignment: Qt.AlignHCenter
@@ -60,9 +60,9 @@ ColumnLayout {
         Layout.alignment: Qt.AlignHCenter
         Repeater {
             model: [
-                {label: qsTr("Hours"), max: 99},
-                {label: qsTr("Min"), max: 59},
-                {label: qsTr("Sec"), max: 59}
+                {label: configManager.emoji("🕐", 2) + qsTr("Hours"), max: 99},
+                {label: configManager.emoji("🕑", 2) + qsTr("Min"), max: 59},
+                {label: configManager.emoji("🕒", 2) + qsTr("Sec"), max: 59}
             ]
             ColumnLayout {
                 spacing: 4
@@ -89,9 +89,9 @@ ColumnLayout {
         spacing: 12
         Layout.alignment: Qt.AlignHCenter
         GlassButton {
-            text: timerRunning ? qsTr("Pause") : qsTr("Start")
+            text: timerRunning ? configManager.emoji("⏸️", 2) + qsTr("Pause") : configManager.emoji("▶️", 2) + qsTr("Start")
             pixelSize: 14
-            implicitWidth: 110; implicitHeight: 40
+            implicitWidth: configManager.emojiLevel >= 2 ? 132 : 110; implicitHeight: 40
             filled: !timerRunning
             baseColor: timerRunning ? Qt.rgba(1,0.6,0,0.22) : Qt.rgba(0.3,1,0.3,0.18)
             hoverColor: timerRunning ? Qt.rgba(1,0.6,0,0.32) : Qt.rgba(0.3,1,0.3,0.3)
@@ -107,9 +107,9 @@ ColumnLayout {
             }
         }
         GlassButton {
-            text: qsTr("Reset")
+            text: configManager.emoji("🔄", 2) + qsTr("Reset")
             pixelSize: 14
-            implicitWidth: 100; implicitHeight: 40
+            implicitWidth: configManager.emojiLevel >= 2 ? 122 : 100; implicitHeight: 40
             baseColor: Qt.rgba(1,0.2,0.2,0.15)
             hoverColor: Qt.rgba(1,0.2,0.2,0.28)
             onClicked: { timerObj.stop(); timerRunning = false; remainingSecs = 0; audioPlayer.stop() }
@@ -120,7 +120,7 @@ ColumnLayout {
 
     RowLayout {
         Layout.fillWidth: true; spacing: 10
-        Text { text: qsTr("Sound when done:"); color: configManager.themeTextSecondary; font.pixelSize: 14; Layout.alignment: Qt.AlignVCenter }
+        Text { text: configManager.emoji("🔔", 2) + qsTr("Sound when done:"); color: configManager.themeTextSecondary; font.pixelSize: 14; Layout.alignment: Qt.AlignVCenter }
         RoundedCombo {
             id: timerSoundCmb
             Layout.fillWidth: true

@@ -64,14 +64,14 @@ ColumnLayout {
     }
 
     Text {
-        text: (configManager.showEmojis ? "🎵 " : "") + qsTr("Sounds")
+        text: configManager.emoji("🎵", 1) + qsTr("Sounds")
         color: configManager.themeTextPrimary
         font.pixelSize: 24
         font.bold: true
     }
 
     Text {
-        text: qsTr("Tones folder: ") + configManager.tonesDirectory
+        text: configManager.emoji("📁", 2) + qsTr("Tones folder: ") + configManager.tonesDirectory
         color: configManager.themeTextSecondary
         font.pixelSize: 13
         wrapMode: Text.WordWrap
@@ -81,7 +81,7 @@ ColumnLayout {
     // Package-installed drop-in folder, when this install has one.
     Text {
         visible: configManager.systemTonesDirectory !== ""
-        text: qsTr("Shared tones: ") + configManager.systemTonesDirectory
+        text: configManager.emoji("🌐", 2) + qsTr("Shared tones: ") + configManager.systemTonesDirectory
         color: configManager.themeTextSecondary
         font.pixelSize: 13
         wrapMode: Text.WordWrap
@@ -103,7 +103,7 @@ ColumnLayout {
         wrapMode: Text.WordWrap
         color: configManager.themeTextSecondary
         font.pixelSize: 13
-        text: qsTr("No tones yet. Drop .wav, .mp3, .ogg, .flac or .aac files into the tones folder, or use Import Sound.")
+        text: configManager.emoji("🎧", 2) + qsTr("No tones yet. Drop .wav, .mp3, .ogg, .flac or .aac files into the tones folder, or use Import Sound.")
     }
 
     ListView {
@@ -151,9 +151,9 @@ ColumnLayout {
                 }
 
                 GlassButton {
-                    text: qsTr("Delete")
+                    text: configManager.emoji("🗑️", 2) + qsTr("Delete")
                     pixelSize: 11
-                    implicitWidth: 64
+                    implicitWidth: configManager.emojiLevel >= 2 ? 84 : 64
                     implicitHeight: 28
                     radius: 7
                     baseColor: Qt.rgba(1,0.2,0.2,0.15)
@@ -173,9 +173,9 @@ ColumnLayout {
     RowLayout {
         Layout.fillWidth: true
         visible: root.pendingReplace === ""
-        GlassButton { text: qsTr("Import Sound"); pixelSize: 13; onClicked: importDialog.open() }
+        GlassButton { text: configManager.emoji("📥", 2) + qsTr("Import Sound"); pixelSize: 13; onClicked: importDialog.open() }
         Item { Layout.fillWidth: true }
-        GlassButton { text: qsTr("Refresh"); pixelSize: 13; onClicked: refresh() }
+        GlassButton { text: configManager.emoji("🔄", 2) + qsTr("Refresh"); pixelSize: 13; onClicked: refresh() }
     }
 
     // Duplicate confirmation. Inline rather than a modal dialog so the prompt
@@ -192,8 +192,8 @@ ColumnLayout {
             font.pixelSize: 13
             text: configManager.toneErrorMessage
         }
-        GlassButton { text: qsTr("Cancel"); pixelSize: 13; onClicked: cancelReplace() }
-        GlassButton { text: qsTr("Replace"); pixelSize: 13; filled: true; onClicked: confirmReplace() }
+        GlassButton { text: configManager.emoji("🚫", 2) + qsTr("Cancel"); pixelSize: 13; onClicked: cancelReplace() }
+        GlassButton { text: configManager.emoji("🔁", 2) + qsTr("Replace"); pixelSize: 13; filled: true; onClicked: confirmReplace() }
     }
 
     FileDialog {

@@ -6,9 +6,9 @@ import GlassAlarm
 // daemon; sending one is optional and never blocks progress.
 WizardPage {
     id: root
-    title: qsTr("Notifications")
+    title: configManager.emoji("🔔", 2) + qsTr("Notifications")
     subtitle: qsTr("Lumalarm can notify you on the desktop before an alarm rings.")
-    primaryLabel: qsTr("Next")
+    primaryLabel: configManager.emoji("➡️", 2) + qsTr("Next")
     primaryEnabled: true
     onPrimaryClicked: wizard.next()
 
@@ -27,8 +27,8 @@ WizardPage {
             spacing: 6
 
             Text {
-                text: wizard.notificationsAvailable ? qsTr("Notifications available")
-                                                    : qsTr("No notification daemon")
+                text: configManager.emoji("🔔", 2) + (wizard.notificationsAvailable ? qsTr("Notifications available")
+                                                    : qsTr("No notification daemon"))
                 color: configManager.themeTextPrimary
                 font.pixelSize: 15
                 font.bold: true
@@ -53,12 +53,12 @@ WizardPage {
         visible: wizard.notificationsAvailable
 
         GlassButton {
-            text: qsTr("Send test notification")
+            text: configManager.emoji("📤", 2) + qsTr("Send test notification")
             pixelSize: 13
             onClicked: {
                 const ok = wizard.testNotification()
-                root.probeResult = ok ? qsTr("Test notification sent.")
-                                      : qsTr("Could not send the notification.")
+                root.probeResult = configManager.emoji("✅", 2) + (ok ? qsTr("Test notification sent.")
+                                      : qsTr("Could not send the notification."))
             }
         }
         Item { Layout.fillWidth: true }

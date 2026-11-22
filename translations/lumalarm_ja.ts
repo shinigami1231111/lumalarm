@@ -91,7 +91,7 @@
     <message>
         <location filename="../qml/pages/AlarmEditor.qml" line="302"/>
         <source>e.g. notify-send &apos;Wake up!&apos;</source>
-        <translation>例：notify-send '目覚まし'</translation>
+        <translation>例：notify-send &apos;目覚まし&apos;</translation>
     </message>
 </context>
 <context>
@@ -309,7 +309,22 @@
         <translation>絵文字を表示</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/LanguagePage.qml" line="72"/>
+        <location filename="../qml/wizard/pages/LanguagePage.qml" line="62"/>
+        <source>Off</source>
+        <translation>オフ</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/pages/LanguagePage.qml" line="62"/>
+        <source>Less</source>
+        <translation>少なめ</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/pages/LanguagePage.qml" line="62"/>
+        <source>More</source>
+        <translation>多め</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/pages/LanguagePage.qml" line="74"/>
         <source>“System default” follows your desktop language.</source>
         <translation>「システムの既定」はデスクトップの言語に従います。</translation>
     </message>
@@ -817,47 +832,62 @@
         <translation>絵文字を表示</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="674"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="664"/>
+        <source>Off</source>
+        <translation>オフ</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/SettingsPage.qml" line="664"/>
+        <source>Less</source>
+        <translation>少なめ</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/SettingsPage.qml" line="664"/>
+        <source>More</source>
+        <translation>多め</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/SettingsPage.qml" line="676"/>
         <source>Night Mode</source>
         <translation>ナイトモード</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="676"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="678"/>
         <source>Dim the window before an alarm so it does not light up a dark room.</source>
         <translation>アラームの前にウィンドウを暗くし、暗い部屋を照らさないようにします。</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="683"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="685"/>
         <source>Enable night mode</source>
         <translation>ナイトモードを有効にする</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="694"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="696"/>
         <source>Dim before alarm</source>
         <translation>アラーム前に暗くする</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="707"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="709"/>
         <source> min</source>
         <translation> 分</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="717"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="719"/>
         <source>Dim strength</source>
         <translation>暗くする強度</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="739"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="741"/>
         <source>Preview</source>
         <translation>プレビュー</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="749"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="751"/>
         <source>Dimming</source>
         <translation>暗くする</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="760"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="762"/>
         <source>Reset to Defaults</source>
         <translation>デフォルトにリセット</translation>
     </message>
@@ -1114,37 +1144,37 @@
 <context>
     <name>WizardController</name>
     <message>
-        <location filename="../src/ui/WizardController.cpp" line="216"/>
+        <location filename="../src/ui/WizardController.cpp" line="220"/>
         <source>Wake test succeeded — this machine can wake up.</source>
         <translation>起動テスト成功 — このマシンは起動できます。</translation>
     </message>
     <message>
-        <location filename="../src/ui/WizardController.cpp" line="217"/>
+        <location filename="../src/ui/WizardController.cpp" line="221"/>
         <source>Wake test failed: %1</source>
         <translation>起動テスト失敗：%1</translation>
     </message>
     <message>
-        <location filename="../src/ui/WizardController.cpp" line="256"/>
+        <location filename="../src/ui/WizardController.cpp" line="260"/>
         <source>Lumalarm is ready</source>
         <translation>Lumalarmが準備完了</translation>
     </message>
     <message>
-        <location filename="../src/ui/WizardController.cpp" line="257"/>
+        <location filename="../src/ui/WizardController.cpp" line="261"/>
         <source>Notifications are working.</source>
         <translation>通知が機能しています。</translation>
     </message>
     <message>
-        <location filename="../src/ui/WizardController.cpp" line="274"/>
+        <location filename="../src/ui/WizardController.cpp" line="278"/>
         <source>Unknown</source>
         <translation>不明</translation>
     </message>
     <message>
-        <location filename="../src/ui/WizardController.cpp" line="279"/>
+        <location filename="../src/ui/WizardController.cpp" line="283"/>
         <source>Real-time clock wake (rtcwake) — recommended</source>
         <translation>リアルタイムクロック起動（rtcwake） — 推奨</translation>
     </message>
     <message>
-        <location filename="../src/ui/WizardController.cpp" line="281"/>
+        <location filename="../src/ui/WizardController.cpp" line="285"/>
         <source>No hardware wake source — alarms ring only while the machine is awake</source>
         <translation>ハードウェア起動ソースなし — アラームはマシンが起動している間のみ鳴ります</translation>
     </message>

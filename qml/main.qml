@@ -196,7 +196,7 @@ Window {
 
                 RowLayout {
                     anchors.fill: parent; anchors.leftMargin: 20; anchors.rightMargin: 10; spacing: 12
-                    Text { text: (configManager.showEmojis ? "❄️ " : "") + "Lumalarm"; color: configManager.themeTextPrimary; font.pixelSize: 22; font.bold: true; Layout.alignment: Qt.AlignVCenter }
+                    Text { text: configManager.emoji("❄️", 1) + "Lumalarm"; color: configManager.themeTextPrimary; font.pixelSize: 22; font.bold: true; Layout.alignment: Qt.AlignVCenter }
                     Item { Layout.fillWidth: true }
                     Text {
                         text: {
@@ -258,11 +258,11 @@ Window {
                 SegmentedControl {
                     anchors.centerIn: parent
                     items: [
-                        {label: qsTr("Alarms"), mode: "alarms", icon: "alarms"},
-                        {label: qsTr("Timer"), mode: "timer", icon: "timer"},
-                        {label: qsTr("Stopwatch"), mode: "stopwatch", icon: "stopwatch"},
-                        {label: qsTr("Sounds"), mode: "sounds", icon: "sounds"},
-                        {label: qsTr("Settings"), mode: "settings", icon: "settings"}
+                        {label: configManager.emoji("🔔", 2) + qsTr("Alarms"), mode: "alarms", icon: "alarms"},
+                        {label: configManager.emoji("⏲️", 2) + qsTr("Timer"), mode: "timer", icon: "timer"},
+                        {label: configManager.emoji("⏱️", 2) + qsTr("Stopwatch"), mode: "stopwatch", icon: "stopwatch"},
+                        {label: configManager.emoji("🎶", 2) + qsTr("Sounds"), mode: "sounds", icon: "sounds"},
+                        {label: configManager.emoji("🛠️", 2) + qsTr("Settings"), mode: "settings", icon: "settings"}
                     ]
                     current: currentMode
                     onSelected: function(m) { currentMode = m }
@@ -312,7 +312,7 @@ Window {
                             }
                             Text {
                                 anchors.centerIn: parent; visible: !alarmEditor.hasSelection
-                                text: qsTr("Select or create an alarm")
+                                text: configManager.emoji("👆", 2) + qsTr("Select or create an alarm")
                                 color: configManager.themeTextSecondary; font.pixelSize: 14
                             }
                         }
@@ -320,9 +320,9 @@ Window {
                         RowLayout {
                             Layout.fillWidth: true; visible: alarmEditor.hasSelection; spacing: 8
                             Item { Layout.fillWidth: true }
-                            GlassButton { text: qsTr("Cancel"); pixelSize: 13; onClicked: alarmEditor.clearSelection() }
+                            GlassButton { text: configManager.emoji("🚫", 2) + qsTr("Cancel"); pixelSize: 13; onClicked: alarmEditor.clearSelection() }
                             GlassButton {
-                                text: alarmEditor.editIndex >= 0 ? qsTr("Update") : qsTr("Create"); pixelSize: 13
+                                text: alarmEditor.editIndex >= 0 ? configManager.emoji("💾", 2) + qsTr("Update") : configManager.emoji("➕", 2) + qsTr("Create"); pixelSize: 13
                                 baseColor: Qt.rgba(0.3, 0.6, 1, 0.2); hoverColor: Qt.rgba(0.3, 0.6, 1, 0.3)
                                 onClicked: { alarmEditor.commitAlarm(); alarmEditor.clearSelection() }
                             }
@@ -337,12 +337,12 @@ Window {
                                 GlassButton {
                                     id: armBtn
                                     text: {
-                                        if (!root.hasNextAlarm) return qsTr("No alarm armed")
+                                        if (!root.hasNextAlarm) return configManager.emoji("😴", 2) + qsTr("No alarm armed")
                                         var ws = scheduler.wakeState
-                                        if (ws === "arming") return qsTr("Arming...")
-                                        if (ws === "armed") return qsTr("Armed ✓")
-                                        if (ws === "failed") return qsTr("Arm FAILED")
-                                        return qsTr("Arm Wake")
+                                        if (ws === "arming") return configManager.emoji("⏳", 2) + qsTr("Arming...")
+                                        if (ws === "armed") return configManager.emoji("✅", 2) + qsTr("Armed ✓")
+                                        if (ws === "failed") return configManager.emoji("⚠️", 2) + qsTr("Arm FAILED")
+                                        return configManager.emoji("⏰", 2) + qsTr("Arm Wake")
                                     }
                                     pixelSize: 12
                                     baseColor: {
@@ -382,7 +382,7 @@ Window {
                                 }
                                 GlassButton {
                                     id: poweroffBtn
-                                    text: qsTr("Power Off & Wake")
+                                    text: configManager.emoji("🌙", 2) + qsTr("Power Off & Wake")
                                     visible: scheduler.wakeState === "armed"
                                     enabled: scheduler.wakeState === "armed"
                                     pixelSize: 12
@@ -397,13 +397,13 @@ Window {
                             Text {
                                 Layout.fillWidth: true; wrapMode: Text.Wrap
                                 visible: scheduler.wakeState === "armed"
-                                text: scheduler.pendingInfo + " — " + qsTr("RTC alarm armed and verified; power off to wake the machine")
+                                text: configManager.emoji("⏰", 2) + scheduler.pendingInfo + " — " + qsTr("RTC alarm armed and verified; power off to wake the machine")
                                 color: configManager.themeTextSecondary; font.pixelSize: 11
                             }
                             Text {
                                 Layout.fillWidth: true; wrapMode: Text.Wrap
                                 visible: scheduler.lastError !== ""
-                                text: qsTr("Error: ") + scheduler.lastError
+                                text: configManager.emoji("⚠️", 2) + qsTr("Error: ") + scheduler.lastError
                                 color: "#ff6b6b"; font.pixelSize: 11
                             }
                         }
@@ -494,7 +494,7 @@ Window {
     Timer { id: audioErrorTimer; interval: 6000; repeat: false; onTriggered: root.audioErrorText = "" }
     Text {
         visible: root.audioErrorText !== ""
-        text: (configManager.showEmojis ? "🔊 " : "") + root.audioErrorText
+        text: configManager.emoji("🔊", 1) + root.audioErrorText
         color: "#ff6b6b"; font.pixelSize: 12
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom; anchors.bottomMargin: 8

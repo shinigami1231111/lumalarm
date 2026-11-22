@@ -102,6 +102,7 @@ private slots:
     void completedWizardDoesNotReopen();
     void forceShowOverridesPersistedFlag();
     void languageSelectionUpdatesConfiguration();
+    void emojiLevelMirrorsConfiguration();
     void testWakeRunsWithoutGate();
     void testNotificationReportsBusTruthfully();
     void skipLeavesConfigurationIntact();
@@ -367,6 +368,24 @@ void TestWizard::languageSelectionUpdatesConfiguration()
     w.setLanguage(QString()); // back to "follow the system locale"
     QCOMPARE(spy.count(), 3);
     QVERIFY(m_config->language().isEmpty());
+}
+
+void TestWizard::emojiLevelMirrorsConfiguration()
+{
+    ProbeableWizard w(m_config, m_wake, m_audio);
+    m_config->setEmojiLevel(1);
+    QCOMPARE(w.emojiLevel(), 1);
+
+    QSignalSpy spy(&w, &WizardController::configChangedMirror);
+    w.setEmojiLevel(2);
+    QCOMPARE(w.emojiLevel(), 2);
+    QCOMPARE(m_config->emojiLevel(), 2); // one shared setting
+    QCOMPARE(spy.count(), 1);
+
+    w.setEmojiLevel(2); // unchanged -> silent
+    QCOMPARE(spy.count(), 1);
+
+    m_config->setEmojiLevel(1); // leave the shared test profile clean
 }
 
 void TestWizard::testWakeRunsWithoutGate()

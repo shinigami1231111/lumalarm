@@ -9,7 +9,7 @@ import GlassAlarm
 // while this page is still on screen.
 WizardPage {
     id: root
-    title: qsTr("Language")
+    title: configManager.emoji("🌐", 2) + qsTr("Language")
     subtitle: qsTr("Choose the language Lumalarm uses. It takes effect right away.")
     primaryLabel: qsTr("Next")
     primaryEnabled: true
@@ -28,7 +28,7 @@ WizardPage {
         spacing: 14
 
         Text {
-            text: qsTr("Interface language")
+            text: configManager.emoji("🌍", 2) + qsTr("Interface language")
             color: configManager.themeTextPrimary
             font.pixelSize: 15
             Layout.fillWidth: true
@@ -53,14 +53,16 @@ WizardPage {
         spacing: 14
 
         Text {
-            text: qsTr("Show emojis")
+            text: configManager.emoji("🎭", 2) + qsTr("Show emojis")
             color: configManager.themeTextPrimary
             font.pixelSize: 14
         }
 
-        ToggleSwitch {
-            checked: configManager.showEmojis
-            onCheckedChanged: configManager.showEmojis = checked
+        RoundedCombo {
+            model: [qsTr("Off"), qsTr("Less"), qsTr("More")]
+            currentIndex: wizard.emojiLevel
+            Layout.preferredWidth: 110
+            onActivated: wizard.emojiLevel = currentIndex
         }
     }
 

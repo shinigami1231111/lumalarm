@@ -51,7 +51,7 @@ Rectangle {
 
             Text {
                 Layout.fillWidth: true
-                text: qsTr("Close Lumalarm?")
+                text: configManager.emoji("🛑", 2) + qsTr("Close Lumalarm?")
                 color: configManager.themeTextPrimary
                 font.pixelSize: 17
                 font.bold: true
@@ -89,7 +89,7 @@ Rectangle {
                 GlassButton {
                     // "Hide to tray" degrades to "Minimize" when there is no tray,
                     // so the label never promises something the app cannot do.
-                    text: lifecycle.canHideToTray ? qsTr("Hide to tray") : qsTr("Minimize")
+                    text: lifecycle.canHideToTray ? configManager.emoji("📥", 2) + qsTr("Hide to tray") : configManager.emoji("➖", 2) + qsTr("Minimize")
                     filled: true
                     onClicked: {
                         root.visible = false
@@ -99,7 +99,7 @@ Rectangle {
 
                 GlassButton {
                     id: quitBtn
-                    text: qsTr("Quit")
+                    text: configManager.emoji("🚪", 2) + qsTr("Quit")
                     onClicked: {
                         root.visible = false
                         lifecycle.confirmClose("quit", dontAskAgain.checked)
@@ -107,7 +107,7 @@ Rectangle {
                 }
 
                 GlassButton {
-                    text: qsTr("Cancel")
+                    text: configManager.emoji("🚫", 2) + qsTr("Cancel")
                     onClicked: root.visible = false
                 }
 

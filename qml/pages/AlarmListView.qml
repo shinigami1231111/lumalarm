@@ -30,12 +30,12 @@ ColumnLayout {
     RowLayout {
         Layout.fillWidth: true
         Layout.margins: 2
-        Text { text: (configManager.showEmojis ? "⏰ " : "") + qsTr("Alarms"); color: configManager.themeTextPrimary; font.pixelSize: 20; font.bold: true }
+        Text { text: configManager.emoji("⏰", 1) + qsTr("Alarms"); color: configManager.themeTextPrimary; font.pixelSize: 20; font.bold: true }
         Item { Layout.fillWidth: true }
         GlassButton {
-            text: (configManager.showEmojis ? "✨ " : "") + qsTr("+  New")
+            text: configManager.emoji("✨", 1) + qsTr("+  New")
             pixelSize: 12
-            implicitWidth: configManager.showEmojis ? 88 : 70; implicitHeight: 32
+            implicitWidth: configManager.emojiLevel >= 2 ? 96 : (configManager.emojiLevel >= 1 ? 88 : 70); implicitHeight: 32
             filled: true
             onClicked: root.addAlarm()
         }
@@ -146,8 +146,8 @@ ColumnLayout {
                     ColumnLayout {
                         Layout.alignment: Qt.AlignVCenter
                         spacing: 4
-                        GlassButton { text:qsTr("Edit"); pixelSize:10; implicitWidth:46; implicitHeight:24; radius:6; onClicked: root.editAlarm(index) }
-                        GlassButton { text:qsTr("Del"); pixelSize:10; implicitWidth:46; implicitHeight:24; radius:6; baseColor: Qt.rgba(1,0.2,0.2,0.15); hoverColor: Qt.rgba(1,0.2,0.2,0.28); onClicked: root.deleteAlarm(index) }
+                        GlassButton { text:configManager.emoji("✏️", 2) + qsTr("Edit"); pixelSize:10; implicitWidth: configManager.emojiLevel >= 2 ? 70 : 46; implicitHeight:24; radius:6; onClicked: root.editAlarm(index) }
+                        GlassButton { text:configManager.emoji("🗑️", 2) + qsTr("Del"); pixelSize:10; implicitWidth: configManager.emojiLevel >= 2 ? 70 : 46; implicitHeight:24; radius:6; baseColor: Qt.rgba(1,0.2,0.2,0.15); hoverColor: Qt.rgba(1,0.2,0.2,0.28); onClicked: root.deleteAlarm(index) }
                     }
                 }
             }

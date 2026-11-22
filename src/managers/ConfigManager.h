@@ -86,9 +86,9 @@ class ConfigManager : public QObject
     Q_PROPERTY(
         bool mirrorWindowButtons READ mirrorWindowButtons WRITE
             setMirrorWindowButtons NOTIFY configChanged)
-    // Show emojis alongside text in the UI. Can be turned off.
-    Q_PROPERTY(bool showEmojis READ showEmojis WRITE setShowEmojis NOTIFY
-                   configChanged)
+    // Emoji density: 0 = off, 1 = a few leading icons, 2 = icons on most
+    // labels and buttons. Stored as an int so the selector has three states.
+    Q_PROPERTY(int emojiLevel READ emojiLevel WRITE setEmojiLevel NOTIFY configChanged)
     // ── audio (alarm sound rebuild, Phase 4) ────────────────────────────────
     // The guarantee policy's knobs, read by main.cpp into
     // AlarmAudioController::applySettings(). Values are validated on read, so
@@ -217,8 +217,11 @@ public:
     void setMirrorApp(bool v);
     bool mirrorWindowButtons() const;
     void setMirrorWindowButtons(bool v);
-    bool showEmojis() const;
-    void setShowEmojis(bool v);
+    int emojiLevel() const;
+    void setEmojiLevel(int level);
+    // QML-facing helper: every decorative emoji goes through this so one
+    // setting controls all of them and no literal can bypass the selector.
+    Q_INVOKABLE QString emoji(const QString &symbol, int minLevel) const;
 
     // Audio (Phase 4): policy kind string ("guarantee" | "alarmOnly"; any
     // unknown value reads back as "guarantee"), sink floor %, our stream

@@ -309,7 +309,22 @@
         <translation>إظهار الرموز التعبيرية</translation>
     </message>
     <message>
-        <location filename="../qml/wizard/pages/LanguagePage.qml" line="72"/>
+        <location filename="../qml/wizard/pages/LanguagePage.qml" line="62"/>
+        <source>Off</source>
+        <translation>إيقاف</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/pages/LanguagePage.qml" line="62"/>
+        <source>Less</source>
+        <translation>أقل</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/pages/LanguagePage.qml" line="62"/>
+        <source>More</source>
+        <translation>أكثر</translation>
+    </message>
+    <message>
+        <location filename="../qml/wizard/pages/LanguagePage.qml" line="74"/>
         <source>“System default” follows your desktop language.</source>
         <translation>«لغة النظام» تتبع لغة سطح المكتب.</translation>
     </message>
@@ -817,47 +832,62 @@
         <translation>إظهار الرموز التعبيرية</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="674"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="664"/>
+        <source>Off</source>
+        <translation>إيقاف</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/SettingsPage.qml" line="664"/>
+        <source>Less</source>
+        <translation>أقل</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/SettingsPage.qml" line="664"/>
+        <source>More</source>
+        <translation>أكثر</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/SettingsPage.qml" line="676"/>
         <source>Night Mode</source>
         <translation>الوضع الليلي</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="676"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="678"/>
         <source>Dim the window before an alarm so it does not light up a dark room.</source>
         <translation>خفّض إضاءة النافذة قبل المنبه حتى لا تُضيء غرفة مظلمة.</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="683"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="685"/>
         <source>Enable night mode</source>
         <translation>تفعيل الوضع الليلي</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="694"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="696"/>
         <source>Dim before alarm</source>
         <translation>خفض الإضاءة قبل المنبه</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="707"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="709"/>
         <source> min</source>
         <translation> د</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="717"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="719"/>
         <source>Dim strength</source>
         <translation>قوة الخفض</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="739"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="741"/>
         <source>Preview</source>
         <translation>معاينة</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="749"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="751"/>
         <source>Dimming</source>
         <translation>جارٍ الخفض</translation>
     </message>
     <message>
-        <location filename="../qml/pages/SettingsPage.qml" line="760"/>
+        <location filename="../qml/pages/SettingsPage.qml" line="762"/>
         <source>Reset to Defaults</source>
         <translation>إعادة إلى الافتراضي</translation>
     </message>
@@ -1114,37 +1144,37 @@
 <context>
     <name>WizardController</name>
     <message>
-        <location filename="../src/ui/WizardController.cpp" line="216"/>
+        <location filename="../src/ui/WizardController.cpp" line="220"/>
         <source>Wake test succeeded — this machine can wake up.</source>
         <translation>نجح اختبار الاستيقاظ — تستطيع هذه الآلة الاستيقاظ.</translation>
     </message>
     <message>
-        <location filename="../src/ui/WizardController.cpp" line="217"/>
+        <location filename="../src/ui/WizardController.cpp" line="221"/>
         <source>Wake test failed: %1</source>
         <translation>فشل اختبار الاستيقاظ: %1</translation>
     </message>
     <message>
-        <location filename="../src/ui/WizardController.cpp" line="256"/>
+        <location filename="../src/ui/WizardController.cpp" line="260"/>
         <source>Lumalarm is ready</source>
         <translation>Lumalarm جاهز</translation>
     </message>
     <message>
-        <location filename="../src/ui/WizardController.cpp" line="257"/>
+        <location filename="../src/ui/WizardController.cpp" line="261"/>
         <source>Notifications are working.</source>
         <translation>الإشعارات تعمل.</translation>
     </message>
     <message>
-        <location filename="../src/ui/WizardController.cpp" line="274"/>
+        <location filename="../src/ui/WizardController.cpp" line="278"/>
         <source>Unknown</source>
         <translation>غير معروف</translation>
     </message>
     <message>
-        <location filename="../src/ui/WizardController.cpp" line="279"/>
+        <location filename="../src/ui/WizardController.cpp" line="283"/>
         <source>Real-time clock wake (rtcwake) — recommended</source>
         <translation>استيقاظ عبر ساعة RTC (rtcwake) — مُوصى به</translation>
     </message>
     <message>
-        <location filename="../src/ui/WizardController.cpp" line="281"/>
+        <location filename="../src/ui/WizardController.cpp" line="285"/>
         <source>No hardware wake source — alarms ring only while the machine is awake</source>
         <translation>لا يوجد مصدر استيقاظ عتادي — ترن المنبهات فقط أثناء عمل الجهاز</translation>
     </message>

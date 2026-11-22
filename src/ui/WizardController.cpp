@@ -104,9 +104,9 @@ bool WizardController::mirrorWindowButtons() const
     return m_config ? m_config->mirrorWindowButtons() : false;
 }
 
-bool WizardController::showEmojis() const
+int WizardController::emojiLevel() const
 {
-    return m_config ? m_config->showEmojis() : true;
+    return m_config ? m_config->emojiLevel() : 1;
 }
 
 void WizardController::setMirrorApp(bool v)
@@ -119,9 +119,11 @@ void WizardController::setMirrorWindowButtons(bool v)
     if (m_config) m_config->setMirrorWindowButtons(v);
 }
 
-void WizardController::setShowEmojis(bool v)
+void WizardController::setEmojiLevel(int level)
 {
-    if (m_config) m_config->setShowEmojis(v);
+    // ConfigManager's configChanged is already mirrored to configChangedMirror
+    // in the constructor, so writing through is enough to notify QML once.
+    if (m_config) m_config->setEmojiLevel(level);
 }
 
 QString WizardController::wakeStatus() const

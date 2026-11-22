@@ -6,9 +6,9 @@ import GlassAlarm
 // the user choose the sleep mode. Next is always clickable — no test is forced.
 WizardPage {
     id: root
-    title: qsTr("Wake method")
+    title: configManager.emoji("⏰", 2) + qsTr("Wake method")
     subtitle: qsTr("For an alarm to bring the machine back from sleep, Lumalarm needs a wake source.")
-    primaryLabel: qsTr("Next")
+    primaryLabel: configManager.emoji("➡️", 2) + qsTr("Next")
     primaryEnabled: true
     onPrimaryClicked: wizard.next()
 
@@ -27,7 +27,7 @@ WizardPage {
             spacing: 6
 
             Text {
-                text: qsTr("Detected")
+                text: configManager.emoji("🔎", 2) + qsTr("Detected")
                 color: configManager.themeTextSecondary
                 font.pixelSize: 12
             }
@@ -53,7 +53,7 @@ WizardPage {
                 Layout.fillWidth: true
                 spacing: 14
                 Text {
-                    text: qsTr("Sleep mode")
+                    text: configManager.emoji("😴", 2) + qsTr("Sleep mode")
                     color: configManager.themeTextPrimary
                     font.pixelSize: 14
                     Layout.preferredWidth: 100
@@ -85,13 +85,13 @@ WizardPage {
 
         GlassButton {
             id: testButton
-            text: qsTr("Test wake")
+            text: configManager.emoji("🚀", 2) + qsTr("Test wake")
             pixelSize: 13
             enabled: wakeManager.wakeState !== "arming" && wakeManager.wakeState !== "armed"
             onClicked: wizard.testWake()
         }
         GlassButton {
-            text: qsTr("Skip this step")
+            text: configManager.emoji("⏭️", 2) + qsTr("Skip this step")
             pixelSize: 13
             onClicked: wizard.skipWakeStep()
         }

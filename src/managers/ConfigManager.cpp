@@ -542,17 +542,38 @@ void ConfigManager::setMirrorWindowButtons(bool v)
     emit configChanged();
 }
 
-bool ConfigManager::showEmojis() const
+int ConfigManager::emojiLevel() const
 {
-    return m_settings->value(QStringLiteral("ui/showEmojis"), true).toBool();
+    if (m_settings->contains(QStringLiteral("ui/emojiLevel"))) {
+        const int level = m_settings->value(QStringLiteral("ui/emojiLevel")).toInt();
+        return qBound(0, level, 2);
+    }
+
+    // Migrate the on/off setting shipped in 017ee5f: "on" becomes the lighter
+    // "Less" level, "off" becomes "Off". A profile with neither key keeps the
+    // same visible labels as before (Less).
+    return m_settings->value(QStringLiteral("ui/showEmojis"), true).toBool() ? 1 : 0;
 }
 
-void ConfigManager::setShowEmojis(bool v)
+void ConfigManager::setEmojiLevel(int level)
 {
-    if (showEmojis() == v)
+    const int clamped = qBound(0, level, 2);
+    const bool hadOldKey = m_settings->contains(QStringLiteral("ui/showEmojis"));
+    if (emojiLevel() == clamped) {
+        if (hadOldKey)
+            m_settings->remove(QStringLiteral("ui/showEmojis"));
         return;
-    m_settings->setValue(QStringLiteral("ui/showEmojis"), v);
+    }
+
+    m_settings->setValue(QStringLiteral("ui/emojiLevel"), clamped);
+    if (hadOldKey)
+        m_settings->remove(QStringLiteral("ui/showEmojis"));
     emit configChanged();
+}
+
+QString ConfigManager::emoji(const QString &symbol, int minLevel) const
+{
+    return emojiLevel() >= qMax(1, minLevel) ? symbol + QStringLiteral(" ") : QString();
 }
 
 // ── audio (alarm sound rebuild, Phase 4) ────────────────────────────────────
