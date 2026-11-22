@@ -104,17 +104,25 @@ void TestSchedulerLogic::classificationMissedWindow()
 
 void TestSchedulerLogic::occurrenceIsAbsoluteUtc()
 {
-    // Fixed "now"; the returned value must be an absolute epoch, strictly in
-    // the future, and correspond to the local wall time the alarm describes.
-    const QDateTime now = QDateTime(QDate(2026, 7, 15), QTime(10, 30, 0));
+    // Use an explicit zone for both the calculation and the round-trip. The
+    // old version mixed QTimeZone::systemTimeZone() (used by the default
+    // argument) with QDateTime::toLocalTime(); those can resolve to different
+    // zones inside a minimal CI container, so the epoch → wall-clock check
+    // failed on Arch while the identical binary passed on Ubuntu/Fedora. This
+    // test is about absolute UTC arithmetic, not the host's /etc/localtime.
+    const QTimeZone fixedUtc("UTC");
+    QVERIFY2(fixedUtc.isValid(), "UTC timezone data unavailable");
+
+    const QDateTime now = QDateTime(QDate(2026, 7, 15), QTime(10, 30, 0), fixedUtc);
     const Alarm a = makeAlarm("utc1", 7, 30);
-    const qint64 occ = computeNextOccurrenceUtc(a, now);
+    const qint64 occ = computeNextOccurrenceUtc(a, now, fixedUtc);
     QVERIFY(occ > now.toSecsSinceEpoch());
 
-    // Round-trip: UTC epoch → local wall clock must be 07:30 next day (today's 07:30 already passed).
-    const QDateTime local = QDateTime::fromSecsSinceEpoch(occ).toLocalTime();
-    QCOMPARE(local.time().hour(), 7);
-    QCOMPARE(local.time().minute(), 30);
+    // Round-trip: UTC epoch → 07:30 next day (today's 07:30 already passed).
+    const QDateTime wall = QDateTime::fromSecsSinceEpoch(occ).toTimeZone(fixedUtc);
+    QCOMPARE(wall.date(), QDate(2026, 7, 16));
+    QCOMPARE(wall.time().hour(), 7);
+    QCOMPARE(wall.time().minute(), 30);
 }
 
 void TestSchedulerLogic::occurrenceOnceThenNextDay()

@@ -113,14 +113,15 @@ jobs:
           # Surface the headless environment in public check-run annotations:
           # these are the variables that can change Qt's platform/plugin choice
           # between the host runner and the three containers.
-          echo "::notice::env HOME=${HOME:-<unset>} DISPLAY=${DISPLAY:-<unset>} QT_QPA_PLATFORM=${QT_QPA_PLATFORM:-<unset>} TMPDIR=${TMPDIR:-<unset>} XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR:-<unset>} LANG=${LANG:-<unset>} nproc=$(nproc)"
+          echo "::notice::env HOME=${HOME:-<unset>} DISPLAY=${DISPLAY:-<unset>} QT_QPA_PLATFORM=${QT_QPA_PLATFORM:-<unset>} TMPDIR=${TMPDIR:-<unset>} XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR:-<unset>} LANG=${LANG:-<unset>} TZ=${TZ:-<unset>} nproc=$(nproc)"
+          if command -v pacman >/dev/null 2>&1; then pacman -Q qt6-base 2>/dev/null || true; fi
           ctest --test-dir build --output-on-failure 2>&1 | tee /tmp/ctest.log
           rc=${PIPESTATUS[0]}
           if [ "$rc" -ne 0 ]; then
             # Workflow commands turn the failure summary into public check-run
             # annotations, so a failing container can be diagnosed without
             # downloading the (auth-gated) job log or ctest artifact.
-            grep -E 'FAIL!|The following tests FAILED|^[[:space:]]*[0-9]+- ' /tmp/ctest.log \
+            grep -E -A4 'FAIL!|The following tests FAILED|^[[:space:]]*[0-9]+- ' /tmp/ctest.log \
               | while IFS= read -r line; do echo "::error::$line"; done
           fi
           exit "$rc"

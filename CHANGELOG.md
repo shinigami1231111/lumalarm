@@ -113,6 +113,9 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
   detection no longer assumes only dnf/pacman can run inside containers.
 - `tst_stg1security` no longer fails in a clean checkout when the git-ignored
   developer file `PKGBUILD.local` is absent; it is audited when present.
+- `tst_schedulerlogic::occurrenceIsAbsoluteUtc` no longer mixes the CI host's
+  system timezone with its UTC round-trip: both sides now use an explicit UTC
+  zone, so the same binary passes on Arch, Fedora and Ubuntu.
 - The advisory clang-tidy workflow also runs in an Ubuntu 26.04 container (its
   Configure step hit the same Qt 6.4 floor), and normalises the GCC-only
   `-mno-direct-extern-access` flag in the lint compile database before running,
