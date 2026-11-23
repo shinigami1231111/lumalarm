@@ -76,16 +76,16 @@ class ConfigManager : public QObject
     Q_PROPERTY(
         bool wizardCompleted READ wizardCompleted WRITE setWizardCompleted NOTIFY configChanged)
     // UI language (STG-5.2). Empty = follow the system locale; otherwise a Qt
-    // locale name ("en", "ar") that matches translations/lumalarm_<lang>.ts.
+    // locale name ("en", "ja") that matches translations/lumalarm_<lang>.ts.
     // NOTIFY stays configChanged like every other property here; languageChanged
     // is an additional signal main.cpp uses to swap the active QTranslator.
     Q_PROPERTY(QString language READ language WRITE setLanguage NOTIFY configChanged)
-    // Mirror the whole UI right-to-left. Only offered when Arabic is chosen;
-    // off by default so English and Japanese stay left-to-right.
+    // Legacy right-to-left options, kept so an old config still loads. They are
+    // no longer offered in the UI because no RTL catalog ships; off by default.
     Q_PROPERTY(
         bool mirrorApp READ mirrorApp WRITE setMirrorApp NOTIFY configChanged)
-    // Mirror the title-bar window buttons (quit / minimize / maximize). Only
-    // offered when Arabic is chosen; off by default so the buttons stay put.
+    // Mirror the title-bar window buttons (quit / minimize / maximize). Also
+    // legacy-only; off by default so English and Japanese stay left-to-right.
     Q_PROPERTY(
         bool mirrorWindowButtons READ mirrorWindowButtons WRITE
             setMirrorWindowButtons NOTIFY configChanged)
@@ -216,12 +216,12 @@ public:
     void setWizardCompleted(bool completed);
 
     // UI language: "" (default) = follow the system locale, otherwise a Qt
-    // locale name such as "en" or "ar". Never a display string — the combo box
+    // locale name such as "en" or "ja". Never a display string — the combo box
     // in Settings maps its labels onto these values.
     QString language() const;
     void setLanguage(const QString &lang);
 
-    // Arabic-only UI options, persisted with the language.
+    // Legacy RTL options, persisted so an old config still loads.
     bool mirrorApp() const;
     void setMirrorApp(bool v);
     bool mirrorWindowButtons() const;

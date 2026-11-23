@@ -16,10 +16,10 @@
 // What is covered here:
 //   * the English source strings survive with no translator installed, which
 //     is the state a machine without Qt Linguist ends up in;
-//   * the compiled Arabic and Japanese catalogs are embedded at the exact
-//     resource path main.cpp loads (":/i18n/<name>.qm") and really translate
-//     strings — including placeholders and leading/trailing spaces, which the
-//     C++ side does .arg() on and concatenates;
+//   * the compiled Japanese catalog is embedded at the exact resource path
+//     main.cpp loads (":/i18n/<name>.qm") and really translates strings —
+//     including placeholders and leading/trailing spaces, which the C++ side
+//     does .arg() on and concatenates;
 //   * a live QML binding that used qsTr() is re-evaluated by
 //     QQmlEngine::retranslate() after a translator is installed *and* after it
 //     is removed, i.e. the round trip the language selector performs;
@@ -29,7 +29,7 @@
 //     lupdate but never translated fails the test instead of silently
 //     falling back to English in the UI.
 //
-// The catalog assertions are property-based (translated, Arabic script,
+// The catalog assertions are property-based (translated, Japanese script,
 // placeholder intact, whitespace intact) rather than exact-string matches, so
 // rewording a translation never turns the test into a translation lock-in.
 //
@@ -41,19 +41,6 @@
 // ============================================================================
 
 namespace {
-
-// True when the string contains at least one Arabic-script character
-// (U+0600..U+06FF). Used to prove a lookup really came back translated
-// instead of merely differing from the source.
-bool containsArabic(const QString &text)
-{
-    for (const QChar &ch : text) {
-        const char16_t u = ch.unicode();
-        if (u >= 0x0600 && u <= 0x06FF)
-            return true;
-    }
-    return false;
-}
 
 // True when the string contains at least one kana character (U+3040..U+30FF).
 bool containsJapanese(const QString &text)
@@ -106,8 +93,6 @@ class TstI18n : public QObject
 private slots:
     void initTestCase();
     void sourceFallbackWithoutTranslator();
-    void arabicCatalogIsEmbedded();
-    void arabicCatalogTranslatesKnownStrings();
     void japaneseCatalogIsEmbedded();
     void japaneseCatalogTranslatesKnownStrings();
     void retranslateUpdatesLiveQmlBinding();
@@ -128,59 +113,6 @@ void TstI18n::sourceFallbackWithoutTranslator()
     QCOMPARE(QCoreApplication::translate("SettingsPage", "Settings"), QStringLiteral("Settings"));
     QCOMPARE(QCoreApplication::translate("WizardController", "Wake test failed: %1"),
              QStringLiteral("Wake test failed: %1"));
-}
-
-void TstI18n::arabicCatalogIsEmbedded()
-{
-    QFile catalog(QStringLiteral(":/i18n/lumalarm_ar.qm"));
-    if (!catalog.open(QIODevice::ReadOnly))
-        QSKIP("Arabic catalog not embedded (Qt LinguistTools unavailable at configure time)");
-    QVERIFY2(catalog.size() > 1000, "embedded Arabic catalog is suspiciously small");
-}
-
-void TstI18n::arabicCatalogTranslatesKnownStrings()
-{
-    QFile catalog(QStringLiteral(":/i18n/lumalarm_ar.qm"));
-    if (!catalog.open(QIODevice::ReadOnly))
-        QSKIP("Arabic catalog not embedded (Qt LinguistTools unavailable at configure time)");
-
-    QTranslator translator;
-    QVERIFY2(translator.load(QStringLiteral(":/i18n/lumalarm_ar.qm")),
-             "QTranslator refused the embedded catalog");
-    QCoreApplication::installTranslator(&translator);
-
-    // A plain QML string (context = QML file base name) comes back translated.
-    const QString settings = QCoreApplication::translate("SettingsPage", "Settings");
-    QVERIFY2(settings != QStringLiteral("Settings"), "SettingsPage/Settings is untranslated");
-    QVERIFY2(containsArabic(settings), "SettingsPage/Settings is not Arabic");
-
-    // A plain C++ string (context = QObject subclass name).
-    const QString quit = QCoreApplication::translate("TrayController", "Quit");
-    QVERIFY2(quit != QStringLiteral("Quit"), "TrayController/Quit is untranslated");
-    QVERIFY2(containsArabic(quit), "TrayController/Quit is not Arabic");
-
-    // The placeholder must survive .arg() exactly as authored, otherwise the
-    // runtime message loses the reason/duration it is supposed to report.
-    const QString failed = QCoreApplication::translate("WizardController", "Wake test failed: %1")
-                               .arg(QStringLiteral("boom"));
-    QVERIFY2(failed.contains(QStringLiteral("boom")), "translation dropped the %1 placeholder");
-    QVERIFY2(containsArabic(failed), "Wake test failed is not Arabic");
-
-    // Leading/trailing spaces are significant: the UI concatenates these
-    // fragments around a countdown, so trimming them corrupts the output.
-    const QString hourSuffix = QCoreApplication::translate("main", "h ");
-    QVERIFY2(hourSuffix.endsWith(QLatin1Char(' ')), "trailing space dropped from 'h '");
-    QVERIFY2(hourSuffix != QStringLiteral("h "), "'h ' was left untranslated");
-
-    const QString minutePrefix = QCoreApplication::translate("SettingsPage", " min");
-    QVERIFY2(minutePrefix.startsWith(QLatin1Char(' ')), "leading space dropped from ' min'");
-    QVERIFY2(minutePrefix != QStringLiteral(" min"), "' min' was left untranslated");
-
-    // Unknown text still falls back to the source instead of an empty label.
-    QCOMPARE(QCoreApplication::translate("SettingsPage", "No such string exists here"),
-             QStringLiteral("No such string exists here"));
-
-    QCoreApplication::removeTranslator(&translator);
 }
 
 void TstI18n::japaneseCatalogIsEmbedded()
@@ -276,23 +208,22 @@ void TstI18n::languageSettingRoundTrips()
     config.setLanguage(QString());
     QVERIFY(config.language().isEmpty()); // "" == follow the system locale
 
-    config.setLanguage(QStringLiteral("ar"));
-    QCOMPARE(config.language(), QStringLiteral("ar"));
-    // The wizard and Settings write "ja" — the key must survive unchanged even
-    // though Arabic is no longer offered in the UI.
     config.setLanguage(QStringLiteral("ja"));
     QCOMPARE(config.language(), QStringLiteral("ja"));
-    config.setLanguage(QStringLiteral("ar")); // restore the value used below
+    // The wizard and Settings write "ja"; a stale hand-edited "ar" value is
+    // still accepted as a plain string, but it no longer has a shipped catalog.
+    config.setLanguage(QStringLiteral("en"));
+    QCOMPARE(config.language(), QStringLiteral("en"));
 
     QSignalSpy changed(&config, &ConfigManager::languageChanged);
-    config.setLanguage(QStringLiteral("ar")); // no change -> no signal
+    config.setLanguage(QStringLiteral("en")); // no change -> no signal
     QCOMPARE(changed.count(), 0);
-    config.setLanguage(QStringLiteral("en"));
+    config.setLanguage(QStringLiteral("ja"));
     QCOMPARE(changed.count(), 1);
 
     // A second instance reads the persisted value back from disk.
     ConfigManager reloaded;
-    QCOMPARE(reloaded.language(), QStringLiteral("en"));
+    QCOMPARE(reloaded.language(), QStringLiteral("ja"));
 
     // Leave the shared profile on the default so this test cannot leak a
     // language choice into the other test binaries.
@@ -302,7 +233,7 @@ void TstI18n::languageSettingRoundTrips()
 void TstI18n::committedCatalogsAreConsistent()
 {
     const QString dir = QString::fromUtf8(LUMALARM_SOURCE_DIR) + QStringLiteral("/translations/");
-    const QStringList catalogs{QStringLiteral("lumalarm_en.ts"), QStringLiteral("lumalarm_ar.ts"),
+    const QStringList catalogs{QStringLiteral("lumalarm_en.ts"),
                                QStringLiteral("lumalarm_ja.ts")};
 
     QList<int> counts;
@@ -328,10 +259,9 @@ void TstI18n::committedCatalogsAreConsistent()
                  qPrintable(name + QStringLiteral(" has obsolete entries")));
     }
 
-    // All three catalogs track the same source strings; lupdate keeps them in
-    // step, but a hand-edited or stale catalog shows up here.
+    // Both shipped catalogs track the same source strings; lupdate keeps them
+    // in step, but a hand-edited or stale catalog shows up here.
     QCOMPARE(counts.at(0), counts.at(1));
-    QCOMPARE(counts.at(0), counts.at(2));
 }
 
 QTEST_GUILESS_MAIN(TstI18n)

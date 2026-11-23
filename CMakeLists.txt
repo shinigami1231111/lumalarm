@@ -173,7 +173,6 @@ if(Qt6LinguistTools_FOUND)
     qt_add_translations(lumalarm
         TS_FILES
             ${CMAKE_CURRENT_SOURCE_DIR}/translations/lumalarm_en.ts
-            ${CMAKE_CURRENT_SOURCE_DIR}/translations/lumalarm_ar.ts
             ${CMAKE_CURRENT_SOURCE_DIR}/translations/lumalarm_ja.ts
         SOURCE_TARGETS lumalarm
         RESOURCE_PREFIX "/i18n"
@@ -530,7 +529,6 @@ if(BUILD_TESTING)
         PRIVATE "LUMALARM_SOURCE_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}\"")
     if(Qt6LinguistTools_FOUND)
         set_source_files_properties(
-            ${CMAKE_CURRENT_BINARY_DIR}/lumalarm_ar.qm
             ${CMAKE_CURRENT_BINARY_DIR}/lumalarm_en.qm
             ${CMAKE_CURRENT_BINARY_DIR}/lumalarm_ja.qm
             PROPERTIES GENERATED TRUE)
@@ -538,7 +536,6 @@ if(BUILD_TESTING)
             PREFIX "/i18n"
             BASE "${CMAKE_CURRENT_BINARY_DIR}"
             FILES
-                ${CMAKE_CURRENT_BINARY_DIR}/lumalarm_ar.qm
                 ${CMAKE_CURRENT_BINARY_DIR}/lumalarm_en.qm
                 ${CMAKE_CURRENT_BINARY_DIR}/lumalarm_ja.qm
         )

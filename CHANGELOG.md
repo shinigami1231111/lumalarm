@@ -20,6 +20,9 @@ All notable user-facing changes are documented here. Entries follow
 - Settings presents alarm playback and the diagnostic wake together as **Alarm Sound & Wake Test**.
   The unused Font Family editor and the redundant Cancel test alarm button were removed.
 - The countdown Timer no longer offers Auto Stop; it remains an alarm-editor setting.
+- The unused Arabic translation catalog was removed; the shipped languages are English and Japanese.
+- The GitHub README now shows the screenshot gallery directly instead of hiding it in a collapsed
+  section, and the redundant alarm-editor crop was removed.
 - The Arch package is rebuilt as `1.0.5-3` from the current source with optional KDE blur disabled.
 
 ### Fixed
