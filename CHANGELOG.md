@@ -10,6 +10,9 @@ All notable user-facing changes are documented here. Entries follow
 
 ## [Unreleased]
 
+> The cleanup entries below are on GitHub `main` only. The published `v1.0.5` tag and `1.0.5-3`
+> package remain at `c14aff8`; no `1.0.5-4` asset was published.
+
 ### Changed
 
 - The RTCwake selector is now a sleep-method chooser with short visible names (`mem`, `freeze`,
@@ -78,11 +81,12 @@ All notable user-facing changes are documented here. Entries follow
 
 - `ctest`: 22/22 passed in clean Arch containers and on the development host.
 - GitHub checks: Ubuntu 26.04, Fedora 40, Arch Linux and clang-tidy completed successfully for the
-  release branch state.
+  tagged release state.
 - The local CI mirror passed with and without clang-tidy; package audits found no personal paths,
   secrets or privileged shell rule in the built artifact.
-- Release checks now record 278 messages in each catalog, 132 gated emoji glyphs, five wizard steps,
-  five offered wake modes (seven remain accepted by the helper) and frameless move/resize handlers.
+- Release checks now record 273 messages in each shipped catalog, 119 gated emoji glyphs, five wizard
+  steps, five offered wake modes (seven remain accepted by the helper) and frameless move/resize
+  handlers.
 
 </details>
 

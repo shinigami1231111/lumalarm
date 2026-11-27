@@ -17,7 +17,7 @@ Alarms · timer · stopwatch · sound manager · English and Japanese
 > [!NOTE]
 > **Current version: [v1.0.5](https://github.com/shinigami1231111/lumalarm/tree/v1.0.5)** — 2026-11-22.
 > The Arch package is available from the [AUR](https://aur.archlinux.org/packages/lumalarm) or as a
-> [direct package download](https://raw.githubusercontent.com/shinigami1231111/lumalarm/v1.0.5/assets/lumalarm-1.0.5-4-x86_64.pkg.tar.zst).
+> [direct package download](https://raw.githubusercontent.com/shinigami1231111/lumalarm/v1.0.5/assets/lumalarm-1.0.5-3-x86_64.pkg.tar.zst).
 
 > [!IMPORTANT]
 > RTC wake depends on your computer's firmware, RTC device and supported sleep modes. Run a short
@@ -79,10 +79,10 @@ helper. No passwordless `sudoers` rule is needed.
 For x86_64, download the versioned package and checksum manifest, verify the package, then install it:
 
 ```bash
-curl -fLO https://raw.githubusercontent.com/shinigami1231111/lumalarm/v1.0.5/assets/lumalarm-1.0.5-4-x86_64.pkg.tar.zst
+curl -fLO https://raw.githubusercontent.com/shinigami1231111/lumalarm/v1.0.5/assets/lumalarm-1.0.5-3-x86_64.pkg.tar.zst
 curl -fLO https://raw.githubusercontent.com/shinigami1231111/lumalarm/v1.0.5/assets/SHA256SUMS
-grep -F 'lumalarm-1.0.5-4-x86_64.pkg.tar.zst' SHA256SUMS | sha256sum --check -
-sudo pacman -U lumalarm-1.0.5-4-x86_64.pkg.tar.zst
+grep -F 'lumalarm-1.0.5-3-x86_64.pkg.tar.zst' SHA256SUMS | sha256sum --check -
+sudo pacman -U lumalarm-1.0.5-3-x86_64.pkg.tar.zst
 ```
 
 AUR helpers check the package hash against the PKGBUILD. The direct download command verifies it against
