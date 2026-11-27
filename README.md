@@ -37,14 +37,14 @@ Alarms · timer · stopwatch · sound manager · English and Japanese
 
 ## Features
 
-- **Alarms** — recurring per-day schedules, names, per-alarm sound and volume, auto-stop, optional command, and a ringing overlay with a **Stop** action.
+- **Alarms** — recurring per-day schedules, names, per-alarm sound, auto-stop, optional command, and a ringing overlay with a **Stop** action.
 - **RTC wake scheduling** — ask the system to wake for an alarm using `rtcwake` through a privileged D-Bus helper.
 - **Test alarm** — schedule a real wake 60 seconds to one hour ahead so you can check your machine's RTC behavior.
 - **Timer and stopwatch** — completion sound and lap recording.
 - **Sound manager** — import and preview `wav`, `mp3`, `ogg`, `flac` and `aac` files.
 - **Volume policy** — raise the output volume while ringing and restore it afterwards, or leave system volume unchanged.
 - **Tray and notifications** — next alarm in the tray tooltip, desktop notifications and optional pre-alarm dimming.
-- **First-run wizard** — four skippable steps for language, wake method, notifications and a summary; reopen it with `--show-wizard`.
+- **First-run wizard** — five skippable steps for language, wake method, notifications, alarm sound/output device and a summary; reopen it with `--show-wizard`.
 - **English and Japanese** — the language can be changed while the app is open.
 - **Theme controls** — color presets, color pickers, pywal import, background opacity and a frameless window that can be moved and resized.
 - **Emoji density** — choose Off, Less or More.

@@ -26,7 +26,8 @@ All notable user-facing changes are documented here. Entries follow
 - The unused Arabic translation catalog was removed; the shipped languages are English and Japanese.
 - The GitHub README now shows the screenshot gallery directly instead of hiding it in a collapsed
   section, and the redundant alarm-editor crop was removed.
-- The Arch package is rebuilt as `1.0.5-3` from the current source with optional KDE blur disabled.
+- The published `1.0.5-3` asset was built from tagged commit `c14aff8` with optional KDE blur disabled;
+  the later cleanup commits are on `main` only.
 
 ### Fixed
 
@@ -48,8 +49,8 @@ All notable user-facing changes are documented here. Entries follow
 - Frameless window with native system move and eight transparent resize handles.
 - Prebuilt Arch package with a pinned SHA-256 checksum, available through the AUR and as a versioned
   package asset; local compilation is not needed to install the published package.
-- First-run wizard (language, wake method, notifications and summary), system tray icon, desktop
-  notifications, test alarm and night mode.
+- First-run wizard (language, wake method, notifications, alarm sound/output device and summary), system
+  tray icon, desktop notifications, test alarm and night mode.
 - Privileged D-Bus wake helper, polkit action `org.lumalarm.schedule.wake` and systemd activation
   files; wake scheduling no longer depends on a passwordless sudo rule.
 - GitHub CI workflows, a local CI mirror, an optional pre-push hook and `.clang-format` / `.clang-tidy`
